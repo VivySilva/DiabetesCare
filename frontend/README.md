@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+#  DiabetesCare
 
-## Getting Started
+Plataforma web para monitoramento glicêmico e educação em saúde voltada para pacientes com diabetes, com foco em autonomia, organização de dados clínicos e acesso a informações confiáveis.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+##  Sobre o Projeto
+
+O **DiabetesCare** é uma aplicação desenvolvida para auxiliar pacientes no controle diário da glicemia, permitindo o registro estruturado de dados, visualização de informações e interação com profissionais da saúde.
+
+A solução busca reduzir a distância entre o acompanhamento clínico e o cotidiano do paciente, promovendo melhor tomada de decisão e adesão ao tratamento.
+
+---
+
+##  Objetivos
+
+* Facilitar o registro de dados glicêmicos
+* Organizar informações clínicas de forma estruturada
+* Oferecer suporte educativo por especialistas
+* Melhorar a comunicação entre pacientes e profissionais
+* Gerar relatórios para acompanhamento médico
+
+---
+
+##  Arquitetura do Sistema
+
+O sistema segue uma arquitetura **cliente-servidor em três camadas (3-tier)**:
+
+* **Frontend:** React + TypeScript + Tailwind CSS
+* **Backend:** Node.js + TypeScript (API REST)
+* **Banco de Dados:** PostgreSQL (Supabase)
+
+```text
+Frontend → Backend → Banco de Dados
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+##  Tecnologias Utilizadas
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Frontend
 
-## Learn More
+* React
+* TypeScript
+* Tailwind CSS
 
-To learn more about Next.js, take a look at the following resources:
+### Backend
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* Node.js
+* Express
+* TypeScript
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Banco de Dados
 
-## Deploy on Vercel
+* Supabase (PostgreSQL)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Segurança
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+* JSON Web Tokens (JWT)
+* BCrypt
+* HTTPS
+
+---
+
+## 🔄 Funcionalidades (em desenvolvimento)
+
+* Cadastro e autenticação de usuários
+* Registro de glicemia
+* Dashboard com gráficos
+* Fórum de dúvidas
+* Publicação de conteúdos por especialistas
+* Geração de relatórios
+
+---
+
+## 🔒 Segurança
+
+* Autenticação baseada em JWT
+* Senhas criptografadas com BCrypt
+* Controle de acesso por perfil (RBAC)
+* Proteção de dados conforme LGPD
+
+---
+
+## 👥 Equipe
+
+* Áurea Letícia Carvalho Macedo
+* Luis Gustavo Luz de Deus Ramos
+* Samylle Rose de Brito Silva
+* Pedro Henrique de Carvalho Sousa
+* Viviany da Silva Araújo
+* Válber Carvalho Bezerra Policarpo
+
+---
+
+## 📚 Licença
+
+Projeto acadêmico desenvolvido para a disciplina de Projeto e Desenvolvimento de Sistemas de Informação II.
