@@ -1,4 +1,6 @@
 import Header from "../components/Header";
+import GlucoseSummary from "../components/GlucoseSummary";
+import GlucoseReport from "../components/GlucoseReport";
 
 export default function Home() {
   return (
@@ -9,12 +11,17 @@ export default function Home() {
         variant="home"
       />
 
-      {/* Próximos componentes:
-          - Dados de cadastro de glicemia
-          - Dashboard
-          - Posts educacionais
-          - Navbar inferior
-      */}
+      <section className="flex flex-col items-center px-[33px] pt-6 gap-6">
+        <GlucoseSummary value={115} moment="Em jejum" status="Estável" />
+
+        <GlucoseReport />
+
+        {/* Próximos componentes:
+            - Dashboard
+            - Posts educacionais
+            - Navbar inferior
+        */}
+      </section>
     </main>
   );
 }
