@@ -1,26 +1,101 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* --- Azuis --- */
+  --dc-azul-claro:  #DBE1FF;
+  --dc-azul:        #2563EB;
+  --dc-azul-escuro: #004AC6;
+  --dc-azul-fundo:  #F7F9FB;
+
+  /* --- Cinzas - Fundos --- */
+  --dc-cinza-claro-fundo:  #C3C6D7;
+  --dc-cinza-fundo:        #64748B;
+  --dc-cinza-escuro-fundo: #E6E8EA;
+
+  /* --- Cinzas - Textos --- */
+  --dc-cinza-escuro-texto: #434655; 
+  --dc-cinza-texto:        #F2F4F6; 
+  --dc-cinza-claro-texto:  #737686; 
+  --dc-texto:              #191C1E; 
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Fontes */
+  --font-sans:    var(--font-inter);    
+  --font-display: var(--font-manrope);  
+
+  /* Cores Figma expostas como utilities Tailwind */
+  --color-azul-claro:        var(--dc-azul-claro);
+  --color-azul:              var(--dc-azul);
+  --color-azul-escuro:       var(--dc-azul-escuro);
+  --color-azul-fundo:        var(--dc-azul-fundo);
+
+  --color-cinza-claro-fundo:  var(--dc-cinza-claro-fundo);
+  --color-cinza-fundo:        var(--dc-cinza-fundo);
+  --color-cinza-escuro-fundo: var(--dc-cinza-escuro-fundo);
+
+  --color-cinza-escuro-texto: var(--dc-cinza-escuro-texto);
+  --color-cinza-texto:        var(--dc-cinza-texto);
+  --color-cinza-claro-texto:  var(--dc-cinza-claro-texto);
+  --color-texto:              var(--dc-texto);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  color: var(--dc-texto);
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* ============================================
+   Escala tipográfica (Figma)
+
+   h1  → Manrope ExtraBold  20px
+   h2  → Manrope SemiBold   18px
+   h3  → Manrope Bold       14px
+   p   → Inter Regular      14px
+   .detail  → Inter Bold    12px
+   .detail2 → Inter Medium  20px
+   ============================================ */
+h1 {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 800;
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+h2 {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+h3 {
+  font-family: var(--font-manrope), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+p {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.detail {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.detail2 {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+}
+
