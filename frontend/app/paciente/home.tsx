@@ -1,10 +1,11 @@
 import Header from "../components/Header";
 import GlucoseSummary from "../components/GlucoseSummary";
 import GlucoseReport from "../components/GlucoseReport";
+import Footer from "../components/Footer";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white pb-[91px]">
       <Header
         title="DiabetesCare"
         titleColor="var(--dc-azul-escuro)"
@@ -19,9 +20,10 @@ export default function Home() {
         {/* Próximos componentes:
             - Dashboard
             - Posts educacionais
-            - Navbar inferior
         */}
       </section>
+
+      <Footer />
     </main>
   );
 }
