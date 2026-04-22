@@ -28,7 +28,7 @@ export default function Registros() {
 
         <div className="flex flex-col gap-10 w-full">
           <RecordCategoryCard
-            href="/paciente/registros/glucose"
+            href="/patient/records/glucose"
             icon={MdBloodtype}
             iconColor="var(--dc-vermelho)"
             iconBg="var(--dc-vermelho-fundo)"
@@ -37,7 +37,7 @@ export default function Registros() {
           />
 
           <RecordCategoryCard
-            href="/paciente/registros/medications"
+            href="/patient/records/medications"
             icon={LuPillBottle}
             iconColor="var(--dc-verde)"
             iconBg="var(--dc-verde-fundo)"

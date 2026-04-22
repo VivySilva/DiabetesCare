@@ -7,10 +7,10 @@ import { FaRegUser } from "react-icons/fa";
 
 
 const NAV_ITEMS = [
-  { label: "Início",      href: "/paciente",            icon: MdHomeFilled,      size: 26 },
-  { label: "Registros",   href: "/paciente/registros",  icon: MdOutlineEditNote, size: 28 },
-  { label: "Comunidade",  href: "/paciente/comunidade", icon: MdGroups,          size: 28 },
-  { label: "Perfil",      href: "/paciente/perfil",     icon: FaRegUser,         size: 20 },
+  { label: "Início",      href: "/patient",            icon: MdHomeFilled,      size: 26 },
+  { label: "Registros",   href: "/patient/records",    icon: MdOutlineEditNote, size: 28 },
+  { label: "Comunidade",  href: "/patient/community",  icon: MdGroups,          size: 28 },
+  { label: "Perfil",      href: "/patient/profile",    icon: FaRegUser,         size: 20 },
 ];
 
 export default function Footer() {
