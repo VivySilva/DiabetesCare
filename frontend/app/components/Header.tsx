@@ -23,7 +23,7 @@ export default function Header({
 
   return (
     <header
-      className={`flex items-center justify-between ${isHome ? "px-[33px]" : "px-6"} py-4 h-[72px] backdrop-blur-[6px] sticky top-0 z-50 w-full`}
+      className={`flex items-center ${isHome ? "justify-between px-[33px]" : "justify-start gap-3 px-6"} py-4 h-[72px] backdrop-blur-[6px] sticky top-0 z-50 w-full`}
       style={{ background: "rgba(247, 249, 251, 0.8)" }}
     >
       {isHome ? (
