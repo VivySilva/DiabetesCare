@@ -1,8 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { MdBloodtype } from "react-icons/md";
+import { LuPillBottle } from "react-icons/lu";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import RecordCategoryCard from "../../components/RecordCategoryCard";
 
 export default function Registros() {
   const router = useRouter();
@@ -15,19 +18,33 @@ export default function Registros() {
         onIconClick={() => router.back()}
       />
 
-      <section className="flex flex-col items-center px-[33px] pt-6 gap-6">
-        {/* Título da tela */}
-        <div className="flex flex-col items-start gap-2 w-[342px]">
+      <section className="flex flex-col items-start px-[33px] pt-6 gap-10 w-full">
+        <div className="flex flex-col items-start gap-2 w-full">
           <h1>Central de Registros</h1>
           <p className="m-0 text-cinza-claro-texto">
             Selecione uma categoria para registrar seus dados de saúde.
           </p>
         </div>
 
-        {/* Próximas telas:
-            - Registro de glicemia
-            - Registro de remédios
-        */}
+        <div className="flex flex-col gap-10 w-full">
+          <RecordCategoryCard
+            href="/paciente/registros/glucose"
+            icon={MdBloodtype}
+            iconColor="var(--dc-vermelho)"
+            iconBg="var(--dc-vermelho-fundo)"
+            title="Glicemia"
+            description="Monitore seus níveis de açúcar no sangue regularmente."
+          />
+
+          <RecordCategoryCard
+            href="/paciente/registros/medications"
+            icon={LuPillBottle}
+            iconColor="var(--dc-verde)"
+            iconBg="var(--dc-verde-fundo)"
+            title="Remédios"
+            description="Confirme a ingestão de comprimidos e outros medicamentos."
+          />
+        </div>
       </section>
 
       <Footer />

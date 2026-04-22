@@ -17,6 +17,12 @@
   --dc-cinza-texto:        #F2F4F6; 
   --dc-cinza-claro-texto:  #737686; 
   --dc-texto:              #191C1E; 
+
+  /* --- Semânticas --- */
+  --dc-vermelho:       #DC2626;
+  --dc-vermelho-fundo: #FEF2F2;
+  --dc-verde:          #059669;
+  --dc-verde-fundo:    #ECFDF5;
 }
 
 @theme inline {
@@ -38,6 +44,11 @@
   --color-cinza-texto:        var(--dc-cinza-texto);
   --color-cinza-claro-texto:  var(--dc-cinza-claro-texto);
   --color-texto:              var(--dc-texto);
+
+  --color-vermelho:       var(--dc-vermelho);
+  --color-vermelho-fundo: var(--dc-vermelho-fundo);
+  --color-verde:          var(--dc-verde);
+  --color-verde-fundo:    var(--dc-verde-fundo);
 }
 
 
