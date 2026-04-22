@@ -2,23 +2,47 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MdHomeFilled, MdOutlineEditNote, MdGroups } from "react-icons/md";
-import { FaRegUser } from "react-icons/fa";
-
-
-const NAV_ITEMS = [
-  { label: "Início",      href: "/patient",            icon: MdHomeFilled,      size: 26 },
-  { label: "Registros",   href: "/patient/records",    icon: MdOutlineEditNote, size: 28 },
-  { label: "Comunidade",  href: "/patient/community",  icon: MdGroups,          size: 28 },
-  { label: "Perfil",      href: "/patient/profile",    icon: FaRegUser,         size: 20 },
-];
+import {
+  MdHomeFilled,
+  MdOutlineEditNote,
+  MdGroups,
+  MdPersonOutline,
+  MdPerson,
+} from "react-icons/md";
 
 export default function Footer() {
   const pathname = usePathname();
 
+  // Verifica se a URL atual começa com /professional. Se não, assume que é /patient.
+  const isProfessional = pathname.startsWith("/professional");
+  const basePath = isProfessional ? "/professional" : "/patient";
+
+  // Os links agora são gerados dinamicamente com base no tipo de usuário
+  const NAV_ITEMS = [
+    { label: "Início", href: basePath, icon: MdHomeFilled, size: 26 },
+    {
+      label: "Registros",
+      href: `${basePath}/records`,
+      icon: MdOutlineEditNote,
+      size: 28,
+    },
+    {
+      label: "Comunidade",
+      href: `${basePath}/community`,
+      icon: MdGroups,
+      size: 28,
+    },
+    {
+      label: "Perfil",
+      href: `${basePath}/profile`,
+      icon: MdPerson,
+      size: 26,
+    },
+  ];
+
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 flex flex-row items-center justify-between h-[91px] px-[33px] pt-3 pb-6 rounded-t-[24px] z-50"
+      className="fixed bottom-0 left-0 right-0 flex flex-row items-center justify-between h-[91px] px-[33px] pt-3 pb-6 rounded-t-[24px] z-50 max-w-md mx-auto"
       style={{
         background: "rgba(255, 255, 255, 0.7)",
         boxShadow: "0px -4px 24px rgba(25, 28, 30, 0.15)",
@@ -48,7 +72,9 @@ export default function Footer() {
 
             <span
               className="detail"
-              style={{ color: active ? "var(--dc-azul)" : "var(--dc-cinza-fundo)" }}
+              style={{
+                color: active ? "var(--dc-azul)" : "var(--dc-cinza-fundo)",
+              }}
             >
               {label}
             </span>
