@@ -11,7 +11,7 @@ export default function LoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Simulação de login para demonstração
-    router.push('/paciente');
+    router.push('/patient');
   };
 
   return (
