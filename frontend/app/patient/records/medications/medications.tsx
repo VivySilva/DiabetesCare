@@ -111,13 +111,28 @@ export default function CadastroRemedios() {
             >
               HORÁRIO
             </span>
-            <div className="flex items-center gap-4 bg-cinza-texto rounded-full px-6 py-4">
+            <div 
+              className="flex items-center gap-4 bg-cinza-texto rounded-full px-6 py-4 cursor-pointer"
+              onClick={() => {
+                const input = document.getElementById("timeInput") as HTMLInputElement;
+                if (input && typeof input.showPicker === "function") {
+                  try {
+                    input.showPicker();
+                  } catch (e) {
+                    input.focus();
+                  }
+                } else if (input) {
+                  input.focus();
+                }
+              }}
+            >
               <MdOutlineAccessTime size={24} color="var(--dc-azul)" />
               <input
+                id="timeInput"
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="bg-transparent outline-none p-0 text-texto w-full [&::-webkit-calendar-picker-indicator]:hidden"
+                className="bg-transparent outline-none p-0 text-texto w-full cursor-pointer [&::-webkit-calendar-picker-indicator]:hidden"
                 style={{ fontFamily: "var(--font-manrope)", fontWeight: 700, fontSize: "18px" }}
               />
             </div>
