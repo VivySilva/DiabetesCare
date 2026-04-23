@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TbHandMove } from "react-icons/tb";
+import { TbHandMove, TbVaccine, TbBone } from "react-icons/tb";
+import { MdOutlineLocationOn, MdOutlineLightbulb, MdPersonOutline, MdAccessibility, MdPerson } from "react-icons/md";
+import { LuRuler } from "react-icons/lu";
+import { FiMinus, FiPlus } from "react-icons/fi";
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
 import SaveButton from "../../../components/SaveButton";
@@ -12,6 +15,11 @@ export default function CadastroGlicemia() {
   const [glucoseValue, setGlucoseValue] = useState(95);
   const [selectedPeriod, setSelectedPeriod] = useState("Jejum");
   const [tookInsulin, setTookInsulin] = useState(true);
+  
+  // Estados da Insulina Expandida
+  const [insulinType, setInsulinType] = useState("Basal");
+  const [insulinAmount, setInsulinAmount] = useState(12);
+  const [injectionSite, setInjectionSite] = useState("Abdômen");
 
   const periods = [
     "Jejum",
@@ -75,7 +83,10 @@ export default function CadastroGlicemia() {
                   max="400"
                   value={glucoseValue}
                   onChange={(e) => setGlucoseValue(Number(e.target.value))}
-                  className="w-full h-2 bg-[#D1D5DB] rounded-lg appearance-none cursor-pointer accent-azul touch-none"
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer touch-none"
+                  style={{
+                    background: `linear-gradient(to right, var(--dc-azul) ${(glucoseValue / 400) * 100}%, #D1D5DB ${(glucoseValue / 400) * 100}%)`
+                  }}
                 />
                 <div className="flex justify-between w-full mt-2">
                   <span className="text-[10px] uppercase text-cinza-claro-texto font-semibold">0 MG/DL</span>
@@ -152,6 +163,146 @@ export default function CadastroGlicemia() {
               </button>
             </div>
           </div>
+
+          {/* Seção Condicional de Detalhes da Insulina */}
+          {tookInsulin && (
+            <div className="flex flex-col gap-6 w-full animate-fade-in pb-2 pt-2">
+              {/* Cabeçalho da Seção */}
+              <div className="flex flex-col gap-2 w-full">
+                <h1>Insulina</h1>
+                <p className="m-0 text-cinza-claro-texto">
+                  Mantenha seu controle em dia para uma vida mais saudável.
+                </p>
+              </div>
+
+              {/* Card: Tipo de Insulina */}
+              <div className="flex flex-col p-5 gap-4 w-full bg-white rounded-[32px] border border-[#F2F4F6]" style={{ boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.02)" }}>
+                <div className="flex items-center gap-2">
+                  <TbVaccine size={24} color="var(--dc-azul)" />
+                  <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
+                    Tipo de Insulina
+                  </span>
+                </div>
+                <div className="flex w-full bg-[#F2F4F6] rounded-full p-1 mt-1">
+                  {["Basal", "Rápida"].map((type) => (
+                    <button
+                      type="button"
+                      key={type}
+                      onClick={() => setInsulinType(type)}
+                      className={`flex-1 py-3 rounded-full detail2 transition-all cursor-pointer ${
+                        insulinType === type ? "bg-azul text-white font-semibold shadow-sm" : "text-texto"
+                      }`}
+                      style={{ fontSize: 14 }}
+                    >
+                      {type}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Card: Quantidade */}
+              <div className="flex flex-col p-5 gap-6 w-full bg-white rounded-[32px] border border-[#F2F4F6]" style={{ boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.02)" }}>
+                <div className="flex items-center gap-2">
+                  <LuRuler size={24} color="var(--dc-azul)" />
+                  <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
+                    Quantidade
+                  </span>
+                </div>
+                
+                <div className="flex flex-col items-center justify-center w-full mt-2">
+                  <span className="text-[48px] font-bold text-azul leading-none" style={{ fontFamily: "var(--font-inter)" }}>
+                    {insulinAmount}
+                  </span>
+                  <span className="text-[10px] uppercase text-cinza-claro-texto font-bold tracking-widest mt-2">
+                    UNIDADES (UI)
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between gap-4 w-full pt-4">
+                  <button 
+                    type="button"
+                    onClick={() => setInsulinAmount(Math.max(0, insulinAmount - 1))}
+                    className="w-12 h-12 rounded-full bg-[#F2F4F6] flex items-center justify-center shrink-0 cursor-pointer hover:bg-gray-200 transition-colors"
+                  >
+                    <FiMinus size={24} color="var(--dc-texto)" />
+                  </button>
+                  
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={insulinAmount}
+                    onChange={(e) => setInsulinAmount(Number(e.target.value))}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer touch-none"
+                    style={{
+                      background: `linear-gradient(to right, var(--dc-azul) ${insulinAmount}%, #D1D5DB ${insulinAmount}%)`
+                    }}
+                  />
+
+                  <button 
+                    type="button"
+                    onClick={() => setInsulinAmount(Math.min(100, insulinAmount + 1))}
+                    className="w-12 h-12 rounded-full bg-azul flex items-center justify-center shrink-0 cursor-pointer shadow-md hover:opacity-90 transition-opacity"
+                  >
+                    <FiPlus size={24} color="#FFFFFF" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Card: Local de Aplicação */}
+              <div className="flex flex-col p-5 gap-4 w-full bg-white rounded-[32px] border border-[#F2F4F6]" style={{ boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.02)" }}>
+                <div className="flex items-center gap-2">
+                  <MdOutlineLocationOn size={20} color="var(--dc-azul)" />
+                  <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
+                    Local de Aplicação
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-4 w-full mt-2">
+                  {[
+                    { name: "Abdômen", icon: MdPersonOutline },
+                    { name: "Coxa", icon: MdAccessibility },
+                    { name: "Braço", icon: TbBone },
+                    { name: "Glúteo", icon: MdPerson }
+                  ].map((site) => {
+                    const Icon = site.icon;
+                    const isSelected = injectionSite === site.name;
+                    return (
+                      <button
+                        type="button"
+                        key={site.name}
+                        onClick={() => setInjectionSite(site.name)}
+                        className={`flex flex-col items-center justify-center gap-3 p-4 rounded-[20px] transition-all border-2 cursor-pointer ${
+                          isSelected 
+                            ? "border-[#BFDBFE] bg-[#EFF6FF]" 
+                            : "border-transparent bg-[#F2F4F6]"
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shadow-sm">
+                          <Icon size={20} color={isSelected ? "var(--dc-azul)" : "var(--dc-cinza-escuro-texto)"} />
+                        </div>
+                        <span className={`text-[13px] font-semibold ${isSelected ? "text-azul" : "text-texto"}`} style={{ fontFamily: "var(--font-inter)" }}>
+                          {site.name}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Card: Dica de Saúde */}
+              <div className="flex items-start gap-4 w-full p-5 rounded-[24px]" style={{ backgroundColor: "#FFF7ED" }}>
+                <MdOutlineLightbulb size={24} color="#B45309" className="shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1">
+                  <span className="font-bold text-[#92400E]" style={{ fontFamily: "var(--font-inter)", fontSize: 14 }}>
+                    Dica de Saúde
+                  </span>
+                  <span className="text-[#92400E]" style={{ fontFamily: "var(--font-inter)", fontSize: 13, lineHeight: "1.4" }}>
+                    Lembre-se de alternar os locais de aplicação para evitar lipodistrofia.
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
 
           <SaveButton className="mt-4" />
         </form>
