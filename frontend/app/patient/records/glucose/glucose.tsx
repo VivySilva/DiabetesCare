@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { TbHandMove, TbVaccine, TbBone } from "react-icons/tb";
+import { TbHandMove, TbVaccine, TbBone, TbDroplet, TbBattery1, TbEyeOff, TbToolsKitchen2, TbWaveSine } from "react-icons/tb";
 import { MdOutlineLocationOn, MdOutlineLightbulb, MdPersonOutline, MdAccessibility, MdPerson } from "react-icons/md";
+import { FaDizzy } from "react-icons/fa";
 import { LuRuler } from "react-icons/lu";
 import { FiMinus, FiPlus } from "react-icons/fi";
 import Header from "../../../components/Header";
@@ -20,6 +21,18 @@ export default function CadastroGlicemia() {
   const [insulinType, setInsulinType] = useState("Basal");
   const [insulinAmount, setInsulinAmount] = useState(12);
   const [injectionSite, setInjectionSite] = useState("Abdômen");
+
+  // Estados de Sintomas
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
+  const [symptomIntensity, setSymptomIntensity] = useState(5);
+
+  const toggleSymptom = (symptom: string) => {
+    if (selectedSymptoms.includes(symptom)) {
+      setSelectedSymptoms(selectedSymptoms.filter(s => s !== symptom));
+    } else {
+      setSelectedSymptoms([...selectedSymptoms, symptom]);
+    }
+  };
 
   const periods = [
     "Jejum",
@@ -303,6 +316,78 @@ export default function CadastroGlicemia() {
               </div>
             </div>
           )}
+
+          {/* Seção de Sintomas */}
+          <div className="flex flex-col gap-6 w-full pt-6 pb-4">
+            {/* Cabeçalho */}
+            <div className="flex flex-col gap-2 w-full">
+              <h1>Sintomas</h1>
+              <p className="m-0 text-cinza-claro-texto">
+                Registre o que você está sentindo para um melhor controle.
+              </p>
+            </div>
+
+            <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
+              Como você está se sentindo?
+            </span>
+
+            <div className="grid grid-cols-3 gap-y-6 gap-x-2 w-full mt-2">
+              {[
+                { name: "Tontura", icon: FaDizzy },
+                { name: "Suor Frio", icon: TbDroplet },
+                { name: "Cansaço", icon: TbBattery1 },
+                { name: "Visão Turva", icon: TbEyeOff },
+                { name: "Fome Excessiva", icon: TbToolsKitchen2 },
+                { name: "Tremores", icon: TbWaveSine },
+              ].map((symptom) => {
+                const Icon = symptom.icon;
+                const isSelected = selectedSymptoms.includes(symptom.name);
+                return (
+                  <button
+                    type="button"
+                    key={symptom.name}
+                    onClick={() => toggleSymptom(symptom.name)}
+                    className="flex flex-col items-center justify-start gap-2 cursor-pointer transition-all"
+                  >
+                    <div className={`w-[84px] h-[84px] rounded-[32px] flex items-center justify-center transition-colors ${
+                      isSelected ? "bg-[#E0E7FF]" : "bg-transparent"
+                    }`}>
+                      <Icon size={28} color={isSelected ? "var(--dc-azul)" : "var(--dc-cinza-escuro-texto)"} />
+                    </div>
+                    <span className={`text-[12px] font-medium text-center leading-tight px-1 ${isSelected ? "text-azul" : "text-texto"}`} style={{ fontFamily: "var(--font-inter)" }}>
+                      {symptom.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Intensidade */}
+            <div className="flex flex-col gap-4 w-full pt-6">
+              <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
+                Intensidade do Sintoma
+              </span>
+              
+              <div className="flex flex-col w-full p-6 bg-white rounded-[32px] border border-[#F2F4F6]" style={{ boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.02)" }}>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  value={symptomIntensity}
+                  onChange={(e) => setSymptomIntensity(Number(e.target.value))}
+                  className="w-full h-2 rounded-lg appearance-none cursor-pointer touch-none"
+                  style={{
+                    background: `linear-gradient(to right, var(--dc-azul) ${(symptomIntensity / 10) * 100}%, #D1D5DB ${(symptomIntensity / 10) * 100}%)`
+                  }}
+                />
+                <div className="flex justify-between items-start w-full mt-4">
+                  <span className="text-[10px] uppercase text-cinza-claro-texto font-bold tracking-widest mt-1">LEVE</span>
+                  <span className="text-[24px] font-bold text-azul leading-none" style={{ fontFamily: "var(--font-inter)" }}>{symptomIntensity}</span>
+                  <span className="text-[10px] uppercase text-cinza-claro-texto font-bold tracking-widest mt-1">GRAVE</span>
+                </div>
+              </div>
+            </div>
+          </div>
 
           <SaveButton className="mt-4" />
         </form>
