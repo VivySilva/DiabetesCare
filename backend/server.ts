@@ -1,33 +1,43 @@
 import express from "express";
+import authRoutes from "./routes/autenticacao";
+import cadastroRoutes from "./routes/cadastro";
+import esqueceuSenhaRoutes from "./routes/esqueceu_a_senha";
 
 /**
- * Instância principal da aplicação Express.
- * Responsável por gerenciar rotas e middlewares da API.
+ * Main Express application instance.
+ * Responsible for managing API routes and middlewares.
  */
 const app = express();
 
 /**
- * Middleware para permitir que a API receba e interprete
- * requisições com corpo em formato JSON.
+ * Middleware to enable the API to receive and parse
+ * incoming requests with JSON payloads.
  */
 app.use(express.json());
 
 /**
- * Rota raiz da API.
- * Utilizada para verificar se o servidor está funcionando corretamente.
+ * Register API routes.
+ */
+app.use("/cadastro", cadastroRoutes);
+app.use("/autenticacao", authRoutes);
+app.use("/esqueceu_a_senha", esqueceuSenhaRoutes);
+
+/**
+ * API root route.
+ * Used to verify if the server is running correctly (health check).
  * 
- * Método: GET
+ * Method: GET
  * Endpoint: /
- * Retorno: Mensagem simples de status da API
+ * Returns: Simple API status message
  */
 app.get("/", (req, res) => {
     res.send("API DiabetesCare rodando 🚀");
 });
 
 /**
- * Inicializa o servidor na porta 3001.
- * Exibe uma mensagem no console quando a API está ativa.
+ * Initializes the server on port 3001.
+ * Logs a message to the console when the API is active.
  */
 app.listen(3001, () => {
-    console.log("Servidor rodando na porta 3001");
+    console.log("🔥 Servidor rondando na porta 3001 🔥");
 });
