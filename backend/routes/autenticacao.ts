@@ -4,6 +4,38 @@ import jwt from "jsonwebtoken";
 import supabase from "../config/supabase";
 
 /**
+ * @openapi
+ * /autenticacao/login:
+ *   post:
+ *     tags:
+ *       - Autenticação
+ *     summary: Login de usuário
+ *     description: Autentica um usuário com email e senha, retornando um token JWT.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - senha
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               senha:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login realizado com sucesso
+ *       400:
+ *         description: Email e senha são obrigatórios
+ *       401:
+ *         description: Credenciais inválidas
+ */
+
+/**
  * @class AuthController
  * @description Controller class responsible for handling authentication operations.
  */

@@ -3,6 +3,51 @@ import bcrypt from "bcrypt";
 import supabase from "../config/supabase";
 
 /**
+ * @openapi
+ * /cadastro:
+ *   post:
+ *     tags:
+ *       - Cadastro
+ *     summary: Cadastro de novo usuário
+ *     description: Registra um novo usuário (paciente ou profissional de saúde).
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - nome
+ *               - email
+ *               - senha
+ *               - confirmarSenha
+ *               - tipo
+ *             properties:
+ *               nome:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               senha:
+ *                 type: string
+ *               confirmarSenha:
+ *                 type: string
+ *               tipo:
+ *                 type: string
+ *                 enum: [profissional, paciente]
+ *               registro_conselho:
+ *                 type: string
+ *                 description: Obrigatório para profissionais (CRM, CRN, etc.)
+ *     responses:
+ *       201:
+ *         description: Usuário cadastrado com sucesso
+ *       400:
+ *         description: Erro de validação
+ *       409:
+ *         description: Email já cadastrado
+ */
+
+/**
  * @class CadastroController
  * @description Controller class responsible for handling user registration operations.
  */

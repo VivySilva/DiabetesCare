@@ -1,4 +1,6 @@
 import express from "express";
+import swaggerUi from "swagger-ui-express";
+import swaggerJsdoc from "swagger-jsdoc";
 import authRoutes from "./routes/autenticacao";
 import cadastroRoutes from "./routes/cadastro";
 import esqueceuSenhaRoutes from "./routes/esqueceu_a_senha";
@@ -8,6 +10,28 @@ import esqueceuSenhaRoutes from "./routes/esqueceu_a_senha";
  * Responsible for managing API routes and middlewares.
  */
 const app = express();
+
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "DiabetesCare API",
+      version: "1.0.0",
+      description: "API para gerenciamento de cuidados com diabetes",
+    },
+    servers: [
+      {
+        url: "http://localhost:3001",
+        description: "Servidor de desenvolvimento",
+      },
+    ],
+  },
+  apis: ["./routes/*.ts"],
+};
+
+const swaggerDocs = swaggerJsdoc(swaggerOptions);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 /**
  * Middleware to enable the API to receive and parse

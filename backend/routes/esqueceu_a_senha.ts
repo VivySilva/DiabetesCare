@@ -5,6 +5,62 @@ import supabase from "../config/supabase";
 import transporter from "../config/email";
 
 /**
+ * @openapi
+ * /esqueceu_a_senha/solicitar:
+ *   post:
+ *     tags:
+ *       - Recuperação de Senha
+ *     summary: Solicitar recuperação de senha
+ *     description: Envia um email com link para redefinir a senha.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Email de recuperação enviado
+ *       400:
+ *         description: Email é obrigatório
+ */
+
+/**
+ * @openapi
+ * /esqueceu_a_senha/redefinir:
+ *   post:
+ *     tags:
+ *       - Recuperação de Senha
+ *     summary: Redefinir senha
+ *     description: Redefine a senha do usuário usando o token enviado por email.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - novaSenha
+ *             properties:
+ *               token:
+ *                 type: string
+ *               novaSenha:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Senha redefinida com sucesso
+ *       400:
+ *         description: Token inválido ou expirado
+ */
+
+/**
  * @class PasswordRecoveryController
  * @description Controller class responsible for handling password recovery operations.
  */
