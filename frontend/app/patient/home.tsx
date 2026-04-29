@@ -1,9 +1,14 @@
+import Link from "next/link";
 import Header from "../components/Header";
 import GlucoseSummary from "../components/GlucoseSummary";
 import GlucoseReport from "../components/GlucoseReport";
 import Footer from "../components/Footer";
+import ArticleCard from "../components/ArticleCard";
+import { COMMUNITY_POSTS } from "./community/data";
 
 export default function Home() {
+  const latestPosts = COMMUNITY_POSTS.slice(0, 2);
+
   return (
     <main className="min-h-screen bg-white pb-[91px]">
       <Header
@@ -17,13 +22,29 @@ export default function Home() {
 
         <GlucoseReport />
 
-        {/* Próximos componentes:
-            - Dashboard
-            - Posts educacionais
-        */}
+        {/* Seção - Últimas publicações */}
+        <div className="flex flex-col w-full" style={{ gap: "16px" }}>
+          <div className="flex items-center justify-between w-full">
+            <h2 className="m-0 text-texto">Últimas publicações</h2>
+            <Link
+              href="/patient/community"
+              className="no-underline text-azul font-semibold"
+              style={{ fontFamily: "var(--font-inter)", fontSize: "13px" }}
+            >
+              Ver Tudo
+            </Link>
+          </div>
+
+          <div className="flex flex-col gap-5 w-full">
+            {latestPosts.map((post) => (
+              <ArticleCard key={post.id} post={post} />
+            ))}
+          </div>
+        </div>
       </section>
 
       <Footer />
     </main>
   );
 }
+
