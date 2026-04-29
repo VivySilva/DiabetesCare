@@ -1,24 +1,43 @@
 import Link from "next/link";
+import { MdEdit } from "react-icons/md";
 import { Post } from "@/app/patient/community/data";
 
 interface ArticleCardProps {
   post: Post;
+  isProfessional?: boolean;
+  onEdit?: (id: string) => void;
 }
 
-export default function ArticleCard({ post }: ArticleCardProps) {
+export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCardProps) {
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onEdit) onEdit(post.id);
+  };
 
   return (
-    <Link href={`/patient/community/${post.id}`} className="no-underline w-full">
+    <Link href={`/patient/community/${post.id}`} className="no-underline w-full relative">
       <article
-        className="flex flex-col items-start w-full rounded-[32px] overflow-hidden bg-white transition-transform active:scale-[0.98] cursor-pointer"
+        className="flex flex-col items-start w-full rounded-[32px] overflow-hidden bg-white transition-transform active:scale-[0.98] cursor-pointer group"
         style={{ boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.05)" }}
       >
+        {/* Botão de Editar (Apenas para Profissional) */}
+        {isProfessional && (
+          <button
+            onClick={handleEditClick}
+            className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-azul shadow-lg hover:bg-azul hover:text-white transition-all transform active:scale-90"
+            aria-label="Editar publicação"
+          >
+            <MdEdit size={20} />
+          </button>
+        )}
+
         {/* Imagem do artigo */}
         <div className="w-full overflow-hidden" style={{ height: "192px" }}>
           <img
             src={post.image}
             alt={post.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         </div>
 

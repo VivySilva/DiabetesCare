@@ -21,8 +21,8 @@ export default function Footer() {
   const NAV_ITEMS = [
     { label: "Início", href: basePath, icon: MdHomeFilled, size: 26 },
     {
-      label: "Registros",
-      href: `${basePath}/records`,
+      label: isProfessional ? "Publicar" : "Registros",
+      href: isProfessional ? `${basePath}/publish` : `${basePath}/records`,
       icon: MdOutlineEditNote,
       size: 28,
     },

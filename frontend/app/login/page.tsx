@@ -8,10 +8,9 @@ import { useRouter } from 'next/navigation';
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleLogin = (role: 'patient' | 'professional') => {
     // Simulação de login para demonstração
-    router.push('/patient');
+    router.push(`/${role}`);
   };
 
   return (
@@ -35,7 +34,7 @@ export default function LoginPage() {
           <p className="text-cinza-claro-texto mt-1">Acesse sua conta para monitorar seus níveis</p>
         </div>
 
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
           <Input 
             label="Usuário" 
             placeholder="Seu nome de usuário"
@@ -73,16 +72,33 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-azul hover:bg-azul-escuro text-white font-bold py-4 rounded-3xl shadow-lg shadow-azul-claro flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]"
-          >
-            Entrar
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-          </button>
+          <div className="flex flex-col gap-4 pt-2">
+            <button
+              type="button"
+              onClick={() => handleLogin('patient')}
+              className="w-full bg-azul hover:bg-azul-escuro text-white font-bold py-4 rounded-3xl shadow-lg shadow-azul-claro flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]"
+            >
+              Entrar como Paciente
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleLogin('professional')}
+              className="w-full bg-azul-escuro hover:bg-black text-white font-bold py-4 rounded-3xl shadow-lg flex items-center justify-center gap-2 transition-all transform active:scale-[0.98]"
+            >
+              Entrar como Profissional
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </button>
+          </div>
         </form>
 
         <p className="text-center text-cinza-claro-texto">
