@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowLeft, CheckCircle2, Plus, Send } from 'lucide-react';
+import { IoMdArrowBack } from 'react-icons/io';
+import { MdCheckCircle, MdAdd, MdSend } from 'react-icons/md';
 
 export default function ForumPostScreen() {
   return (
@@ -7,7 +8,7 @@ export default function ForumPostScreen() {
       {/* Header */}
       <header className="flex items-center p-6 pb-4">
         <button className="text-gray-600 hover:bg-gray-100 p-2 -ml-2 rounded-full transition-colors">
-          <ArrowLeft size={20} />
+          <IoMdArrowBack size={20} />
         </button>
         <h1 className="text-lg font-semibold ml-2 text-gray-900">Fórum</h1>
       </header>
@@ -37,7 +38,7 @@ export default function ForumPostScreen() {
           <div className="bg-blue-50/50 border border-blue-200 rounded-2xl p-1 shadow-sm">
             <div className="bg-white rounded-xl p-4">
               <span className="inline-flex items-center text-[10px] font-bold text-white bg-blue-600 px-2 py-1 rounded-md mb-4 tracking-wide">
-                <CheckCircle2 size={12} className="mr-1" /> RESPOSTA DO ESPECIALISTA
+                <MdCheckCircle size={12} className="mr-1" /> RESPOSTA DO ESPECIALISTA
               </span>
               
               <div className="flex items-center gap-3 mb-3">
@@ -76,7 +77,7 @@ export default function ForumPostScreen() {
       {/* Input Area */}
       <footer className="fixed bottom-0 w-full max-w-md bg-white border-t border-gray-100 p-4 pb-6 flex items-center gap-3">
         <button className="text-gray-400 hover:text-gray-600 transition-colors p-1 border border-gray-300 rounded-full">
-          <Plus size={18} />
+          <MdAdd size={18} />
         </button>
         <div className="flex-1 bg-gray-100 rounded-full flex items-center px-4 py-2">
           <input 
@@ -86,7 +87,7 @@ export default function ForumPostScreen() {
           />
         </div>
         <button className="bg-blue-600 text-white p-2.5 rounded-full hover:bg-blue-700 transition-colors">
-          <Send size={16} />
+          <MdSend size={16} />
         </button>
       </footer>
     </div>

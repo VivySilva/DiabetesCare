@@ -15,30 +15,29 @@ export default function ProfissionalPage() {
       id: "1",
       title: "Como controlar a glicemia no dia a dia",
       content: ["Manter uma rotina alimentar equilibrada é essencial..."],
-      image:
-        "https://images.unsplash.com/photo-1498837167922-ddd27525d352",
+      image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352",
       author: "Você",
       date: "HOJE",
       category: "Saúde",
     },
   ];
 
-
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px]">
-      <Header title="DiabetesCare" variants="home" titleColor="var(--dc-azul)" />
+      <Header title="DiabetesCare" variant="home" titleColor="var(--dc-azul)" />
 
       <main className="flex flex-col px-[33px] gap-8 mt-6">
         {/* Título e Descrição */}
         <div className="flex flex-col gap-2">
-          <h1 className="text-texto">Comunidade</h1>
+          <h1 className="text-texto text-2xl font-bold">Painel</h1>
           <p className="text-cinza-claro-texto">
-            Gerencie suas publicações e compartilhe conhecimento com os pacientes.
+            Gerencie suas publicações e compartilhe conhecimento com a comunidade.
           </p>
         </div>
 
         {/* AÇÕES */}
         <div className="flex gap-4">
+          {/* AJUSTE AQUI: O href deve ser o caminho da pasta da sua PublishPage */}
           <Link
             href="/professional/publish"
             className="flex-1 bg-white rounded-[32px] p-6 flex flex-col items-center text-center gap-3 shadow-sm active:scale-95 transition-transform"

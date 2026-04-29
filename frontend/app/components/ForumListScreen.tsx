@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowLeft, Search, MessageSquare, ThumbsUp, CheckCircle2 } from 'lucide-react';
+import { IoMdArrowBack } from 'react-icons/io';
+import { MdSearch, MdChatBubbleOutline, MdThumbUp, MdCheckCircle } from 'react-icons/md';
 
 export default function ForumListScreen() {
   return (
@@ -7,7 +8,7 @@ export default function ForumListScreen() {
       {/* Header */}
       <header className="flex items-center p-6 pb-2">
         <button className="text-gray-600 hover:bg-gray-100 p-2 -ml-2 rounded-full transition-colors">
-          <ArrowLeft size={20} />
+          <IoMdArrowBack size={20} />
         </button>
         <h1 className="text-lg font-semibold ml-2 text-gray-900">Fórum</h1>
       </header>
@@ -15,7 +16,7 @@ export default function ForumListScreen() {
       {/* Search */}
       <div className="px-6 py-4">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <MdSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input 
             type="text" 
             placeholder="Buscar tópicos no fórum..." 
@@ -31,7 +32,7 @@ export default function ForumListScreen() {
         <div className="border border-gray-100 rounded-2xl p-5 shadow-sm">
           <div className="flex justify-between items-center mb-3">
             <span className="flex items-center text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md tracking-wide">
-              <CheckCircle2 size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
+              <MdCheckCircle size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
             </span>
             <span className="text-xs text-gray-400 font-medium">2h atrás</span>
           </div>
@@ -41,8 +42,8 @@ export default function ForumListScreen() {
           </p>
           <div className="flex justify-between items-center">
             <div className="flex gap-4 text-gray-400 text-xs font-medium">
-              <span className="flex items-center gap-1"><MessageSquare size={14} /> 42</span>
-              <span className="flex items-center gap-1"><ThumbsUp size={14} /> 128</span>
+              <span className="flex items-center gap-1"><MdChatBubbleOutline size={14} /> 42</span>
+              <span className="flex items-center gap-1"><MdThumbUp size={14} /> 128</span>
             </div>
             <div className="flex -space-x-2">
               <img src="https://i.pravatar.cc/100?img=1" alt="user" className="w-6 h-6 rounded-full border-2 border-white" />
@@ -56,7 +57,7 @@ export default function ForumListScreen() {
         <div className="border border-gray-100 rounded-2xl p-5 shadow-sm">
           <div className="flex justify-between items-center mb-3">
             <span className="flex items-center text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md tracking-wide">
-              <CheckCircle2 size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
+              <MdCheckCircle size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
             </span>
             <span className="text-xs text-gray-400 font-medium">5h atrás</span>
           </div>
@@ -66,8 +67,8 @@ export default function ForumListScreen() {
           </p>
           <div className="flex justify-between items-center">
             <div className="flex gap-4 text-gray-400 text-xs font-medium">
-              <span className="flex items-center gap-1"><MessageSquare size={14} /> 89</span>
-              <span className="flex items-center gap-1"><ThumbsUp size={14} /> 254</span>
+              <span className="flex items-center gap-1"><MdChatBubbleOutline size={14} /> 89</span>
+              <span className="flex items-center gap-1"><MdThumbUp size={14} /> 254</span>
             </div>
             <div className="flex -space-x-2">
               <img src="https://i.pravatar.cc/100?img=3" alt="user" className="w-6 h-6 rounded-full border-2 border-white" />
@@ -81,7 +82,7 @@ export default function ForumListScreen() {
         <div className="border border-gray-100 rounded-2xl p-5 shadow-sm">
           <div className="flex justify-between items-center mb-3">
             <span className="flex items-center text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md tracking-wide">
-              <CheckCircle2 size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
+              <MdCheckCircle size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
             </span>
             <span className="text-xs text-gray-400 font-medium">Ontem</span>
           </div>
@@ -91,8 +92,8 @@ export default function ForumListScreen() {
           </p>
           <div className="flex justify-between items-center">
             <div className="flex gap-4 text-gray-400 text-xs font-medium">
-              <span className="flex items-center gap-1"><MessageSquare size={14} /> 15</span>
-              <span className="flex items-center gap-1"><ThumbsUp size={14} /> 58</span>
+              <span className="flex items-center gap-1"><MdChatBubbleOutline size={14} /> 15</span>
+              <span className="flex items-center gap-1"><MdThumbUp size={14} /> 58</span>
             </div>
             <div className="flex -space-x-2">
               <img src="https://i.pravatar.cc/100?img=5" alt="user" className="w-6 h-6 rounded-full border-2 border-white" />

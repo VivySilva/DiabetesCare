@@ -21,8 +21,8 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
         className="flex flex-col items-start w-full rounded-[32px] overflow-hidden bg-white transition-transform active:scale-[0.98] cursor-pointer group"
         style={{ boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.05)" }}
       >
-        {/* Botão de Editar (Apenas para Profissional) */}
-        {isProfessional && (
+        {/* Botão de Editar (Apenas para Profissional se onEdit for fornecido) */}
+        {isProfessional && onEdit && (
           <button
             onClick={handleEditClick}
             className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-azul shadow-lg hover:bg-azul hover:text-white transition-all transform active:scale-90"

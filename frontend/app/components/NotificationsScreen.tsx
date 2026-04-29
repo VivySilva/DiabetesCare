@@ -1,5 +1,6 @@
 import React from 'react';
-import { ArrowLeft, Pill, Syringe, Droplet, Activity, Footprints } from 'lucide-react';
+import { IoMdArrowBack } from 'react-icons/io';
+import { MdMedication, MdVaccines, MdWaterDrop, MdMonitorHeart, MdDirectionsWalk } from 'react-icons/md';
 
 export default function NotificationsScreen() {
   return (
@@ -7,7 +8,7 @@ export default function NotificationsScreen() {
       {/* Header */}
       <header className="flex items-center p-6 bg-white sticky top-0 z-10">
         <button className="text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors">
-          <ArrowLeft size={20} />
+          <IoMdArrowBack size={20} />
         </button>
         <h1 className="text-lg font-semibold ml-4 text-gray-900">Notificações</h1>
       </header>
@@ -22,7 +23,7 @@ export default function NotificationsScreen() {
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4">
               <div className="flex items-start gap-4">
                 <div className="bg-blue-100 p-3 rounded-full text-blue-600">
-                  <Pill size={24} />
+                  <MdMedication size={24} />
                 </div>
                 <div>
                   <h3 className="font-bold text-blue-700">Hora da Metformina</h3>
@@ -42,7 +43,7 @@ export default function NotificationsScreen() {
             {/* Card Insulina */}
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex items-start gap-4">
               <div className="bg-indigo-50 p-3 rounded-full text-indigo-400">
-                <Syringe size={24} />
+                <MdVaccines size={24} />
               </div>
               <div>
                 <h3 className="font-bold text-gray-800">Lembrete de Insulina</h3>
@@ -54,7 +55,7 @@ export default function NotificationsScreen() {
             <div className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4">
               <div className="flex items-start gap-4">
                 <div className="bg-orange-50 p-3 rounded-full text-orange-400">
-                  <Droplet size={24} />
+                  <MdWaterDrop size={24} />
                 </div>
                 <div>
                   <h3 className="font-bold text-gray-800">Medição Glicêmica</h3>
@@ -81,7 +82,7 @@ export default function NotificationsScreen() {
               <div className="absolute right-0 top-0 opacity-40 mix-blend-overlay w-1/2 h-full bg-[url('https://images.unsplash.com/photo-1536922246289-88c42f957773?auto=format&fit=crop&q=80&w=400')] bg-cover bg-center"></div>
               <div className="relative z-10">
                 <div className="bg-white/20 p-2 rounded-full inline-block mb-3 backdrop-blur-sm">
-                  <Footprints size={20} />
+                   <MdDirectionsWalk size={20} />
                 </div>
                 <p className="font-medium text-lg leading-tight w-3/4">
                   "Parece que sua glicemia tende a subir às quartas. Que tal uma caminhada leve hoje?"
@@ -91,11 +92,11 @@ export default function NotificationsScreen() {
 
             {/* Card Hidratação */}
             <div className="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
-              <Droplet className="absolute -bottom-6 -right-6 text-gray-50 w-32 h-32" strokeWidth={1} />
+              <MdWaterDrop className="absolute -bottom-6 -right-6 text-gray-50 w-32 h-32" />
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="bg-blue-50 p-2 rounded-full text-blue-400">
-                    <Droplet size={20} />
+                    <MdWaterDrop size={20} />
                   </div>
                   <h3 className="font-bold text-gray-800 text-sm">Dica de Hidratação</h3>
                 </div>
