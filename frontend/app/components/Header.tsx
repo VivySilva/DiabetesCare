@@ -31,7 +31,7 @@ export default function Header({
           <h1 style={{ color: titleColor }}>{title}</h1>
           <button
             onClick={onIconClick}
-            className="flex items-center justify-center text-[var(--dc-azul-escuro)]"
+            className="flex items-center justify-center text-[var(--dc-cinza-fundo)]"
             aria-label="Notificações"
           >
             <IoMdNotificationsOutline size={26} />

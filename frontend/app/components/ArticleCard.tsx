@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Post } from "../community/data";
+import { Post } from "@/app/patient/community/data";
 
 interface ArticleCardProps {
   post: Post;
