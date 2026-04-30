@@ -18,7 +18,6 @@ export default function CadastroRemedios() {
       <Header
         title="Remédios"
         variant="page"
-        onIconClick={() => router.back()}
       />
 
       <section className="flex flex-col items-start px-[33px] pt-6 gap-6 w-full">

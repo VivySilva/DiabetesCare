@@ -39,7 +39,7 @@ export default function MyPostsPage() {
       <Header 
         title="Minhas Publicações" 
         variant="page" 
-        onIconClick={() => router.push('/professional')} 
+        onBackClick={() => router.push('/professional')} 
       />
 
       <main className="flex flex-col px-[33px] gap-6 mt-6">

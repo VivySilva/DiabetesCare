@@ -14,7 +14,7 @@ export default function PostDetail({ id }: { id: string }) {
   if (!post) {
     return (
       <main className="min-h-screen bg-white pb-[91px]">
-        <Header title="Visualização de postagem" variant="page" onIconClick={() => router.back()} />
+        <Header title="Visualização de postagem" variant="page" />
         <section className="flex flex-col items-center justify-center px-[33px] pt-24 gap-4 w-full text-center">
           <h1 className="text-texto">Postagem não encontrada</h1>
           <p className="text-cinza-claro-texto">O artigo que você procura não existe ou foi removido.</p>
@@ -34,7 +34,6 @@ export default function PostDetail({ id }: { id: string }) {
       <Header
         title="Visualização de postagem"
         variant="page"
-        onIconClick={() => router.back()}
       />
 
       <div className="w-full overflow-hidden" style={{ height: "219.38px", flexShrink: 0 }}>

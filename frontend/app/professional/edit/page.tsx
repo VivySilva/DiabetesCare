@@ -1,8 +1,8 @@
 "use client";
 import { useRouter } from "next/navigation";
 import Avatar from "@/app/components/profile/avatar";
+import Header from "@/app/components/Header";
 import {
-  MdArrowBack,
   MdPersonOutline,
   MdWorkOutline,
   MdOutlineContacts,
@@ -22,22 +22,14 @@ export default function EditProfessionalProfile() {
 
   return (
     <main className="min-h-screen bg-white pb-24">
+      <Header title="Editar Perfil" variant="page" />
       <div className="max-w-md mx-auto w-full min-h-screen flex flex-col px-6 py-6">
-        {/* Header com Botão de Voltar */}
-        <header className="flex items-center gap-4 mb-6">
-          <button
-            onClick={() => router.back()}
-            className="text-gray-900 p-1 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <MdArrowBack size={24} />
-          </button>
-          <div className="flex-1 flex flex-col items-center mr-8">
-            <Avatar mode="edit" size={80} />
-            <h1 className="font-bold text-gray-900 mt-3">
-              Dr. Ricardo Oliveira
-            </h1>
-          </div>
-        </header>
+        <div className="flex flex-col items-center mb-8">
+          <Avatar mode="edit" size={80} />
+          <h1 className="font-bold text-gray-900 mt-3">
+            Dr. Ricardo Oliveira
+          </h1>
+        </div>
 
         <form className="flex flex-col gap-8" onSubmit={handleSave}>
           {/* Seção: Informações Pessoais */}

@@ -1,20 +1,16 @@
 "use client";
 import Avatar from "@/app/components/profile/avatar";
-import { MdArrowBack, MdEdit } from "react-icons/md";
+import { MdEdit } from "react-icons/md";
 import { useRouter } from "next/navigation";
+import Header from "@/app/components/Header";
 
 export default function EditPatientProfile() {
   const router = useRouter();
 
   return (
     <main className="min-h-screen bg-white">
+      <Header title="Editar Perfil" variant="page" />
       <div className="max-w-md mx-auto w-full min-h-screen flex flex-col px-6 py-6 pb-8">
-        <header className="flex items-center gap-4 mb-8">
-          <button onClick={() => router.back()} className="text-gray-900">
-            <MdArrowBack size={24} />
-          </button>
-          <h1 className="text-xl font-bold text-gray-900">Editar Perfil</h1>
-        </header>
 
         <div className="flex flex-col items-center mb-8">
           <Avatar src="null" mode="edit" />

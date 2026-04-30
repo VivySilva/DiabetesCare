@@ -12,6 +12,7 @@ import {
   MdLink,
   MdOutlineCategory,
 } from "react-icons/md";
+import Header from "@/app/components/Header";
 
 export default function PublishPage() {
   const router = useRouter();
@@ -55,37 +56,29 @@ export default function PublishPage() {
   return (
     <div className="min-h-screen bg-[#F7F9FB] flex flex-col">
       {/* ── TOP BAR ── */}
-      <header className="flex items-center justify-between px-5 py-4 bg-[#F7F9FB] sticky top-0 z-50">
-        <button
-          onClick={() => router.push("/professional")}
-          className="w-9 h-9 flex items-center justify-center rounded-full bg-white shadow-sm text-[var(--dc-texto)] active:scale-95 transition-transform"
-          aria-label="Fechar"
-        >
-          <MdClose size={20} />
-        </button>
-
-        <h1 className="text-[var(--dc-texto)] font-bold text-base">
-          Criar Publicação
-        </h1>
-
-        {/* Categoria pill */}
-        <div className="relative">
-          <MdOutlineCategory
-            size={14}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--dc-azul)] pointer-events-none"
-          />
-          <select
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            className="appearance-none bg-[var(--dc-azul-claro)] text-[var(--dc-azul)] text-xs font-semibold pl-7 pr-3 py-1.5 rounded-full outline-none cursor-pointer"
-          >
-            <option value="Saúde">Saúde</option>
-            <option value="Nutrição">Nutrição</option>
-            <option value="Exercícios">Exercícios</option>
-            <option value="Dicas">Dicas</option>
-          </select>
-        </div>
-      </header>
+      <Header 
+        title="Criar Publicação" 
+        variant="page" 
+        onBackClick={() => router.push("/professional")}
+        rightElement={
+          <div className="relative">
+            <MdOutlineCategory
+              size={14}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[var(--dc-azul)] pointer-events-none"
+            />
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="appearance-none bg-[var(--dc-azul-claro)] text-[var(--dc-azul)] text-xs font-semibold pl-7 pr-3 py-1.5 rounded-full outline-none cursor-pointer"
+            >
+              <option value="Saúde">Saúde</option>
+              <option value="Nutrição">Nutrição</option>
+              <option value="Exercícios">Exercícios</option>
+              <option value="Dicas">Dicas</option>
+            </select>
+          </div>
+        }
+      />
 
       {/* ── SCROLLABLE CONTENT ── */}
       <main className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col gap-5">

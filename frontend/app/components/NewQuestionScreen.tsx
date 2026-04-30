@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { MdClose } from 'react-icons/md';
+import Header from './Header';
 
 interface NewQuestionProps {
   onClose: () => void;
@@ -13,18 +14,11 @@ export default function NewQuestionScreen({ onClose, onSubmit }: NewQuestionProp
 
   return (
     <div className="fixed inset-0 bg-white z-[100] flex flex-col font-sans">
-      {/* Header */}
-      <header className="flex items-center justify-between p-6">
-        <div className="flex items-center gap-4">
-          <button 
-            onClick={onClose}
-            className="text-gray-400 hover:bg-gray-100 p-2 rounded-full transition-colors"
-          >
-            <MdClose size={24} />
-          </button>
-          <h1 className="text-lg font-bold text-gray-900">Nova Pergunta</h1>
-        </div>
-      </header>
+      <Header 
+        title="Nova Pergunta" 
+        variant="page" 
+        onBackClick={onClose}
+      />
 
       {/* Input Area */}
       <main className="flex-1 px-8 pt-4">

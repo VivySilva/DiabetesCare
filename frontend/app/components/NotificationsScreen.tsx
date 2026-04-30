@@ -1,17 +1,21 @@
-import React from 'react';
+"use client";
+
 import { IoMdArrowBack } from 'react-icons/io';
 import { MdMedication, MdVaccines, MdWaterDrop, MdMonitorHeart, MdDirectionsWalk } from 'react-icons/md';
+import Header from './Header';
 
-export default function NotificationsScreen() {
+interface NotificationsProps {
+  onBack?: () => void;
+}
+
+export default function NotificationsScreen({ onBack }: NotificationsProps) {
   return (
     <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-10 font-sans">
-      {/* Header */}
-      <header className="flex items-center p-6 bg-white sticky top-0 z-10">
-        <button className="text-gray-600 hover:bg-gray-100 p-2 rounded-full transition-colors">
-          <IoMdArrowBack size={20} />
-        </button>
-        <h1 className="text-lg font-semibold ml-4 text-gray-900">Notificações</h1>
-      </header>
+      <Header 
+        title="Notificações" 
+        variant="page" 
+        onBackClick={onBack}
+      />
 
       <main className="px-6 py-4 space-y-8">
         {/* Seção Hoje */}

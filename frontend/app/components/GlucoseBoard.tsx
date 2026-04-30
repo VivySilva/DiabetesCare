@@ -18,7 +18,7 @@ export default function GlucoseBoard() {
 
   return (
     <div className="flex flex-col gap-8 w-full max-w-[342px] mx-auto">
-      
+
       {/* RELATÓRIO DE MÉDIAS */}
       <div className="flex flex-col gap-4">
         <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider">
@@ -67,9 +67,8 @@ export default function GlucoseBoard() {
           <button
             key={p}
             onClick={() => setPeriod(p as any)}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-full transition-all ${
-              period === p ? "bg-azul text-white shadow-md" : "text-gray-400 hover:text-gray-500"
-            }`}
+            className={`flex-1 py-2.5 text-xs font-bold rounded-full transition-all ${period === p ? "bg-azul text-white shadow-md" : "text-gray-400 hover:text-gray-500"
+              }`}
           >
             {p}
           </button>
@@ -82,7 +81,7 @@ export default function GlucoseBoard() {
           <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider">
             Gráfico de Evolução
           </p>
-          
+
           <div className="flex gap-4">
             <div className="flex items-center gap-1.5">
               <div className="w-2 h-2 rounded-full bg-azul" />
@@ -132,7 +131,7 @@ export default function GlucoseBoard() {
             <circle cx="250" cy="240" r="6" fill="white" stroke="var(--dc-azul)" strokeWidth="3" />
             <circle cx="250" cy="200" r="6" fill="white" stroke="var(--dc-verde)" strokeWidth="3" />
             <circle cx="250" cy="220" r="6" fill="white" stroke="var(--dc-roxo)" strokeWidth="3" />
-            
+
             {/* Peak points for Friday (SEX) */}
             <circle cx="450" cy="180" r="6" fill="white" stroke="var(--dc-azul)" strokeWidth="3" />
             <circle cx="450" cy="100" r="6" fill="white" stroke="var(--dc-verde)" strokeWidth="3" />
@@ -143,8 +142,8 @@ export default function GlucoseBoard() {
         {/* X Axis Labels */}
         <div className="flex justify-between px-2 mt-2">
           {chartData.map((d) => (
-            <span 
-              key={d.day} 
+            <span
+              key={d.day}
               className={`text-[9px] font-bold tracking-widest ${d.day === "QUA" ? "text-azul" : "text-gray-300"}`}
             >
               {d.day}

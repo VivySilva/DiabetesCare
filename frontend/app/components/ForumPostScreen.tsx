@@ -16,7 +16,7 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
 
   return (
     <div className="max-w-md mx-auto bg-white min-h-screen flex flex-col font-sans">
-      <Header title="Fórum" variant="page" onIconClick={() => router.back()} />
+      <Header title="Fórum" variant="page" />
 
       {/* Main Content */}
       <main className="flex-1 px-6 overflow-y-auto pb-24 bg-[#F7F9FB]">

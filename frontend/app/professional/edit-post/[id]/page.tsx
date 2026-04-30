@@ -54,7 +54,6 @@ export default function EditPostPage() {
       <Header 
         title="Editar Publicação" 
         variant="page" 
-        onIconClick={() => router.back()} 
       />
 
       <main className="flex flex-col px-6 pt-4 gap-6">

@@ -1,12 +1,17 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import Header from "../components/Header";
 import GlucoseSummary from "../components/GlucoseSummary";
 import GlucoseBoard from "../components/GlucoseBoard";
 import Footer from "../components/Footer";
 import ArticleCard from "../components/ArticleCard";
+import NotificationsScreen from "../components/NotificationsScreen";
 import { COMMUNITY_POSTS } from "./community/data";
 
 export default function Home() {
+  const [showNotifications, setShowNotifications] = useState(false);
   const latestPosts = COMMUNITY_POSTS.slice(0, 2);
 
   return (
@@ -15,7 +20,14 @@ export default function Home() {
         title="DiabetesCare"
         titleColor="var(--dc-azul-escuro)"
         variant="home"
+        onNotificationClick={() => setShowNotifications(true)}
       />
+
+      {showNotifications && (
+        <div className="fixed inset-0 z-[60]">
+          <NotificationsScreen onBack={() => setShowNotifications(false)} />
+        </div>
+      )}
 
       <section className="flex flex-col items-center px-[33px] pt-6 gap-6">
         <GlucoseSummary value={115} moment="Em jejum" status="Estável" />
