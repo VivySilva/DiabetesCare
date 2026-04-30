@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
 import { MdEdit } from "react-icons/md";
 import { Post } from "@/app/patient/community/data";
+import { usePathname } from "next/navigation";
 
 interface ArticleCardProps {
   post: Post;
@@ -9,6 +12,9 @@ interface ArticleCardProps {
 }
 
 export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCardProps) {
+  const pathname = usePathname();
+  const basePath = pathname.startsWith("/professional") ? "/professional" : "/patient";
+
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -16,7 +22,7 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
   };
 
   return (
-    <Link href={`/patient/community/${post.id}`} className="no-underline w-full relative">
+    <Link href={`${basePath}/community/${post.id}`} className="no-underline w-full relative">
       <article
         className="flex flex-col items-start w-full rounded-[32px] overflow-hidden bg-white transition-transform active:scale-[0.98] cursor-pointer group"
         style={{ boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.05)" }}

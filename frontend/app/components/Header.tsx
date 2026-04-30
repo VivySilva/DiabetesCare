@@ -1,5 +1,9 @@
+"use client";
+
 import React from "react";
 import { IoMdArrowBack, IoMdNotificationsOutline } from "react-icons/io";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface HeaderProps {
   title: string;
@@ -19,7 +23,12 @@ export default function Header({
   variant = "page",
   onIconClick,
 }: HeaderProps) {
+  const pathname = usePathname();
   const isHome = variant === "home";
+
+  // Determina a home baseada no caminho atual
+  const isProfessional = pathname.startsWith("/professional");
+  const homeHref = isProfessional ? "/professional" : "/patient";
 
   return (
     <header
@@ -28,7 +37,9 @@ export default function Header({
     >
       {isHome ? (
         <>
-          <h1 style={{ color: titleColor }}>{title}</h1>
+          <Link href={homeHref} className="no-underline">
+            <h1 style={{ color: titleColor }}>{title}</h1>
+          </Link>
           <button
             onClick={onIconClick}
             className="flex items-center justify-center text-[var(--dc-cinza-fundo)]"
@@ -46,7 +57,9 @@ export default function Header({
           >
             <IoMdArrowBack size={24} />
           </button>
-          <h1 style={{ color: titleColor }}>{title}</h1>
+          <Link href={homeHref} className="no-underline">
+            <h1 style={{ color: titleColor }}>{title}</h1>
+          </Link>
         </>
       )}
     </header>
