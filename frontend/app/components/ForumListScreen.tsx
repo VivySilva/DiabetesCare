@@ -1,18 +1,50 @@
+"use client";
+
 import React from 'react';
-import { IoMdArrowBack } from 'react-icons/io';
-import { MdSearch, MdChatBubbleOutline, MdThumbUp, MdCheckCircle } from 'react-icons/md';
+import { MdSearch, MdChatBubbleOutline, MdThumbUp, MdCheckCircle, MdAdd } from 'react-icons/md';
 
-export default function ForumListScreen() {
+interface ForumListProps {
+  onTopicClick: (id: string) => void;
+  onCreateClick?: () => void;
+  role: 'patient' | 'professional';
+}
+
+export default function ForumListScreen({ onTopicClick, onCreateClick, role }: ForumListProps) {
+  const TOPICS = [
+    {
+      id: "1",
+      title: "Manejo de Glicemia: Como lidar com picos matinais?",
+      preview: "Tenho notado que minha glicemia sobe muito logo após acordar, mesmo sem comer nada. Alguém j...",
+      time: "2h atrás",
+      replies: 42,
+      likes: 128,
+      moderated: true,
+      users: ["1", "2"]
+    },
+    {
+      id: "2",
+      title: "Receitas Low Carb para o Final de Semana",
+      preview: "Compartilhem aqui suas melhores dicas de sobremesas que não alteram a curva glicêmica...",
+      time: "5h atrás",
+      replies: 89,
+      likes: 254,
+      moderated: true,
+      users: ["3", "4"]
+    },
+    {
+      id: "3",
+      title: "Exercícios e Diabetes: O que priorizar?",
+      preview: "Dúvida frequente: é melhor fazer cardio antes ou depois do treino de força para evitar hipoglicemia?",
+      time: "Ontem",
+      replies: 15,
+      likes: 58,
+      moderated: false,
+      users: ["5"]
+    }
+  ];
+
   return (
-    <div className="max-w-md mx-auto bg-white min-h-screen font-sans">
-      {/* Header */}
-      <header className="flex items-center p-6 pb-2">
-        <button className="text-gray-600 hover:bg-gray-100 p-2 -ml-2 rounded-full transition-colors">
-          <IoMdArrowBack size={20} />
-        </button>
-        <h1 className="text-lg font-semibold ml-2 text-gray-900">Fórum</h1>
-      </header>
-
+    <div className="w-full flex flex-col font-sans">
       {/* Search */}
       <div className="px-6 py-4">
         <div className="relative">
@@ -20,89 +52,57 @@ export default function ForumListScreen() {
           <input 
             type="text" 
             placeholder="Buscar tópicos no fórum..." 
-            className="w-full bg-gray-50 border border-gray-100 rounded-full py-3 pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-100 transition-all placeholder-gray-400"
+            className="w-full bg-white border border-gray-100 rounded-full py-3.5 pl-11 pr-4 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition-all placeholder-gray-400 shadow-sm"
           />
         </div>
       </div>
 
       {/* List */}
-      <main className="px-6 space-y-4 pb-6">
-        
-        {/* Post 1 */}
-        <div className="border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <span className="flex items-center text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md tracking-wide">
-              <MdCheckCircle size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
-            </span>
-            <span className="text-xs text-gray-400 font-medium">2h atrás</span>
-          </div>
-          <h2 className="font-bold text-gray-900 text-lg leading-tight mb-2">Manejo de Glicemia: Como lidar com picos matinais?</h2>
-          <p className="text-sm text-gray-500 line-clamp-2 mb-4">
-            Tenho notado que minha glicemia sobe muito logo após acordar, mesmo sem comer nada. Alguém j...
-          </p>
-          <div className="flex justify-between items-center">
-            <div className="flex gap-4 text-gray-400 text-xs font-medium">
-              <span className="flex items-center gap-1"><MdChatBubbleOutline size={14} /> 42</span>
-              <span className="flex items-center gap-1"><MdThumbUp size={14} /> 128</span>
+      <main className="px-6 flex-1 space-y-4">
+        {TOPICS.map((topic) => (
+          <div 
+            key={topic.id}
+            onClick={() => onTopicClick(topic.id)}
+            className="bg-white border border-gray-50 rounded-[32px] p-6 shadow-sm active:scale-[0.98] transition-all cursor-pointer hover:border-blue-100"
+          >
+            <div className="flex justify-between items-center mb-4">
+              {topic.moderated ? (
+                <span className="flex items-center text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg tracking-wider uppercase">
+                  <MdCheckCircle size={12} className="mr-1" /> Moderado
+                </span>
+              ) : (
+                <div />
+              )}
+              <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{topic.time}</span>
             </div>
-            <div className="flex -space-x-2">
-              <img src="https://i.pravatar.cc/100?img=1" alt="user" className="w-6 h-6 rounded-full border-2 border-white" />
-              <img src="https://i.pravatar.cc/100?img=2" alt="user" className="w-6 h-6 rounded-full border-2 border-white" />
-              <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 text-[10px] flex items-center justify-center text-gray-500 font-medium">+15</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Post 2 */}
-        <div className="border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <span className="flex items-center text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md tracking-wide">
-              <MdCheckCircle size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
-            </span>
-            <span className="text-xs text-gray-400 font-medium">5h atrás</span>
-          </div>
-          <h2 className="font-bold text-gray-900 text-lg leading-tight mb-2">Receitas Low Carb para o Final de Semana</h2>
-          <p className="text-sm text-gray-500 line-clamp-2 mb-4">
-            Compartilhem aqui suas melhores dicas de sobremesas que não alteram a curva glicêmica...
-          </p>
-          <div className="flex justify-between items-center">
-            <div className="flex gap-4 text-gray-400 text-xs font-medium">
-              <span className="flex items-center gap-1"><MdChatBubbleOutline size={14} /> 89</span>
-              <span className="flex items-center gap-1"><MdThumbUp size={14} /> 254</span>
-            </div>
-            <div className="flex -space-x-2">
-              <img src="https://i.pravatar.cc/100?img=3" alt="user" className="w-6 h-6 rounded-full border-2 border-white" />
-              <img src="https://i.pravatar.cc/100?img=4" alt="user" className="w-6 h-6 rounded-full border-2 border-white" />
-              <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 text-[10px] flex items-center justify-center text-gray-500 font-medium">+86</div>
+            <h2 className="font-bold text-gray-900 text-lg leading-tight mb-2">{topic.title}</h2>
+            <p className="text-sm text-gray-500 line-clamp-2 mb-6 leading-relaxed">
+              {topic.preview}
+            </p>
+            <div className="flex justify-between items-center pt-2 border-t border-gray-50">
+              <div className="flex gap-4 text-gray-400 text-[11px] font-bold">
+                <span className="flex items-center gap-1.5"><MdChatBubbleOutline size={16} /> {topic.replies}</span>
+                <span className="flex items-center gap-1.5"><MdThumbUp size={16} /> {topic.likes}</span>
+              </div>
+              <div className="flex -space-x-2">
+                {topic.users.map(u => (
+                   <img key={u} src={`https://i.pravatar.cc/100?img=${u}`} alt="user" className="w-7 h-7 rounded-full border-2 border-white shadow-sm" />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Post 3 */}
-        <div className="border border-gray-100 rounded-2xl p-5 shadow-sm">
-          <div className="flex justify-between items-center mb-3">
-            <span className="flex items-center text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-1 rounded-md tracking-wide">
-              <MdCheckCircle size={12} className="mr-1" /> MODERADO POR ESPECIALISTA
-            </span>
-            <span className="text-xs text-gray-400 font-medium">Ontem</span>
-          </div>
-          <h2 className="font-bold text-gray-900 text-lg leading-tight mb-2">Exercícios e Diabetes: O que priorizar?</h2>
-          <p className="text-sm text-gray-500 line-clamp-2 mb-4">
-            Dúvida frequente: é melhor fazer cardio antes ou depois do treino de força para evitar hipoglicemia?
-          </p>
-          <div className="flex justify-between items-center">
-            <div className="flex gap-4 text-gray-400 text-xs font-medium">
-              <span className="flex items-center gap-1"><MdChatBubbleOutline size={14} /> 15</span>
-              <span className="flex items-center gap-1"><MdThumbUp size={14} /> 58</span>
-            </div>
-            <div className="flex -space-x-2">
-              <img src="https://i.pravatar.cc/100?img=5" alt="user" className="w-6 h-6 rounded-full border-2 border-white" />
-              <div className="w-6 h-6 rounded-full border-2 border-white bg-gray-100 text-[10px] flex items-center justify-center text-gray-500 font-medium">+6</div>
-            </div>
-          </div>
-        </div>
-
+        ))}
       </main>
+
+      {/* FAB para Paciente */}
+      {role === 'patient' && (
+        <button 
+          onClick={onCreateClick}
+          className="fixed bottom-28 right-6 w-14 h-14 bg-azul text-white rounded-2xl shadow-lg shadow-blue-200 flex items-center justify-center active:scale-90 transition-all z-40"
+        >
+          <MdAdd size={32} />
+        </button>
+      )}
     </div>
   );
 }
