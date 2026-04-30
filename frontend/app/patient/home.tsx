@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Header from "../components/Header";
 import GlucoseSummary from "../components/GlucoseSummary";
-import GlucoseReport from "../components/GlucoseReport";
+import GlucoseBoard from "../components/GlucoseBoard";
 import Footer from "../components/Footer";
 import ArticleCard from "../components/ArticleCard";
 import { COMMUNITY_POSTS } from "./community/data";
@@ -20,7 +20,7 @@ export default function Home() {
       <section className="flex flex-col items-center px-[33px] pt-6 gap-6">
         <GlucoseSummary value={115} moment="Em jejum" status="Estável" />
 
-        <GlucoseReport />
+        <GlucoseBoard />
 
         {/* Seção - Últimas publicações */}
         <div className="flex flex-col w-full" style={{ gap: "16px" }}>

@@ -23,6 +23,7 @@
   --dc-vermelho-fundo: #FEF2F2;
   --dc-verde:          #059669;
   --dc-verde-fundo:    #ECFDF5;
+  --dc-roxo:           #8B5CF6;
 }
 
 @theme inline {
@@ -49,6 +50,7 @@
   --color-vermelho-fundo: var(--dc-vermelho-fundo);
   --color-verde:          var(--dc-verde);
   --color-verde-fundo:    var(--dc-verde-fundo);
+  --color-roxo:           var(--dc-roxo);
 }
 
 
