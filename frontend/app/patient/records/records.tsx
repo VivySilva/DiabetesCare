@@ -15,6 +15,7 @@ export default function Registros() {
       <Header
         title="Registros"
         variant="page"
+        showNotification={true}
       />
 
       <section className="flex flex-col items-start px-[33px] pt-6 gap-10 w-full">

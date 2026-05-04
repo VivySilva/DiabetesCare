@@ -1,4 +1,4 @@
-import CadastroRemedios from "./medications";
+import CadastroRemedios from "./medication_record";
 
 export default function RemediosPage() {
   return <CadastroRemedios />;

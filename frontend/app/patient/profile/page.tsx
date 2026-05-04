@@ -11,13 +11,36 @@ import {
   MdLogout,
 } from "react-icons/md";
 import { useRouter } from "next/navigation";
+import { getUserProfile } from "../../../services/api";
+import { useEffect } from "react";
 
 export default function PatientProfile() {
   const router = useRouter();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
-
-  // 1. Criamos um estado para controlar se o sistema está gerando o PDF
+  const [user, setUser] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        const res = await getUserProfile(token);
+        setUser(res.user);
+      } catch (error) {
+        console.error("Erro ao carregar perfil:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [router]);
 
   // 2. Esta é a função que "conversa" com o backend
   const handleExportPDF = async () => {
@@ -57,23 +80,37 @@ export default function PatientProfile() {
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-[100px]">
       <div className="max-w-md mx-auto w-full bg-[#F8F9FA] min-h-screen relative">
-        <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="page" />
+        <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="page" showNotification={true} />
 
         <section className="flex flex-col items-center mt-6 px-6">
           <Link href="/patient/profile/edit">
-            <Avatar mode="view" />
+            <Avatar mode="view" src={user?.avatar_url} />
           </Link>
 
-          <h2 className="text-2xl font-bold text-gray-900 mt-4">
-            Ricardo Oliveira
-          </h2>
-          <span className="bg-blue-100 text-blue-600 text-[11px] font-bold px-3 py-1 rounded-full mt-2 tracking-wide uppercase">
-            Paciente Tipo 2
-          </span>
+          {isLoading ? (
+            <div className="flex flex-col items-center mt-4 gap-2">
+              <div className="h-8 w-48 bg-gray-200 animate-pulse rounded-lg"></div>
+              <div className="h-6 w-32 bg-gray-200 animate-pulse rounded-full"></div>
+            </div>
+          ) : (
+            <>
+              <h2 className="text-2xl font-bold text-gray-900 mt-4 text-center">
+                {user?.name || "Usuário"}
+              </h2>
+              <span className="bg-blue-100 text-blue-600 text-[11px] font-bold px-3 py-1 rounded-full mt-2 tracking-wide uppercase">
+                {user?.role === "PROFESSIONAL" ? "Especialista" : user?.diabetes_type || "Paciente"}
+              </span>
+            </>
+          )}
 
           <div className="flex w-full gap-4 mt-8">
-            <InfoCard label="Idade" value="42 anos" />
-            <InfoCard label="Gênero" value="Masculino" />
+            <InfoCard label="Idade" value={user?.age ? `${user.age} anos` : "Não informado"} />
+            <InfoCard label="Gênero" value={user?.gender || "Não informado"} />
+          </div>
+
+          <div className="w-full mt-4 flex flex-col gap-4">
+            <InfoCard label="E-mail" value={user?.email || "Não informado"} />
+            <InfoCard label="Telefone" value={user?.phone || "Não informado"} />
           </div>
 
           <div className="w-full bg-gray-100 rounded-[24px] p-2 mt-8 flex flex-col gap-1">
@@ -89,7 +126,6 @@ export default function PatientProfile() {
             >
               <div className="flex items-center gap-3 text-blue-700 font-semibold">
                 {isExporting ? (
-                  // Círculo girando enquanto carrega
                   <div className="w-5 h-5 border-2 border-blue-700 border-t-transparent rounded-full animate-spin"></div>
                 ) : (
                   <MdOutlinePictureAsPdf size={22} />

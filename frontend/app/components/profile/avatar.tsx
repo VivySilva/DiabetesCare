@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { MdEdit, MdPhotoCamera, MdPerson } from "react-icons/md";
 
@@ -19,6 +19,11 @@ export default function Avatar({
   const [preview, setPreview] = useState<string | null>(src || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Garantir que o preview atualize sempre que o src vindo do banco mudar
+  useEffect(() => {
+    setPreview(src || null);
+  }, [src]);
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -35,10 +40,6 @@ export default function Avatar({
       fileInputRef.current?.click();
     }
   };
-
-  // 👇 AQUI ESTÁ A CORREÇÃO:
-  // Só consideramos a imagem válida se o preview existir e não for a palavra "null"
-  const hasValidImage = preview && preview !== "null";
 
   return (
     <div className="relative flex justify-center">
@@ -59,21 +60,22 @@ export default function Avatar({
         style={{ width: size, height: size }}
         onClick={triggerFileInput}
       >
-        {/* 👇 SE TIVER IMAGEM VÁLIDA, MOSTRA A FOTO. SENÃO, MOSTRA O ÍCONE */}
-        {hasValidImage ? (
-          <Image
+        {preview ? (
+          <img
             src={preview}
             alt="Foto de perfil"
-            width={size}
-            height={size}
             className="object-cover w-full h-full"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = ""; // Clear on error to show icon
+              setPreview(null);
+            }}
           />
         ) : (
           <MdPerson size={size * 0.6} className="text-gray-400" />
         )}
       </div>
 
-      {mode === "edit" ? (
+      {mode === "edit" && (
         <button
           type="button"
           onClick={triggerFileInput}
@@ -81,10 +83,6 @@ export default function Avatar({
         >
           <MdPhotoCamera size={18} />
         </button>
-      ) : (
-        <div className="absolute bottom-0 right-1/2 translate-x-[40px] bg-blue-600 w-9 h-9 rounded-full flex items-center justify-center border-2 border-white text-white shadow-md">
-          <MdEdit size={18} />
-        </div>
       )}
     </div>
   );

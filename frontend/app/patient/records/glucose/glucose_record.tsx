@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { TbHandMove, TbVaccine, TbBone, TbDroplet, TbBattery1, TbEyeOff, TbToolsKitchen2, TbWaveSine } from "react-icons/tb";
-import { MdOutlineLocationOn, MdOutlineLightbulb, MdPersonOutline, MdAccessibility, MdPerson } from "react-icons/md";
+import { MdOutlineLocationOn, MdOutlineLightbulb, MdPersonOutline, MdAccessibility, MdPerson, MdCheckCircleOutline } from "react-icons/md";
 import { FaDizzy } from "react-icons/fa";
 import { LuRuler } from "react-icons/lu";
 import { FiMinus, FiPlus } from "react-icons/fi";
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
 import SaveButton from "../../../components/SaveButton";
+import { registerGlucose } from "../../../../services/api";
+import SuccessModal from "../../../components/modals/success-modal";
 
 export default function CadastroGlicemia() {
   const router = useRouter();
@@ -23,14 +25,32 @@ export default function CadastroGlicemia() {
   const [injectionSite, setInjectionSite] = useState("Abdômen");
 
   // Estados de Sintomas
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [symptomIntensity, setSymptomIntensity] = useState(5);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(["Sem Sintomas"]);
+  const [symptomIntensity, setSymptomIntensity] = useState(0);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const toggleSymptom = (symptom: string) => {
-    if (selectedSymptoms.includes(symptom)) {
-      setSelectedSymptoms(selectedSymptoms.filter(s => s !== symptom));
+    if (symptom === "Sem Sintomas") {
+      setSelectedSymptoms(["Sem Sintomas"]);
+      setSymptomIntensity(0);
+      return;
+    }
+
+    let newSymptoms = selectedSymptoms.filter(s => s !== "Sem Sintomas");
+    
+    if (newSymptoms.includes(symptom)) {
+      newSymptoms = newSymptoms.filter(s => s !== symptom);
     } else {
-      setSelectedSymptoms([...selectedSymptoms, symptom]);
+      newSymptoms = [...newSymptoms, symptom];
+    }
+    
+    setSelectedSymptoms(newSymptoms);
+    if (newSymptoms.length === 0) {
+      setSelectedSymptoms(["Sem Sintomas"]);
+      setSymptomIntensity(0);
     }
   };
 
@@ -44,11 +64,44 @@ export default function CadastroGlicemia() {
     "Antes de dormir",
   ];
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Você precisa estar logado para salvar registros.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await registerGlucose({
+        glucose_value: glucoseValue,
+        period: selectedPeriod,
+        took_insulin: tookInsulin,
+        insulin_type: tookInsulin ? insulinType : undefined,
+        insulin_amount: tookInsulin ? insulinAmount : undefined,
+        injection_site: tookInsulin ? injectionSite : undefined,
+        symptoms: selectedSymptoms,
+        symptom_intensity: symptomIntensity
+      }, token);
+
+      setShowSuccess(true);
+    } catch (err: any) {
+      setError(err.message || "Erro ao salvar glicemia");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-white pb-[91px]">
       <Header
         title="Glicemia"
         variant="page"
+        showNotification={true}
       />
 
       <section className="flex flex-col items-start px-[33px] pt-6 gap-6 w-full">
@@ -59,12 +112,11 @@ export default function CadastroGlicemia() {
           </p>
         </div>
 
+        {error && <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-xl w-full">{error}</div>}
+
         <form
           className="flex flex-col gap-8 w-full"
-          onSubmit={(e) => {
-            e.preventDefault();
-            console.log("Glicose salva:", glucoseValue);
-          }}
+          onSubmit={handleSubmit}
         >
           {/* Título da seção */}
           <div className="flex flex-col gap-6 w-full">
@@ -332,6 +384,7 @@ export default function CadastroGlicemia() {
 
             <div className="grid grid-cols-3 gap-y-6 gap-x-2 w-full mt-2">
               {[
+                { name: "Sem Sintomas", icon: MdCheckCircleOutline },
                 { name: "Tontura", icon: FaDizzy },
                 { name: "Suor Frio", icon: TbDroplet },
                 { name: "Cansaço", icon: TbBattery1 },
@@ -361,35 +414,46 @@ export default function CadastroGlicemia() {
               })}
             </div>
 
-            {/* Intensidade */}
-            <div className="flex flex-col gap-4 w-full pt-6">
-              <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
-                Intensidade do Sintoma
-              </span>
-              
-              <div className="flex flex-col w-full p-6 bg-white rounded-[32px] border border-[#F2F4F6]" style={{ boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.02)" }}>
-                <input
-                  type="range"
-                  min="0"
-                  max="10"
-                  value={symptomIntensity}
-                  onChange={(e) => setSymptomIntensity(Number(e.target.value))}
-                  className="w-full h-2 rounded-lg appearance-none cursor-pointer touch-none"
-                  style={{
-                    background: `linear-gradient(to right, var(--dc-azul) ${(symptomIntensity / 10) * 100}%, #D1D5DB ${(symptomIntensity / 10) * 100}%)`
-                  }}
-                />
-                <div className="flex justify-between items-start w-full mt-4">
-                  <span className="text-[10px] uppercase text-cinza-claro-texto font-bold tracking-widest mt-1">LEVE</span>
-                  <span className="text-[24px] font-bold text-azul leading-none" style={{ fontFamily: "var(--font-inter)" }}>{symptomIntensity}</span>
-                  <span className="text-[10px] uppercase text-cinza-claro-texto font-bold tracking-widest mt-1">GRAVE</span>
+            {/* Intensidade - Só mostra se não for "Sem Sintomas" */}
+            {!selectedSymptoms.includes("Sem Sintomas") && (
+              <div className="flex flex-col gap-4 w-full pt-6">
+                <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
+                  Intensidade do Sintoma
+                </span>
+                
+                <div className="flex flex-col w-full p-6 bg-white rounded-[32px] border border-[#F2F4F6]" style={{ boxShadow: "0px 4px 24px rgba(0, 0, 0, 0.02)" }}>
+                  <input
+                    type="range"
+                    min="0"
+                    max="10"
+                    value={symptomIntensity}
+                    onChange={(e) => setSymptomIntensity(Number(e.target.value))}
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer touch-none"
+                    style={{
+                      background: `linear-gradient(to right, var(--dc-azul) ${(symptomIntensity / 10) * 100}%, #D1D5DB ${(symptomIntensity / 10) * 100}%)`
+                    }}
+                  />
+                  <div className="flex justify-between items-start w-full mt-4">
+                    <span className="text-[10px] uppercase text-cinza-claro-texto font-bold tracking-widest mt-1">LEVE</span>
+                    <span className="text-[24px] font-bold text-azul leading-none" style={{ fontFamily: "var(--font-inter)" }}>{symptomIntensity}</span>
+                    <span className="text-[10px] uppercase text-cinza-claro-texto font-bold tracking-widest mt-1">GRAVE</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
 
           <SaveButton className="mt-4" />
         </form>
+
+        <SuccessModal 
+          isOpen={showSuccess} 
+          message="Seu registro de glicemia foi salvo com sucesso e já está no seu histórico." 
+          onClose={() => {
+            setShowSuccess(false);
+            router.push("/patient/records");
+          }} 
+        />
       </section>
 
       <Footer />

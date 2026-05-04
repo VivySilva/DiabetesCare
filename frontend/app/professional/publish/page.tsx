@@ -46,11 +46,30 @@ export default function PublishPage() {
   };
 
   /* ---------- submit ---------- */
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const content = contentRef.current?.innerHTML ?? "";
     if (!title.trim() || !content.trim()) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('Você precisa estar logado para publicar.');
+      return;
+    }
+
     setIsPublishing(true);
-    setTimeout(() => router.push("/professional"), 1500);
+    try {
+      const { createCommunityPost } = await import('@/services/api');
+      await createCommunityPost({
+        title,
+        cover_image_url: coverImage,
+        category,
+        content_html: content,
+      }, token);
+      router.push("/professional");
+    } catch (err: any) {
+      alert(err.message || 'Erro ao publicar. Tente novamente.');
+      setIsPublishing(false);
+    }
   };
 
   return (

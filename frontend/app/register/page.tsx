@@ -4,15 +4,49 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Input } from '../components/Input';
 import { useRouter } from 'next/navigation';
+import { registerUser } from '../../services/api';
+import SuccessModal from '../components/modals/success-modal';
 
 export default function RegisterPage() {
   const [isProfessional, setIsProfessional] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [licenseNumber, setLicenseNumber] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulação de cadastro para demonstração
-    router.push('/register');
+    if (password !== confirmPassword) {
+      setError('As senhas não coincidem.');
+      return;
+    }
+    
+    try {
+      setIsLoading(true);
+      setError('');
+      
+      await registerUser({
+        name,
+        email,
+        phone,
+        password,
+        confirmPassword,
+        role: isProfessional ? 'professional' : 'patient',
+        licenseNumber: isProfessional ? licenseNumber : undefined,
+      });
+      
+      setShowSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao realizar cadastro.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -53,9 +87,12 @@ export default function RegisterPage() {
         </div>
 
         <form className="space-y-4" onSubmit={handleSubmit}>
+          {error && <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-xl">{error}</div>}
           <Input 
             label="Nome completo" 
             placeholder="Como deseja ser chamado?"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -68,6 +105,8 @@ export default function RegisterPage() {
             label="E-mail" 
             type="email"
             placeholder="seu@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
@@ -77,9 +116,24 @@ export default function RegisterPage() {
           />
 
           <Input 
+            label="Telefone" 
+            type="tel"
+            placeholder="(00) 00000-0000"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            icon={
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.27-2.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+              </svg>
+            }
+          />
+
+          <Input 
             label="Senha" 
             type="password"
             placeholder="Mínimo 8 caracteres"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -98,6 +152,8 @@ export default function RegisterPage() {
             label="Confirmar Senha" 
             type="password"
             placeholder="Repita sua senha"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             icon={
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M2.5 2v6h6M21.5 22v-6h-6"></path>
@@ -110,6 +166,8 @@ export default function RegisterPage() {
             <Input 
               label="Registro no Conselho" 
               placeholder="CRM / CRN"
+              value={licenseNumber}
+              onChange={(e) => setLicenseNumber(e.target.value)}
               icon={
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -124,9 +182,10 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="w-full bg-azul hover:bg-azul-escuro text-white font-bold py-4 rounded-3xl shadow-lg shadow-azul-claro transition-all transform active:scale-[0.98] mt-4"
+            disabled={isLoading}
+            className={`w-full ${isLoading ? 'bg-gray-400' : 'bg-azul hover:bg-azul-escuro'} text-white font-bold py-4 rounded-3xl shadow-lg shadow-azul-claro transition-all transform active:scale-[0.98] mt-4`}
           >
-            Cadastrar
+            {isLoading ? 'Cadastrando...' : 'Cadastrar'}
           </button>
         </form>
 
@@ -134,6 +193,15 @@ export default function RegisterPage() {
           Já tem uma conta? <Link href="/login" className="text-azul font-bold hover:underline">Faça login</Link>
         </p>
       </div>
+
+      <SuccessModal 
+        isOpen={showSuccess} 
+        message="Sua conta foi criada com sucesso! Agora você pode fazer login." 
+        onClose={() => {
+          setShowSuccess(false);
+          router.push('/login');
+        }} 
+      />
     </div>
   );
 }

@@ -5,17 +5,29 @@ import Link from 'next/link';
 import { Input } from '../components/Input';
 import { useRouter } from 'next/navigation';
 import { MdEmail, MdArrowBack } from 'react-icons/md';
+import { requestPasswordRecovery } from '../../services/api';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [isSent, setIsSent] = useState(false);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
-    // Simulação de envio
-    setIsSent(true);
+    
+    try {
+      setIsLoading(true);
+      setError('');
+      await requestPasswordRecovery(email);
+      setIsSent(true);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao enviar e-mail de recuperação.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -47,6 +59,7 @@ export default function ForgotPasswordPage() {
       {!isSent ? (
         <div className="w-full max-w-md space-y-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {error && <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-xl">{error}</div>}
             <Input 
               label="E-mail" 
               type="email"
@@ -58,11 +71,11 @@ export default function ForgotPasswordPage() {
 
             <button
               type="submit"
-              disabled={!email}
+              disabled={!email || isLoading}
               className={`w-full py-4 rounded-3xl font-bold text-white text-base shadow-lg transition-all transform active:scale-[0.98]
-                ${!email ? "bg-gray-300 shadow-none" : "bg-azul hover:bg-azul-escuro shadow-azul-claro"}`}
+                ${(!email || isLoading) ? "bg-gray-300 shadow-none" : "bg-azul hover:bg-azul-escuro shadow-azul-claro"}`}
             >
-              Enviar Link de Recuperação
+              {isLoading ? 'Enviando...' : 'Enviar Link de Recuperação'}
             </button>
           </form>
 

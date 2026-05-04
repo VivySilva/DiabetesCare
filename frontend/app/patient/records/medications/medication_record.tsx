@@ -6,18 +6,60 @@ import { MdSearch, MdOutlineAccessTime, MdOutlineNotificationsActive } from "rea
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
 import SaveButton from "../../../components/SaveButton";
+import { registerMedication } from "../../../../services/api";
+import SuccessModal from "../../../components/modals/success-modal";
 
 export default function CadastroRemedios() {
   const router = useRouter();
   const [selectedType, setSelectedType] = useState("Medicamento Oral");
+  const [medicationName, setMedicationName] = useState("");
   const [time, setTime] = useState("08:00");
   const [remind, setRemind] = useState(true);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+
+    if (!medicationName.trim()) {
+      setError("Por favor, informe o nome do medicamento.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      setError("Você precisa estar logado para salvar registros.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await registerMedication({
+        category: selectedType,
+        medication_name: medicationName,
+        time: time,
+        notify: remind
+      }, token);
+
+      setShowSuccess(true);
+    } catch (err: any) {
+      setError(err.message || "Erro ao salvar medicamento");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <main className="min-h-screen bg-white pb-[91px]">
       <Header
         title="Remédios"
         variant="page"
+        showNotification={true}
       />
 
       <section className="flex flex-col items-start px-[33px] pt-6 gap-6 w-full">
@@ -28,13 +70,11 @@ export default function CadastroRemedios() {
           </p>
         </div>
 
+        {error && <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-xl w-full">{error}</div>}
+
         <form
           className="flex flex-col w-full"
-          onSubmit={(e) => {
-            e.preventDefault();
-            console.log("Dados salvos:", { selectedType, time, remind });
-            // Futuramente enviaremos os dados para a API aqui
-          }}
+          onSubmit={handleSubmit}
         >
           <div
           className="flex flex-col items-start p-6 gap-8 w-full rounded-[32px]"
@@ -92,6 +132,8 @@ export default function CadastroRemedios() {
               <MdSearch size={24} color="var(--dc-cinza-fundo)" />
               <input
                 type="text"
+                value={medicationName}
+                onChange={(e) => setMedicationName(e.target.value)}
                 placeholder="Ex: Metformina, Gliclazida..."
                 className="w-full bg-transparent outline-none p-0 text-sm text-texto placeholder:text-cinza-claro-fundo"
               />
@@ -176,6 +218,15 @@ export default function CadastroRemedios() {
           
           <SaveButton className="mt-[36px]" />
         </form>
+
+        <SuccessModal 
+          isOpen={showSuccess} 
+          message="Medicamento salvo com sucesso! Já configuramos seu lembrete." 
+          onClose={() => {
+            setShowSuccess(false);
+            router.push("/patient/records");
+          }} 
+        />
       </section>
 
       <Footer />

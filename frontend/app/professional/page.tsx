@@ -1,26 +1,45 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import ArticleCard from "@/app/components/ArticleCard";
 import { MdAdd, MdTrendingUp } from "react-icons/md";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { getCommunityPosts, deleteCommunityPost } from "@/services/api";
 
 export default function ProfissionalPage() {
   const router = useRouter();
-  const POSTS = [
-    {
-      id: "1",
-      title: "Como controlar a glicemia no dia a dia",
-      content: ["Manter uma rotina alimentar equilibrada é essencial..."],
-      image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352",
-      author: "Você",
-      date: "HOJE",
-      category: "Saúde",
-    },
-  ];
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) { setIsLoading(false); return; }
+    const user = JSON.parse(userStr);
+
+    getCommunityPosts()
+      .then((data) => {
+        // Filter only posts by this professional
+        const myPosts = (data.posts || []).filter((p: any) => p.author_id === user.id);
+        setPosts(myPosts);
+      })
+      .catch(() => {})
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const handleDelete = async (id: string) => {
+    const token = localStorage.getItem('token');
+    if (!token || !confirm('Tem certeza que deseja remover esta publicação?')) return;
+    try {
+      await deleteCommunityPost(id, token);
+      setPosts(prev => prev.filter(p => p.id !== id));
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px]">
@@ -87,10 +106,25 @@ export default function ProfissionalPage() {
           </div>
 
           <div className="flex flex-col gap-4">
-            {POSTS.map((post) => (
+            {isLoading && (
+              <div className="py-8 text-center text-gray-400 text-sm">Carregando publicações...</div>
+            )}
+            {!isLoading && posts.length === 0 && (
+              <div className="py-8 text-center text-gray-400 text-sm">
+                Você ainda não publicou nenhum artigo.
+              </div>
+            )}
+            {posts.slice(0, 3).map((post) => (
               <ArticleCard
                 key={post.id}
-                post={post}
+                post={{
+                  id: post.id,
+                  title: post.title,
+                  author: 'Você',
+                  date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' }),
+                  image: post.cover_image_url || '',
+                  content: [post.content_html],
+                }}
                 isProfessional={true}
                 onEdit={(id) => router.push(`/professional/edit-post/${id}`)}
               />

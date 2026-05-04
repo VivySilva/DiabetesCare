@@ -4,41 +4,15 @@ import crypto from "crypto";
 import supabase from "../config/supabase";
 import transporter from "../config/email";
 
-/**
- * @openapi
- * /esqueceu_a_senha/solicitar:
- *   post:
- *     tags:
- *       - Recuperação de Senha
- *     summary: Solicitar recuperação de senha
- *     description: Envia um email com link para redefinir a senha.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - email
- *             properties:
- *               email:
- *                 type: string
- *                 format: email
- *     responses:
- *       200:
- *         description: Email de recuperação enviado
- *       400:
- *         description: Email é obrigatório
- */
 
 /**
  * @openapi
- * /esqueceu_a_senha/redefinir:
+ * /forgot_password/reset:
  *   post:
  *     tags:
- *       - Recuperação de Senha
- *     summary: Redefinir senha
- *     description: Redefine a senha do usuário usando o token enviado por email.
+ *       - Password recovery
+ *     summary: Reset password using token
+ *     description: Resets the user’s password using the token sent by email
  *     requestBody:
  *       required: true
  *       content:
@@ -47,17 +21,17 @@ import transporter from "../config/email";
  *             type: object
  *             required:
  *               - token
- *               - novaSenha
+ *               - new_password
  *             properties:
  *               token:
  *                 type: string
- *               novaSenha:
+ *               new_password:
  *                 type: string
  *     responses:
  *       200:
- *         description: Senha redefinida com sucesso
+ *         description: Password reset successfully
  *       400:
- *         description: Token inválido ou expirado
+ *         description: Bad request if token or new password is missing, or if token is invalid/used/expired
  */
 
 /**
@@ -72,7 +46,7 @@ class PasswordRecoveryController {
      * Generates a secure token, saves it to the database with a 1-hour expiration,
      * and sends an email containing the recovery link.
      * 
-     * @route POST /esqueceu_a_senha/solicitar
+     * @route POST /forgot_password/request
      * @param {Request} req - The Express request object.
      * @param {string} req.body.email - The email of the user requesting password recovery.
      * @param {Response} res - The Express response object.
@@ -89,13 +63,13 @@ class PasswordRecoveryController {
                 return res.status(400).json({ erro: "O email é obrigatório." });
             }
 
-            const { data: usuario, error: errorBusca } = await supabase
-                .from("usuario")
-                .select("id, nome")
+            const { data: user, error: errorBusca } = await supabase
+                .from("users")
+                .select("id, name")
                 .eq("email", email)
                 .maybeSingle();
 
-            if (errorBusca || !usuario) {
+            if (errorBusca || !user) {
                 return res.status(200).json({
                     mensagem: "Se o e-mail existir, um link de recuperação será enviado."
                 });
@@ -103,37 +77,37 @@ class PasswordRecoveryController {
 
             const token = crypto.randomBytes(32).toString("hex");
 
-            const expiraEm = new Date();
-            expiraEm.setHours(expiraEm.getHours() + 1);
+            const expiresAt = new Date();
+            expiresAt.setHours(expiresAt.getHours() + 1);
 
-            const { error: errorInsert } = await supabase
-                .from("recuperacao_senha")
+            const { error: insertError } = await supabase
+                .from("password_recoveries")
                 .insert([
                     {
-                        usuario_id: usuario.id,
+                        user_id: user.id,
                         token: token,
-                        expira_em: expiraEm.toISOString(),
-                        usado: false
+                        expires_at: expiresAt.toISOString(),
+                        used: false
                     }
                 ]);
 
-            if (errorInsert) {
-                console.error("Erro ao inserir token:", errorInsert);
+            if (insertError) {
+                console.error("Error inserting recovery token:", insertError);
                 return res.status(500).json({ erro: "Erro ao gerar recuperação de senha." });
             }
             try {
                 const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-                const resetLink = `${frontendUrl}/redefinir-senha?token=${token}`;
+                const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
                 await transporter.sendMail({
                     from: `"DiabetesCare" <${process.env.EMAIL_USER}>`,
                     to: email,
                     subject: "Recuperação de Senha - DiabetesCare",
-                    text: `Olá, ${usuario.nome}\n\nVocê solicitou a recuperação da sua senha.\n\nUse o link abaixo para redefinir sua senha:\n${resetLink}\n\nEsse link expira em 1 hora.`,
+                    text: `Olá, ${user.name}\n\nVocê solicitou a recuperação da sua senha.\n\nUse o link abaixo para redefinir sua senha:\n${resetLink}\n\nEsse link expira em 1 hora.`,
                     html: `
                     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
                         <h2 style="color: #2b6cb0; text-align: center;">DiabetesCare</h2>
-                        <p style="font-size: 16px; color: #333;">Olá, <strong>${usuario.nome}</strong>,</p>
+                        <p style="font-size: 16px; color: #333;">Olá, <strong>${user.name}</strong>,</p>
                         <p style="font-size: 16px; color: #333;">Recebemos uma solicitação para redefinir a senha da sua conta.</p>
                         <div style="text-align: center; margin: 30px 0;">
                             <a href="${resetLink}" style="background-color: #2b6cb0; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">Redefinir Minha Senha</a>
@@ -172,10 +146,10 @@ class PasswordRecoveryController {
      * @description Route to reset the user's password using the token received via email.
      * Verifies token validity (exists, unused, and unexpired) and securely updates the user's password.
      * 
-     * @route POST /esqueceu_a_senha/redefinir
+     * @route POST /forgot_password/reset
      * @param {Request} req - The Express request object.
      * @param {string} req.body.token - The previously generated password recovery token.
-     * @param {string} req.body.novaSenha - The new password chosen by the user.
+     * @param {string} req.body.new_password - The new password chosen by the user.
      * @param {Response} res - The Express response object.
      * @returns {Promise<Response>} 200 - Success message confirming the password has been reset.
      * @returns {Promise<Response>} 400 - Bad request error if the token or new password is missing, or if the token is invalid, used, or expired.
@@ -184,60 +158,60 @@ class PasswordRecoveryController {
 
     public async resetPassword(req: Request, res: Response): Promise<Response | any> {
         try {
-            const { token, novaSenha } = req.body;
+            const { token, new_password: newPassword } = req.body;
 
-            if (!token || !novaSenha) {
+            if (!token || !newPassword) {
                 return res.status(400).json({
                     erro: "Token e nova senha são obrigatórios."
                 });
             }
 
-            const { data: registroToken, error } = await supabase
-                .from("recuperacao_senha")
-                .select("id, usuario_id, expira_em, usado")
+            const { data: tokenRecord, error: tokenError } = await supabase
+                .from("password_recoveries")
+                .select("id, user_id, expires_at, used")
                 .eq("token", token)
                 .maybeSingle();
 
-            if (error || !registroToken) {
+            if (tokenError || !tokenRecord) {
                 return res.status(400).json({ erro: "Token inválido." });
             }
 
-            if (registroToken.usado) {
+            if (tokenRecord.used) {
                 return res.status(400).json({ erro: "Token já utilizado." });
             }
 
-            const agora = new Date();
-            const expiraEm = new Date(registroToken.expira_em);
+            const now = new Date();
+            const expiresAt = new Date(tokenRecord.expires_at);
 
-            if (agora > expiraEm) {
+            if (now > expiresAt) {
                 return res.status(400).json({ erro: "Token expirado." });
             }
 
             const salt = await bcrypt.genSalt(10);
-            const senhaHash = await bcrypt.hash(novaSenha, salt);
+            const passwordHash = await bcrypt.hash(newPassword, salt);
 
-            const { error: erroUpdate } = await supabase
-                .from("usuario")
-                .update({ senha_criptografada: senhaHash })
-                .eq("id", registroToken.usuario_id);
+            const { error: updateError } = await supabase
+                .from("users")
+                .update({ password_hash: passwordHash })
+                .eq("id", tokenRecord.user_id);
 
-            if (erroUpdate) {
+            if (updateError) {
                 return res.status(500).json({
                     erro: "Erro ao atualizar senha."
                 });
             }
 
             await supabase
-                .from("recuperacao_senha")
-                .update({ usado: true })
-                .eq("id", registroToken.id);
+                .from("password_recoveries")
+                .update({ used: true })
+                .eq("id", tokenRecord.id);
 
             return res.status(200).json({
                 mensagem: "Senha redefinida com sucesso!"
             });
 
         } catch (error) {
-            console.error("Erro ao redefinir senha:", error);
+            console.error("Error resetting password:", error);
             return res.status(500).json({ erro: "Erro interno." });
         }
     }
@@ -252,11 +226,11 @@ const passwordRecoveryController = new PasswordRecoveryController();
 // ==========================================
 // ROUTE: Request Password Recovery
 // ==========================================
-router.post("/solicitar", passwordRecoveryController.requestRecovery);
+router.post("/request", passwordRecoveryController.requestRecovery);
 
 // ==========================================
 // ROUTE: Reset Password
 // ==========================================
-router.post("/redefinir", passwordRecoveryController.resetPassword);
+router.post("/reset", passwordRecoveryController.resetPassword);
 
 export default router;

@@ -1,11 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { IoMdArrowBack, IoMdNotificationsOutline } from "react-icons/io";
 import { MdLogout } from "react-icons/md";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import LogoutModal from "./modals/logout-modal";
+import { getNotifications, getUserProfile } from "../../services/api";
+import NotificationsScreen from "./NotificationsScreen";
+import Avatar from "./profile/avatar";
 
 interface HeaderProps {
   title: string;
@@ -16,6 +19,7 @@ interface HeaderProps {
    * @default "page"
    */
   variant?: "home" | "page";
+  showNotification?: boolean;
   onNotificationClick?: () => void;
   onBackClick?: () => void;
   rightElement?: React.ReactNode;
@@ -25,6 +29,7 @@ export default function Header({
   title,
   titleColor = "var(--dc-texto)",
   variant = "page",
+  showNotification = false,
   onNotificationClick,
   onBackClick,
   rightElement,
@@ -32,6 +37,48 @@ export default function Header({
   const pathname = usePathname();
   const router = useRouter();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string>("patient");
+
+  useEffect(() => {
+    const fetchUnread = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const res = await getNotifications(token);
+        const notificationsList = res.notifications || [];
+        const unread = notificationsList.filter((n: any) => !n.read).length;
+        setUnreadCount(unread);
+      } catch (error) {
+        console.error("Erro ao buscar notificações para o badge:", error);
+      }
+    };
+
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await getUserProfile(token);
+        setUserAvatar(res.user.avatar_url || null);
+        setUserRole(res.user.role || "patient");
+      } catch (err) {
+        console.error("Erro ao carregar avatar no header:", err);
+      }
+    };
+
+    fetchUnread();
+    fetchProfile();
+    // Opcional: Polling a cada 30 segundos
+    const interval = setInterval(() => {
+      fetchUnread();
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const profileLink = userRole === "professional" ? "/professional/profile" : "/patient/profile";
 
   const isHome = variant === "home";
 
@@ -84,17 +131,30 @@ export default function Header({
             rightElement
           ) : (
             <>
-              {isHome && (
+              {(isHome || showNotification) && (
                 <button
-                  onClick={onNotificationClick}
-                  className="flex items-center justify-center text-[var(--dc-cinza-fundo)] hover:opacity-70 transition-opacity"
+                  onClick={onNotificationClick || (() => setIsNotificationsOpen(true))}
+                  className="relative flex items-center justify-center text-[var(--dc-cinza-fundo)] hover:opacity-70 transition-opacity"
                   aria-label="Notificações"
                 >
                   <IoMdNotificationsOutline size={26} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                      {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
+                  )}
                 </button>
               )}
             </>
           )}
+
+          {/* Mini User Icon */}
+          <Link 
+            href={profileLink}
+            className="flex items-center justify-center active:scale-95 transition-all"
+          >
+            <Avatar src={userAvatar || undefined} size={34} mode="view" />
+          </Link>
           <button
             onClick={() => setIsLogoutOpen(true)}
             className="flex items-center justify-center text-red-500 hover:opacity-70 transition-opacity"
@@ -110,6 +170,10 @@ export default function Header({
         onClose={() => setIsLogoutOpen(false)}
         onConfirm={handleLogoutConfirm}
       />
+
+      {isNotificationsOpen && (
+        <NotificationsScreen onBack={() => setIsNotificationsOpen(false)} />
+      )}
     </>
   );
 }
