@@ -16,6 +16,7 @@ interface Reply {
 interface Topic {
   id: string;
   title: string;
+  preview: string;
   is_moderated: boolean;
   likes_count: number;
   created_at: string;
@@ -126,7 +127,7 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
                     <img src={topic.users.avatar_url} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 text-[10px] font-bold">
-                      {topic.users?.name.substring(0, 2).toUpperCase()}
+                      {topic.users?.name ? topic.users.name.substring(0, 2).toUpperCase() : '??'}
                     </div>
                   )}
                 </div>
