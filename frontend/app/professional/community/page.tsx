@@ -14,7 +14,7 @@ export default function ProfessionalCommunityPage() {
 
   return (
     <main className="min-h-screen bg-[#F7F9FB] pb-[91px]">
-      <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="home" />
+      <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="home" notificationCount={3} />
 
       {/* Tabs Toggle */}
       <div className="px-6 pt-6">

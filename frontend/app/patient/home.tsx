@@ -1,3 +1,5 @@
+'use client';
+
 import Link from "next/link";
 import Header from "../components/Header";
 import GlucoseSummary from "../components/GlucoseSummary";
@@ -15,6 +17,7 @@ export default function Home() {
         title="DiabetesCare"
         titleColor="var(--dc-azul-escuro)"
         variant="home"
+        notificationCount={3}
       />
 
       <section className="flex flex-col items-center px-[33px] pt-6 gap-6">

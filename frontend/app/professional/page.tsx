@@ -24,7 +24,7 @@ export default function ProfissionalPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px]">
-      <Header title="DiabetesCare" variant="home" titleColor="var(--dc-azul)" />
+      <Header title="DiabetesCare" variant="home" titleColor="var(--dc-azul)" notificationCount={3} />
 
       <main className="flex flex-col px-[33px] gap-8 mt-6">
         {/* Título e Descrição */}
