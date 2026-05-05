@@ -5,8 +5,8 @@ import Avatar from "@/app/components/profile/avatar";
 import InfoCard from "@/app/components/profile/info-card";
 import LogoutModal from "@/app/components/modals/logout-modal";
 import Footer from "@/app/components/Footer";
+import Header from "@/app/components/Header";
 import {
-  MdNotificationsNone,
   MdSchool,
   MdOutlineEmail,
   MdOutlinePhone,
@@ -21,12 +21,12 @@ export default function ProfessionalProfile() {
     <main className="min-h-screen bg-[#F8F9FA] pb-[100px]">
       <div className="max-w-md mx-auto w-full bg-[#F8F9FA] min-h-screen relative">
         {/* Header */}
-        <header className="flex justify-between items-center px-6 py-4">
-          <h1 className="text-blue-600 font-bold text-xl">DiabetesCare</h1>
-          <button className="text-gray-600 hover:text-blue-600 transition-colors">
-            <MdNotificationsNone size={26} />
-          </button>
-        </header>
+        <Header
+          title="DiabetesCare"
+          titleColor="var(--dc-azul)"
+          variant="home"
+          notificationCount={3}
+        />
 
         {/* Topo do Perfil */}
         <section className="flex flex-col items-center mt-4 px-6">
