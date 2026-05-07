@@ -1,0 +1,76 @@
+import { NextRequest, NextResponse } from "next/server";
+import supabase from "@/config/supabase";
+import { verifyToken, unauthorizedResponse } from "@/lib/auth";
+
+export async function GET() {
+  try {
+    const { data, error } = await supabase
+      .from("forum_topics")
+      .select("id, title, preview, is_moderated, likes_count, created_at, author_id, users(name, avatar_url, role)")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching forum topics:", error);
+      return NextResponse.json({ erro: "Erro ao buscar tópicos do fórum." }, { status: 500 });
+    }
+
+    const topicIds = (data || []).map((t: any) => t.id);
+    const { data: replyCounts } = await supabase
+      .from("forum_replies")
+      .select("topic_id")
+      .in("topic_id", topicIds);
+
+    const countMap: Record<string, number> = {};
+    (replyCounts || []).forEach((r: any) => {
+      countMap[r.topic_id] = (countMap[r.topic_id] || 0) + 1;
+    });
+
+    const topicsWithCounts = (data || []).map((topic: any) => ({
+      ...topic,
+      replies_count: countMap[topic.id] || 0,
+    }));
+
+    return NextResponse.json({ topics: topicsWithCounts }, { status: 200 });
+  } catch (error) {
+    console.error("General error listing topics:", error);
+    return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  const user = await verifyToken(req);
+  if (!user) return unauthorizedResponse();
+
+  try {
+    const body = await req.json();
+    const { title, preview } = body;
+
+    if (!title) {
+      return NextResponse.json({ erro: "O título do tópico é obrigatório." }, { status: 400 });
+    }
+
+    const { data, error } = await supabase
+      .from("forum_topics")
+      .insert([
+        {
+          author_id: user.id,
+          title,
+          preview: preview || title.substring(0, 120),
+          is_moderated: false,
+          likes_count: 0,
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating forum topic:", error);
+      return NextResponse.json({ erro: "Erro ao criar tópico.", detalhe: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ mensagem: "Tópico criado com sucesso!", topic: data }, { status: 201 });
+  } catch (error) {
+    console.error("General error creating topic:", error);
+    return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
+  }
+}

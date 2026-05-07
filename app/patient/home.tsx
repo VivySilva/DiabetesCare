@@ -1,0 +1,154 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { IoMdNotificationsOutline } from "react-icons/io";
+import Header from "@/components/ui/Header";
+import GlucoseSummary from "@/components/charts/GlucoseSummary";
+import GlucoseBoard from "@/components/charts/GlucoseBoard";
+import Footer from "@/components/ui/Footer";
+import ArticleCard from "@/components/ui/ArticleCard";
+import NotificationsScreen from "@/components/features/notifications/NotificationsScreen";
+import { getUserProfile } from "@/services/user/userService"
+import { getGlucoseRecords } from "@/services/glucose/glucoseService"
+import { getCommunityPosts } from "@/services/community/communityService";
+
+export default function Home() {
+  const router = useRouter();
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [userName, setUserName] = useState("");
+  const [latestGlucose, setLatestGlucose] = useState<any>(null);
+  const [allGlucoseRecords, setAllGlucoseRecords] = useState<any[]>([]);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        // Busca perfil (essencial para validar sessão)
+        try {
+          const profileRes = await getUserProfile(token);
+          if (profileRes.user) {
+            setUserName(profileRes.user.name.split(' ')[0]);
+          }
+        } catch (e: any) { 
+          console.error("Erro perfil/sessão:", e);
+          // Se falhar ao buscar o perfil, a sessão provavelmente expirou ou é inválida
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          router.push("/login");
+          return;
+        }
+
+        // Busca glicemia
+        try {
+          const glucoseRes = await getGlucoseRecords(token);
+          if (glucoseRes.records && glucoseRes.records.length > 0) {
+            setLatestGlucose(glucoseRes.records[0]);
+            setAllGlucoseRecords(glucoseRes.records);
+          }
+        } catch (e) { console.error("Erro glicemia:", e); }
+
+        // Busca posts
+        try {
+          const postsRes = await getCommunityPosts();
+          setPosts(postsRes.posts?.slice(0, 2) || []);
+        } catch (e) { console.error("Erro posts:", e); }
+
+      } catch (err) {
+        console.error("Erro geral na home:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [router]);
+
+  return (
+    <main className="min-h-screen bg-white pb-[91px] md:pb-12">
+      <Header
+        title="DiabetesCare"
+        titleColor="var(--dc-azul-escuro)"
+        variant="home"
+        onNotificationClick={() => setShowNotifications(true)}
+      />
+
+      {/* Mobile: floating notification overlay */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-[60]">
+          <NotificationsScreen onBack={() => setShowNotifications(false)} />
+        </div>
+      )}
+
+      {/* Desktop top bar (replaces hidden Header on home variant) */}
+      <div className="hidden md:flex items-center justify-between px-8 py-5 sticky top-0 z-50 w-full backdrop-blur-[6px]" style={{ background: 'rgba(247, 249, 251, 0.85)' }}>
+        <span className="font-display font-extrabold text-xl text-azul-escuro tracking-tight">DiabetesCare</span>
+        <button
+          onClick={() => setShowNotifications(true)}
+          className="relative flex items-center justify-center text-cinza-fundo hover:opacity-70 transition-opacity"
+          aria-label="Notificações"
+        >
+          <IoMdNotificationsOutline size={26} />
+        </button>
+      </div>
+
+      {/* Centralized Container with Max Width */}
+      <section className="w-full max-w-5xl mx-auto px-6 md:px-8 pt-6 pb-12 flex flex-col gap-8">
+        
+        {/* Title / Greetings Area */}
+        <div className="flex flex-col w-full gap-1">
+          <h1 className="text-texto text-2xl md:text-3xl font-bold">Olá, {userName || "carregando..."}</h1>
+          <p className="text-cinza-claro-texto text-sm">Como está seu controle hoje?</p>
+        </div>
+
+        {/* ── ROW 1: Resumo Glicemia | Artigos Recentes ── */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full items-start">
+          
+          {/* Resumo de Glicemia */}
+          <GlucoseSummary 
+            value={latestGlucose?.glucose_value || "--"} 
+            moment={latestGlucose?.period || "Sem registros"} 
+            status={latestGlucose ? (latestGlucose.glucose_value > 150 ? "Atenção" : "Estável") : undefined} 
+          />
+
+          {/* Artigos Recentes */}
+          <div className="bg-white rounded-[32px] border border-gray-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-5 h-full">
+            <div className="flex items-center justify-between w-full">
+              <h2 className="m-0 text-texto font-bold text-lg">Artigos Recentes</h2>
+              <Link
+                href="/patient/community"
+                className="no-underline text-azul font-semibold text-xs hover:underline"
+              >
+                Ver Tudo
+              </Link>
+            </div>
+
+            <div className="flex flex-col gap-5 w-full">
+              {posts.length > 0 ? (
+                posts.map((post) => (
+                  <ArticleCard key={post.id} post={post} />
+                ))
+              ) : (
+                <p className="text-gray-400 text-sm text-center py-6">Nenhuma publicação encontrada.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ── ROW 2: GlucoseBoard (gráfico + médias detalhadas) ── */}
+        <GlucoseBoard records={allGlucoseRecords} />
+
+      </section>
+
+      <Footer />
+    </main>
+  );
+}
