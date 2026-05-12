@@ -13,6 +13,8 @@ import {
 import { useRouter } from "next/navigation";
 import { getUserProfile } from "@/services/user/userService";
 import { useEffect } from "react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 export default function PatientProfile() {
   const router = useRouter();
@@ -42,38 +44,96 @@ export default function PatientProfile() {
     fetchProfile();
   }, [router]);
 
-  // 2. Esta é a função que "conversa" com o backend
   const handleExportPDF = async () => {
-    setIsExporting(true); // Começa o carregamento
+    setIsExporting(true);
+    const token = localStorage.getItem("token");
 
     try {
-      // O 'fetch' faz o pedido para o seu servidor
-      const response = await fetch("SUA_URL_DO_BACKEND_AQUI", {
+      // 1. Buscar os dados do relatório na nossa nova API
+      const response = await fetch("/api/reports/generate?period=30", {
         method: "GET",
-        // Caso precise de login: headers: { "Authorization": "Bearer ..." }
+        headers: { 
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
       });
 
-      if (!response.ok) throw new Error("Erro ao baixar PDF");
+      if (!response.ok) throw new Error("Erro ao buscar dados do relatório");
 
-      // Transformamos a resposta em um "Blob" (um arquivo bruto)
-      const blob = await response.blob();
+      const resData = await response.json();
+      const { summary, aiTips, patientName } = resData.data;
 
-      // Criamos um link "invisível" para forçar o navegador a baixar o arquivo
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = "meu_relatorio_diabetes.pdf"; // Nome que o usuário verá ao salvar
-      document.body.appendChild(link);
-      link.click(); // Simula o clique de download
+      // 2. Iniciar a geração do PDF com jsPDF
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
 
-      // Limpamos a memória
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      // Cabeçalho do Relatório
+      doc.setFontSize(22);
+      doc.setTextColor(0, 51, 102); // Azul escuro
+      doc.text("Relatório Clínico Individual", 14, 22);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`DiabetesCare - Gerado em: ${new Date().toLocaleDateString()}`, 14, 28);
+      doc.line(14, 32, pageWidth - 14, 32);
+
+      // Info do Paciente
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.setFont("helvetica", "bold");
+      doc.text("Dados do Paciente", 14, 42);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Nome: ${patientName}`, 14, 48);
+      doc.text(`Período analisado: Últimos 30 dias`, 14, 54);
+
+      // Tabela de Métricas Clínicas
+      autoTable(doc, {
+        startY: 65,
+        head: [['Métrica', 'Valor']],
+        body: [
+          ['Média Glicêmica', `${summary.glucose_average} mg/dL`],
+          ['Glicada Estimada (eAG)', `${summary.estimated_a1c}%`],
+          ['Tempo no Alvo (TIR)', `${summary.time_in_range}%`],
+          ['Variabilidade (SD)', `${summary.variability} mg/dL`],
+          ['Episódios de Hipoglicemia', summary.hypoglycemia_events],
+          ['Episódios de Hiperglicemia', summary.hyperglycemia_events],
+        ],
+        theme: 'striped',
+        headStyles: { fillColor: [0, 102, 204] }
+      });
+
+      // Seção da Diabética (IA)
+      const finalY = (doc as any).lastAutoTable.finalY + 15;
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(0, 102, 102); // Verde azulado clínico
+      doc.text("Análise Inteligente - Diabetica LLM", 14, finalY);
+      
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(11);
+      doc.setTextColor(60, 60, 60);
+      
+      // Texto explicativo sobre quem gerou
+      doc.setFontSize(9);
+      doc.text("As dicas abaixo foram geradas automaticamente pela Diabetica (Large Language Model) com base nos seus dados:", 14, finalY + 7);
+      
+      doc.setFontSize(11);
+      // Quebra de linha automática para o texto da IA
+      const splitTips = doc.splitTextToSize(aiTips, pageWidth - 28);
+      doc.text(splitTips, 14, finalY + 18);
+
+      // Rodapé
+      doc.setFontSize(9);
+      doc.setTextColor(150);
+      doc.text("Este relatório é uma ferramenta de apoio e não substitui a consulta médica.", 14, doc.internal.pageSize.getHeight() - 10);
+
+      // 3. Download do Arquivo
+      doc.save(`Relatorio_DiabetesCare_${patientName.replace(/ /g, "_")}.pdf`);
+
     } catch (error) {
       console.error(error);
-      alert("Erro ao gerar o relatório. Tente novamente.");
+      alert("Houve um problema ao gerar seu relatório. Verifique sua conexão e tente novamente.");
     } finally {
-      setIsExporting(false); // Para o carregamento, dando certo ou errado
+      setIsExporting(false);
     }
   };
 
