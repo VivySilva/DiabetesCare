@@ -23,6 +23,44 @@ export default function CadastroGlicemia() {
   const [insulinType, setInsulinType] = useState("Basal");
   const [insulinAmount, setInsulinAmount] = useState(12);
   const [injectionSite, setInjectionSite] = useState("Abdômen");
+  
+  // Lógica de cores e alertas
+  const getStatusColor = () => {
+    if (glucoseValue <= 70) return "#F59E0B"; // Laranja para Hipoglicemia
+    if (glucoseValue > 180) return "#EF4444"; // Vermelho para Hiperglicemia
+    return "var(--dc-azul)"; // Azul padrão
+  };
+
+  const getHealthAlert = () => {
+    if (glucoseValue <= 70) {
+      return {
+        title: "Alerta de Hipoglicemia",
+        message: "Seu nível de açúcar está baixo. Consuma 15g de carboidratos de absorção rápida e meça novamente em 15 minutos.",
+        color: "#F59E0B",
+        bg: "#FFFBEB"
+      };
+    }
+    if (glucoseValue >= 250) {
+      return {
+        title: "Alerta de Hiperglicemia Grave",
+        message: "Nível muito elevado. Verifique se há sintomas de cetoacidose e entre em contato com seu médico se necessário.",
+        color: "#EF4444",
+        bg: "#FEF2F2"
+      };
+    }
+    if (glucoseValue > 180) {
+      return {
+        title: "Atenção: Glicemia Elevada",
+        message: "Seu nível está acima do alvo. Beba água e considere realizar uma atividade leve se autorizado.",
+        color: "#EF4444",
+        bg: "#FEF2F2"
+      };
+    }
+    return null;
+  };
+
+  const healthAlert = getHealthAlert();
+  const statusColor = getStatusColor();
 
   // Estados de Sintomas
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(["Sem Sintomas"]);
@@ -134,7 +172,10 @@ export default function CadastroGlicemia() {
                 <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
                   Glicose
                 </span>
-                <div className="bg-azul text-white px-4 py-2 rounded-full font-bold detail2" style={{ fontSize: 14 }}>
+                <div 
+                  className="px-4 py-2 rounded-full font-bold detail2 transition-colors duration-300 text-white" 
+                  style={{ fontSize: 14, backgroundColor: statusColor }}
+                >
                   {glucoseValue} mg/dL
                 </div>
               </div>
@@ -149,7 +190,7 @@ export default function CadastroGlicemia() {
                   onChange={(e) => setGlucoseValue(Number(e.target.value))}
                   className="w-full h-2 rounded-lg appearance-none cursor-pointer touch-none"
                   style={{
-                    background: `linear-gradient(to right, var(--dc-azul) ${(glucoseValue / 400) * 100}%, #D1D5DB ${(glucoseValue / 400) * 100}%)`
+                    background: `linear-gradient(to right, ${statusColor} ${(glucoseValue / 400) * 100}%, #D1D5DB ${(glucoseValue / 400) * 100}%)`
                   }}
                 />
                 <div className="flex justify-between w-full mt-2">
@@ -159,6 +200,24 @@ export default function CadastroGlicemia() {
                 </div>
               </div>
             </div>
+
+            {/* Alert Message */}
+            {healthAlert && (
+              <div 
+                className="flex items-start gap-4 p-5 rounded-[24px] animate-in fade-in slide-in-from-top-2 duration-300"
+                style={{ backgroundColor: healthAlert.bg, border: `1px solid ${healthAlert.color}20` }}
+              >
+                <MdOutlineLightbulb size={24} color={healthAlert.color} className="shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1">
+                  <span className="font-bold" style={{ fontFamily: "var(--font-inter)", fontSize: 14, color: healthAlert.color }}>
+                    {healthAlert.title}
+                  </span>
+                  <span style={{ fontFamily: "var(--font-inter)", fontSize: 13, lineHeight: "1.4", color: healthAlert.color }}>
+                    {healthAlert.message}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Seleção de Período (Scroll Horizontal) */}
