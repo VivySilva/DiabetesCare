@@ -1,7 +1,8 @@
 import jwt from "jsonwebtoken";
+import { env } from "@/config/env";
 import { NextRequest } from "next/server";
 
-const JWT_SECRET = process.env.JWT_SECRET || "";
+const JWT_SECRET = env.JWT_SECRET;
 
 export interface AuthUser {
   id: string;

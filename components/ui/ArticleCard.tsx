@@ -56,12 +56,12 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
           <div className="flex items-center gap-2 w-full">
             <div className="w-7 h-7 rounded-full bg-azul-claro flex items-center justify-center shrink-0">
               <span className="text-azul text-[10px] font-bold" style={{ fontFamily: "var(--font-inter)" }}>
-                {post.author.charAt(0)}
+                {(post.author || 'A').charAt(0)}
               </span>
             </div>
             <div className="flex flex-col" style={{ gap: "2px" }}>
               <span className="text-[12px] font-semibold text-texto leading-none" style={{ fontFamily: "var(--font-inter)" }}>
-                {post.author}
+                {post.author || 'Autor'}
               </span>
               <span className="text-[10px] text-cinza-claro-texto uppercase tracking-widest font-medium" style={{ fontFamily: "var(--font-inter)" }}>
                 {post.date}
@@ -82,7 +82,7 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
             className="m-0 text-cinza-claro-texto line-clamp-2"
             style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.6" }}
           >
-            {post.content[0]}
+            {post.content?.[0] || 'Clique para ler o conteúdo completo...'}
           </p>
         </div>
       </article>

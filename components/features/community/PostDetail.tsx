@@ -67,7 +67,7 @@ export default function PostDetail({ id }: { id: string }) {
               className="text-azul font-bold"
               style={{ fontFamily: "var(--font-inter)", fontSize: "16px" }}
             >
-              {post.author.charAt(0)}
+              {(post.author || 'A').charAt(0)}
             </span>
           </div>
           <div className="flex flex-col" style={{ gap: "4px" }}>
@@ -75,7 +75,7 @@ export default function PostDetail({ id }: { id: string }) {
               className="font-semibold text-texto"
               style={{ fontFamily: "var(--font-inter)", fontSize: "14px", lineHeight: 1.2 }}
             >
-              {post.author}
+              {post.author || 'Autor'}
             </span>
             <span
               className="text-cinza-claro-texto"

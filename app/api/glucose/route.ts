@@ -4,6 +4,8 @@ import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 import { glucoseSchema } from "@/schemas/glucose";
 import { successResponse, errorResponse } from "@/lib/api-response";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();

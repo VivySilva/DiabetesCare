@@ -15,8 +15,13 @@ const envSchema = z.object({
 const _env = envSchema.safeParse(process.env);
 
 if (!_env.success) {
-  console.error("❌ Invalid environment variables:", _env.error.format());
-  throw new Error("Invalid environment variables");
+  const errors = _env.error.flatten().fieldErrors;
+  const missingVars = Object.keys(errors).join(", ");
+  
+  console.error("❌ Erro de Configuração: Variáveis de ambiente inválidas ou ausentes:", missingVars);
+  console.error("Detalhes:", JSON.stringify(errors, null, 2));
+  
+  throw new Error(`Configuração Inválida: Verifique seu arquivo .env.local. Variáveis afetadas: ${missingVars}`);
 }
 
 export const env = _env.data;

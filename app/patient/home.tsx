@@ -50,9 +50,11 @@ export default function Home() {
         // Busca glicemia
         try {
           const glucoseRes = await getGlucoseRecords(token);
-          if (glucoseRes.records && glucoseRes.records.length > 0) {
-            setLatestGlucose(glucoseRes.records[0]);
-            setAllGlucoseRecords(glucoseRes.records);
+          // A API de glicose usa successResponse, que coloca os dados dentro de 'data'
+          const records = glucoseRes.data?.records || [];
+          if (records.length > 0) {
+            setLatestGlucose(records[0]);
+            setAllGlucoseRecords(records);
           }
         } catch (e) { console.error("Erro glicemia:", e); }
 
@@ -114,8 +116,8 @@ export default function Home() {
           
           {/* Resumo de Glicemia */}
           <GlucoseSummary 
-            value={latestGlucose?.glucose_value || "--"} 
-            moment={latestGlucose?.period || "Sem registros"} 
+            value={latestGlucose?.glucose_value} 
+            moment={latestGlucose?.period} 
             status={latestGlucose ? (latestGlucose.glucose_value > 150 ? "Atenção" : "Estável") : undefined} 
           />
 
@@ -134,7 +136,14 @@ export default function Home() {
             <div className="flex flex-col gap-5 w-full">
               {posts.length > 0 ? (
                 posts.map((post) => (
-                  <ArticleCard key={post.id} post={post} />
+                  <ArticleCard key={post.id} post={{
+                    id: post.id,
+                    title: post.title,
+                    author: post.users?.name || 'Autor',
+                    date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' }),
+                    image: post.cover_image_url || '',
+                    content: [post.content_html],
+                  }} />
                 ))
               ) : (
                 <p className="text-gray-400 text-sm text-center py-6">Nenhuma publicação encontrada.</p>

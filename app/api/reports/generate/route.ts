@@ -4,6 +4,8 @@ import { ReportService } from "@/services/reports/report-service";
 import { DiabeticaService } from "@/services/reports/diabetica-service";
 import { successResponse, errorResponse } from "@/lib/api-response";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();

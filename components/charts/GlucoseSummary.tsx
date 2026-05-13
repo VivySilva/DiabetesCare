@@ -7,10 +7,11 @@ interface GlucoseSummaryProps {
 }
 
 export default function GlucoseSummary({
-  value = 115,
-  moment = "Em jejum",
-  status = "Estável",
+  value,
+  moment = "Sem registros",
+  status = "---",
 }: GlucoseSummaryProps) {
+  const displayValue = value !== undefined && value !== null ? value : "--";
   return (
     <div
       className="flex flex-col justify-between p-8 gap-4 w-[342px] h-[226px] bg-white rounded-[32px]"
@@ -23,7 +24,7 @@ export default function GlucoseSummary({
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-2">
           <span style={{ fontFamily: "var(--font-manrope)", fontWeight: 800, fontSize: 48, color: "var(--dc-azul)", lineHeight: 1 }}>
-            {value}
+            {displayValue}
           </span>
           <span style={{ fontFamily: "var(--font-inter)", fontWeight: 400, fontSize: 14, color: "var(--dc-cinza-claro-texto)" }}>
             mg/dL

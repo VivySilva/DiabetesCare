@@ -34,12 +34,12 @@ export class DiabeticaService {
       // Simulação de chamada para a LLM Diabetica
       // No futuro, substituir pela URL real da API da Diabetica
       console.log("Chamando Diabetica LLM com prompt:", prompt);
-      
+
       // Mock de resposta inteligente baseado nos dados
       if (summary.hypoglycemia_events > 3) {
         return "Notamos uma frequência alta de hipoglicemias. Revise sua dose de insulina basal com seu médico e certifique-se de carregar sempre um carboidrato de rápida absorção.";
       }
-      
+
       if (summary.time_in_range < 70) {
         return "Seu tempo no alvo está abaixo do recomendado (70%). Tente monitorar a glicemia antes das refeições e ajustar a contagem de carboidratos.";
       }

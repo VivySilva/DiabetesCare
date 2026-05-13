@@ -8,23 +8,46 @@ interface GlucoseBoardProps {
 }
 
 export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
-  const [period, setPeriod] = useState<"Diário" | "Semanal" | "Mensal">("Diário");
+  const [period, setPeriod] = useState<"Diário" | "Semanal" | "Mensal">("Semanal");
 
   // Cálculos dinâmicos
-  const getAverage = (periodName: string | string[]) => {
-    const filtered = records.filter(r => 
-      Array.isArray(periodName) 
-        ? periodName.includes(r.period) 
-        : r.period === periodName
-    );
-    if (filtered.length === 0) return 0;
-    const sum = filtered.reduce((acc, r) => acc + r.glucose_value, 0);
-    return (sum / filtered.length).toFixed(1);
+  // Cálculos dinâmicos baseados no período selecionado
+  const getFilteredRecords = () => {
+    const now = new Date();
+    const startDate = new Date();
+
+    if (period === "Diário") {
+      startDate.setHours(0, 0, 0, 0);
+    } else if (period === "Semanal") {
+      startDate.setDate(now.getDate() - 7);
+    } else if (period === "Mensal") {
+      startDate.setDate(now.getDate() - 30);
+    }
+
+    return records.filter(r => new Date(r.created_at) >= startDate);
   };
 
-  const avgJejum = getAverage("Jejum");
-  const avgPos = getAverage(["Pós-Desjejum", "Pós-Prandial", "Pós-Jantar"]);
-  const avgSono = getAverage("Antes de dormir");
+  // Averages for the summary cards - Always use at least the last 7 days for better context
+  const getSummaryAverage = (periodName: string | string[]) => {
+    const now = new Date();
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(now.getDate() - 7);
+    
+    const filtered = records.filter(r => {
+      const isCorrectPeriod = Array.isArray(periodName) 
+        ? periodName.some(p => r.period?.includes(p)) 
+        : r.period?.includes(periodName);
+      return isCorrectPeriod && new Date(r.created_at) >= sevenDaysAgo;
+    });
+
+    if (filtered.length === 0) return null;
+    const sum = filtered.reduce((acc, r) => acc + r.glucose_value, 0);
+    return (sum / filtered.length).toFixed(0);
+  };
+
+  const avgJejum = getSummaryAverage("Jejum");
+  const avgPos = getSummaryAverage(["Pós-Desjejum", "Pós-Prandial", "Pós-Jantar"]);
+  const avgSono = getSummaryAverage("dormir");
 
   // Mock de dados para o gráfico baseado nos registros reais (últimos 7 dias)
   const days = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
@@ -32,13 +55,22 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
   const sortedDays = [...days.slice(today + 1), ...days.slice(0, today + 1)];
 
   const chartData = sortedDays.map((dayName, index) => {
-    // Busca registros para este dia da semana (simplificado para demonstração)
-    // No mundo real, filtraríamos por data exata.
+    // Calcula a data para cada dia do gráfico (retrocedendo a partir de hoje)
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() - (sortedDays.length - 1 - index));
+    const dateStr = targetDate.toISOString().split('T')[0];
+
+    // Filtra registros para este dia específico
+    const dayRecords = records.filter(r => {
+      const rDate = new Date(r.created_at).toISOString().split('T')[0];
+      return rDate === dateStr;
+    });
+
     return {
       day: dayName,
-      jejum: records.find(r => r.period === "Jejum")?.glucose_value || 90 + Math.random() * 20,
-      pos: records.find(r => r.period.includes("Pós"))?.glucose_value || 130 + Math.random() * 30,
-      sono: records.find(r => r.period.includes("dormir"))?.glucose_value || 110 + Math.random() * 20,
+      jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
+      pos: dayRecords.find(r => r.period.includes("Pós"))?.glucose_value || 0,
+      sono: dayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,
     };
   });
 
@@ -136,7 +168,14 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
             {/* Generate Path dynamically */}
             {["jejum", "pos", "sono"].map((type, i) => {
               const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
-              const points = chartData.map((d, idx) => `${idx * 100 + 50},${getY(d[type as keyof typeof d] as number)}`);
+              // Filtramos apenas pontos que possuem valor maior que 0 para não quebrar o gráfico
+              const points = chartData
+                .map((d, idx) => ({ x: idx * 100 + 50, y: d[type as keyof typeof d] as number }))
+                .filter(p => p.y > 0)
+                .map(p => `${p.x},${getY(p.y)}`);
+
+              if (points.length < 1) return null;
+
               return (
                 <path
                   key={type}
@@ -154,6 +193,9 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
             {["jejum", "pos", "sono"].map((type, i) => {
               const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
               const lastVal = chartData[chartData.length - 1][type as keyof typeof chartData[0]] as number;
+              
+              if (lastVal === 0) return null;
+
               return (
                 <circle 
                   key={type}

@@ -58,7 +58,7 @@ export default function PublishPage() {
 
     setIsPublishing(true);
     try {
-      const { createCommunityPost } = await import('@/services/api');
+      const { createCommunityPost } = await import('@/services/community/communityService');
       await createCommunityPost({
         title,
         cover_image_url: coverImage,
