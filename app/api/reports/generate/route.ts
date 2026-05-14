@@ -6,6 +6,16 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * GET /api/reports/generate
+ * 
+ * Gera um relatório consolidado com dados clínicos e insights de IA.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} req.query - Parâmetros de busca na URL.
+ * @param {string} [req.query.period=7] - Período em dias para análise (ex: 7, 15, 30).
+ * @returns {Promise<Response>} Relatório completo ou erro (401, 500).
+ */
 export async function GET(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
@@ -15,10 +25,7 @@ export async function GET(req: NextRequest) {
   const periodDays = parseInt(period);
 
   try {
-    // 1. Agrega dados clínicos
     const summary = await ReportService.getSummary(user.id, periodDays);
-
-    // 2. Busca insights da IA Diabetica
     const aiTips = await DiabeticaService.getAITips(summary);
 
     return successResponse({

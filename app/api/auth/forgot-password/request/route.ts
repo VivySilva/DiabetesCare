@@ -3,6 +3,16 @@ import crypto from "crypto";
 import supabase from "@/config/supabase";
 import transporter from "@/config/email";
 
+/**
+ * POST /api/auth/forgot-password/request
+ * 
+ * Inicia o processo de recuperação de senha enviando um e-mail com um token único.
+ * 
+ * @param {NextRequest} req - Objeto de requisição do Next.js.
+ * @param {Object} req.body - Conteúdo da requisição.
+ * @param {string} req.body.email - E-mail do usuário que solicita a recuperação.
+ * @returns {Promise<Response>} Resposta JSON confirmando o envio da solicitação ou erro (400, 500).
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

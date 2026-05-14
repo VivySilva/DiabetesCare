@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
+/**
+ * GET /api/community/[id]
+ * 
+ * Recupera os detalhes de uma publicação específica da comunidade pelo ID.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} context - Contexto da rota.
+ * @param {Object} context.params - Parâmetros da URL.
+ * @param {string} context.params.id - ID da publicação.
+ * @returns {Promise<Response>} Dados da publicação ou erro (404, 500).
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -26,6 +37,22 @@ export async function GET(
   }
 }
 
+/**
+ * PUT /api/community/[id]
+ * 
+ * Atualiza uma publicação existente. Requer que o usuário seja o autor.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} context - Contexto da rota.
+ * @param {Object} context.params - Parâmetros da URL.
+ * @param {string} context.params.id - ID da publicação a editar.
+ * @param {Object} req.body - Dados para atualização.
+ * @param {string} [req.body.title] - Novo título.
+ * @param {string} [req.body.cover_image_url] - Nova URL da imagem.
+ * @param {string} [req.body.category] - Nova categoria.
+ * @param {string} [req.body.content_html] - Novo conteúdo em HTML.
+ * @returns {Promise<Response>} Post atualizado ou erro (403, 404, 500).
+ */
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -70,6 +97,17 @@ export async function PUT(
   }
 }
 
+/**
+ * DELETE /api/community/[id]
+ * 
+ * Remove uma publicação da comunidade. Requer que o usuário seja o autor.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} context - Contexto da rota.
+ * @param {Object} context.params - Parâmetros da URL.
+ * @param {string} context.params.id - ID da publicação a remover.
+ * @returns {Promise<Response>} Mensagem de sucesso ou erro (403, 404, 500).
+ */
 export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

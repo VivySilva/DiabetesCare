@@ -60,6 +60,7 @@ export default function Header({
 
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
+      console.log("Token from localStorage (Header):", typeof token, token?.length);
       if (!token) return;
       try {
         const res = await getUserProfile(token);

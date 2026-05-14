@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
+/**
+ * POST /api/forum/[id]/like
+ * 
+ * Alterna (curtir/descurtir) a curtida de um usuário em um tópico do fórum.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} context - Contexto da rota.
+ * @param {Object} context.params - Parâmetros da URL.
+ * @param {string} context.params.id - ID do tópico a ser curtido/descurtido.
+ * @returns {Promise<Response>} Status da curtida e nova contagem ou erro (401, 500).
+ */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

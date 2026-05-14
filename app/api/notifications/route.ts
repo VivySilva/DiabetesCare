@@ -3,7 +3,16 @@ import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 import { successResponse, errorResponse } from "@/lib/api-response";
 
+/**
+ * GET /api/notifications
+ * 
+ * Recupera a lista de notificações do usuário autenticado.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @returns {Promise<Response>} Lista de notificações ou erro (401, 500).
+ */
 export async function GET(req: NextRequest) {
+  console.log("GET /api/notifications called");
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
 

@@ -4,14 +4,28 @@ import supabase from "@/config/supabase";
 import { registerSchema } from "@/schemas/auth";
 import { successResponse, errorResponse } from "@/lib/api-response";
 
+/**
+ * POST /api/auth/register
+ * 
+ * Realiza o cadastro de um novo usuário (paciente ou profissional) no sistema.
+ * 
+ * @param {NextRequest} req - Objeto de requisição do Next.js.
+ * @param {Object} req.body - Conteúdo da requisição.
+ * @param {string} req.body.name - Nome completo do usuário.
+ * @param {string} req.body.email - Endereço de e-mail.
+ * @param {string} req.body.password - Senha.
+ * @param {"patient" | "professional"} req.body.role - Papel do usuário.
+ * @param {string} [req.body.licenseNumber] - Registro profissional (obrigatório para profissionais).
+ * @param {string} [req.body.phone] - Telefone opcional.
+ * @returns {Promise<Response>} Resposta JSON com status 201 (criado) ou erro (400, 500).
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    // Validação com Zod
     const result = registerSchema.safeParse(body);
     if (!result.success) {
-      return errorResponse(result.error.errors[0].message, 400);
+      return errorResponse(result.error.issues[0].message, 400);
     }
 
     const { name, email, password, role, licenseNumber, phone } = result.data;

@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 
+/**
+ * GET /api/forum/[id]
+ * 
+ * Recupera os detalhes de um tópico específico do fórum e todas as suas respostas.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} context - Contexto da rota.
+ * @param {Object} context.params - Parâmetros da URL.
+ * @param {string} context.params.id - ID do tópico a ser recuperado.
+ * @returns {Promise<Response>} Dados do tópico e lista de respostas ou erro (404, 500).
+ */
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

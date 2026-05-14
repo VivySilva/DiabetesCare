@@ -6,6 +6,14 @@ import { successResponse, errorResponse } from "@/lib/api-response";
 
 export const dynamic = "force-dynamic";
 
+/**
+ * GET /api/glucose
+ * 
+ * Recupera o histórico de medições de glicose do usuário autenticado.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @returns {Promise<Response>} Lista de registros de glicose ou erro (401, 500).
+ */
 export async function GET(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
@@ -29,6 +37,23 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * POST /api/glucose
+ * 
+ * Registra uma nova medição de glicose.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} req.body - Dados da medição.
+ * @param {number} req.body.glucose_value - Valor da glicemia medida.
+ * @param {string} req.body.period - Período (Jejum, Pré-Prandial, etc).
+ * @param {boolean} req.body.took_insulin - Se houve aplicação de insulina.
+ * @param {string} [req.body.insulin_type] - Tipo da insulina.
+ * @param {number} [req.body.insulin_amount] - Quantidade de unidades.
+ * @param {string} [req.body.injection_site] - Local da aplicação.
+ * @param {string[]} [req.body.symptoms] - Lista de sintomas.
+ * @param {number} [req.body.symptom_intensity] - Intensidade dos sintomas.
+ * @returns {Promise<Response>} Registro criado ou erro (400, 401, 500).
+ */
 export async function POST(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
@@ -36,10 +61,9 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
-    // Validação com Zod
     const result = glucoseSchema.safeParse(body);
     if (!result.success) {
-      return errorResponse(result.error.errors[0].message, 400);
+      return errorResponse(result.error.issues[0].message, 400);
     }
 
     const {

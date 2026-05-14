@@ -1,19 +1,23 @@
 import { ReportSummary } from "./report-service";
 
 /**
- * DiabeticaService - Camada de Integração com Inteligência Artificial
+ * DiabeticaService - AI Integration Layer.
  * 
- * Este serviço é responsável por consumir a LLM Diabetica (Large Language Model) 
- * para transformar dados glicêmicos brutos em insights clínicos acionáveis e humanizados.
+ * Este serviço transforma dados glicêmicos em insights clínicos acionáveis.
  */
 export class DiabeticaService {
   /**
-   * Gera dicas personalizadas baseadas no resumo clínico do paciente.
+   * Generates personalized tips based on the patient's clinical summary.
    * 
-   * @param summary - Objeto contendo médias, variabilidade e eventos de hipo/hiper.
-   * @returns Uma string contendo os conselhos gerados pela IA Diabetica.
-   * 
-   * @link Referência da LLM: https://github.com/waltonfuture/Diabetica
+   * @param {Object} summary - Objeto contendo o resumo clínico.
+   * @param {string} summary.period - Período analisado.
+   * @param {number} summary.glucose_average - Média glicêmica.
+   * @param {number} summary.estimated_a1c - A1c estimada.
+   * @param {number} summary.time_in_range - Tempo no alvo.
+   * @param {number} summary.hypoglycemia_events - Eventos de hipo.
+   * @param {number} summary.hyperglycemia_events - Eventos de hiper.
+   * @param {number} summary.variability - Variabilidade (DP).
+   * @returns {Promise<string>} Conselhos gerados pela IA.
    */
   static async getAITips(summary: ReportSummary): Promise<string> {
     const prompt = `
@@ -31,11 +35,6 @@ export class DiabeticaService {
     `;
 
     try {
-      // Simulação de chamada para a LLM Diabetica
-      // No futuro, substituir pela URL real da API da Diabetica
-      console.log("Chamando Diabetica LLM com prompt:", prompt);
-
-      // Mock de resposta inteligente baseado nos dados
       if (summary.hypoglycemia_events > 3) {
         return "Notamos uma frequência alta de hipoglicemias. Revise sua dose de insulina basal com seu médico e certifique-se de carregar sempre um carboidrato de rápida absorção.";
       }

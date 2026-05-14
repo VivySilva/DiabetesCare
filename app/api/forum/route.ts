@@ -2,6 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
+/**
+ * GET /api/forum
+ * 
+ * Recupera a lista de todos os tópicos do fórum, incluindo contagem de curtidas e respostas.
+ * 
+ * @returns {Promise<Response>} Lista de tópicos com dados do autor e contadores.
+ */
 export async function GET() {
   try {
     const { data, error } = await supabase
@@ -37,6 +44,17 @@ export async function GET() {
   }
 }
 
+/**
+ * POST /api/forum
+ * 
+ * Cria um novo tópico no fórum. Requer autenticação.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} req.body - Conteúdo do tópico.
+ * @param {string} req.body.title - Título do tópico.
+ * @param {string} [req.body.preview] - Breve descrição ou resumo.
+ * @returns {Promise<Response>} Tópico criado ou erro (400, 401, 500).
+ */
 export async function POST(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();

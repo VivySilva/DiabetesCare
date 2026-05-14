@@ -2,6 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import supabase from "@/config/supabase";
 
+/**
+ * POST /api/auth/forgot-password/reset
+ * 
+ * Redefine a senha do usuário utilizando um token de recuperação válido.
+ * 
+ * @param {NextRequest} req - Objeto de requisição do Next.js.
+ * @param {Object} req.body - Conteúdo da requisição.
+ * @param {string} req.body.token - O token de recuperação validado.
+ * @param {string} req.body.new_password - A nova senha a ser definida.
+ * @returns {Promise<Response>} Resposta JSON confirmando a redefinição ou erro (400, 500).
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();

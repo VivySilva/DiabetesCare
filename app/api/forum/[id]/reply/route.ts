@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
+/**
+ * POST /api/forum/[id]/reply
+ * 
+ * Adiciona uma resposta a um tópico específico do fórum.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} context - Contexto da rota.
+ * @param {Object} context.params - Parâmetros da URL.
+ * @param {string} context.params.id - ID do tópico ao qual responder.
+ * @param {Object} req.body - Conteúdo da resposta.
+ * @param {string} req.body.content - Texto da resposta.
+ * @returns {Promise<Response>} Resposta criada ou erro (400, 401, 404, 500).
+ */
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
+/**
+ * POST /api/medications
+ * 
+ * Registra um novo medicamento no cronograma do usuário.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} req.body - Dados do medicamento.
+ * @param {string} req.body.category - Categoria (ex: Insulina, Oral).
+ * @param {string} req.body.medication_name - Nome do remédio.
+ * @param {string} req.body.time - Horário da dose (HH:mm).
+ * @param {boolean} req.body.notify - Se deseja receber notificação.
+ * @returns {Promise<Response>} Registro criado ou erro (400, 401, 500).
+ */
 export async function POST(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
@@ -39,7 +52,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // GATILHO: Se notify for true, criar uma notificação de lembrete
     if (notify) {
       await supabase.from("notifications").insert([
         {

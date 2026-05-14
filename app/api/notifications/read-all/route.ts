@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
+/**
+ * PATCH /api/notifications/read-all
+ * 
+ * Marca todas as notificações não lidas do usuário como lidas.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @returns {Promise<Response>} Mensagem de sucesso ou erro (401, 500).
+ */
 export async function PATCH(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();

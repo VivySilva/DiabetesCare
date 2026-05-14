@@ -1,5 +1,8 @@
 import supabase from "@/config/supabase";
 
+/**
+ * Interface representing the clinical report summary data.
+ */
 export interface ReportSummary {
   period: string;
   glucose_average: number;
@@ -13,24 +16,23 @@ export interface ReportSummary {
 }
 
 /**
- * ReportService - Motor de Agregação de Dados Clínicos
+ * ReportService - Clinical Data Aggregation Engine.
  * 
- * Este serviço consolida informações de múltiplos módulos (glicose, medicamentos)
- * para gerar um resumo estatístico necessário para a tomada de decisão clínica.
+ * Este serviço consolida informações de múltiplos módulos para gerar resumos estatísticos.
  */
 export class ReportService {
   /**
-   * Agrega e processa dados de um usuário para um período específico.
+   * Aggregates and processes user data for a specific period.
    * 
-   * @param userId - ID único do usuário (UUID).
-   * @param periodDays - Janela de tempo em dias para análise (ex: 7, 30, 365).
-   * @returns Um objeto ReportSummary contendo médias, TIR e variabilidade.
+   * @param {string} userId - ID único do usuário.
+   * @param {number} periodDays - Janela de tempo em dias para análise.
+   * @returns {Promise<ReportSummary>} Resumo estatístico contendo médias, TIR e variabilidade.
+   * @throws {Error} Falha na busca dos dados no banco.
    */
   static async getSummary(userId: string, periodDays: number): Promise<ReportSummary> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - periodDays);
 
-    // 1. Buscar registros de glicose
     const { data: glucoseRecords, error: glucoseError } = await supabase
       .from("glucose_records")
       .select("glucose_value, created_at")
@@ -39,7 +41,6 @@ export class ReportService {
 
     if (glucoseError) throw glucoseError;
 
-    // 2. Buscar registros de medicamentos
     const { data: medicationRecords, error: medError } = await supabase
       .from("medication_records")
       .select("*")
@@ -48,7 +49,6 @@ export class ReportService {
 
     if (medError) throw medError;
 
-    // 3. Cálculos Clínicos
     const values = glucoseRecords.map(r => r.glucose_value);
     const total = values.length;
 
@@ -61,7 +61,6 @@ export class ReportService {
     const hypos = values.filter(v => v < 70).length;
     const hypers = values.filter(v => v > 180).length;
 
-    // Variabilidade (Desvio Padrão)
     const variance = total > 0
       ? values.reduce((a, b) => a + Math.pow(b - average, 2), 0) / total
       : 0;
@@ -76,7 +75,7 @@ export class ReportService {
       total_records: total,
       hypoglycemia_events: hypos,
       hyperglycemia_events: hypers,
-      medication_adherence: 100, // Simplificado para este MVP
+      medication_adherence: 100,
     };
   }
 }

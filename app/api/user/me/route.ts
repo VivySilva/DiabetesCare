@@ -3,6 +3,14 @@ import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 import bcrypt from "bcrypt";
 
+/**
+ * GET /api/user/me
+ * 
+ * Recupera os dados do perfil do usuário autenticado.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @returns {Promise<Response>} Dados do usuário ou erro (401, 404, 500).
+ */
 export async function GET(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
@@ -25,6 +33,23 @@ export async function GET(req: NextRequest) {
   }
 }
 
+/**
+ * PUT /api/user/me
+ * 
+ * Atualiza os dados do perfil do usuário autenticado.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} req.body - Dados para atualização.
+ * @param {string} [req.body.name] - Novo nome.
+ * @param {string} [req.body.email] - Novo e-mail.
+ * @param {number} [req.body.age] - Nova idade.
+ * @param {string} [req.body.gender] - Gênero.
+ * @param {string} [req.body.diabetes_type] - Tipo de diabetes.
+ * @param {string} [req.body.phone] - Novo telefone.
+ * @param {string} [req.body.avatar_url] - Nova URL da imagem de perfil.
+ * @param {string} [req.body.password] - Nova senha (será hasheada).
+ * @returns {Promise<Response>} Perfil atualizado ou erro (401, 409, 500).
+ */
 export async function PUT(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
