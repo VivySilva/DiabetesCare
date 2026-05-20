@@ -82,6 +82,8 @@ export async function PUT(req: NextRequest) {
       diabetes_type,
       phone,
       avatar_url,
+      // license_number is kept for professional accounts
+      license_number: body.license_number,
       updated_at: new Date().toISOString(),
     };
 

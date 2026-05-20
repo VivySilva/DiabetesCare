@@ -132,7 +132,7 @@ export default function Sidebar() {
             <div className="flex flex-col overflow-hidden">
               <span className="font-bold text-sm text-texto truncate">{userName || "Carregando..."}</span>
               <span className="text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">
-                {userRole === "professional" ? "Profissional" : "Paciente"}
+                {userRole === "PROFESSIONAL" ? "Especialista" : "Paciente"}
               </span>
             </div>
           </div>
