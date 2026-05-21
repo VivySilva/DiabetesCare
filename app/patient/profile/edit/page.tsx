@@ -1,272 +1,507 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import Avatar from "@/components/ui/profile/avatar";
-import { MdEdit, MdEmail, MdPhone } from "react-icons/md";
+import {
+  MdEdit,
+  MdEmail,
+  MdPhone,
+  MdPerson,
+  MdLock,
+  MdVisibility,
+  MdVisibilityOff,
+  MdArrowBack,
+  MdSave,
+  MdBloodtype,
+  MdCheckCircle,
+} from "react-icons/md";
 import { useRouter } from "next/navigation";
 import Header from "@/components/ui/Header";
 import { getUserProfile, updateUserProfile } from "@/services/user/userService";
 import SuccessModal from "@/components/ui/modals/success-modal";
+import { motion, AnimatePresence } from "framer-motion";
+
+const DIABETES_TYPES = [
+  { value: "Tipo 1",       label: "Tipo 1" },
+  { value: "Tipo 2",       label: "Tipo 2" },
+  { value: "Gestacional",  label: "Gestacional" },
+  { value: "Pré-diabetes", label: "Pré-diabetes" },
+];
 
 export default function EditPatientProfile() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [error, setError] = useState("");
+  const [isLoading, setIsLoading]       = useState(true);
+  const [isSaving, setIsSaving]         = useState(false);
+  const [showSuccess, setShowSuccess]   = useState(false);
+  const [error, setError]               = useState("");
 
-  // Form states
-  const [name, setName] = useState("");
-  const [age, setAge] = useState("");
-  const [gender, setGender] = useState("Masculino");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState(""); // Email usually read-only in profile edit for security
+  // Campos do formulário
+  const [name, setName]               = useState("");
+  const [age, setAge]                 = useState("");
+  const [gender, setGender]           = useState("Masculino");
+  const [phone, setPhone]             = useState("");
+  const [email, setEmail]             = useState("");
   const [diabetesType, setDiabetesType] = useState("Tipo 2");
-  const [password, setPassword] = useState("");
+  const [password, setPassword]       = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [showPassword, setShowPassword]       = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  // Avatar: guardamos a URL original do banco separada do preview local
+  const [savedAvatarUrl, setSavedAvatarUrl] = useState<string>("");   // URL real salva no banco
+  const [avatarPreview, setAvatarPreview]   = useState<string>("");   // Preview (pode ser base64)
+  const [avatarFile, setAvatarFile]         = useState<File | null>(null); // Arquivo novo selecionado
+
+  // ─── Carrega perfil atual ────────────────────────────────────────────────
   useEffect(() => {
     const fetchProfile = async () => {
       const token = localStorage.getItem("token");
-      if (!token) {
-        router.push("/login");
-        return;
-      }
+      if (!token) { router.push("/login"); return; }
 
       try {
         const res = await getUserProfile(token);
         const u = res.user;
-        setName(u.name || "");
-        setAge(u.age?.toString() || "");
-        setGender(u.gender || "Masculino");
-        setPhone(u.phone || "");
-        setEmail(u.email || "");
-        setDiabetesType(u.diabetes_type || "Tipo 2");
-        setAvatarUrl(u.avatar_url || "");
-      } catch (err) {
+        setName(u.name ?? "");
+        setAge(u.age != null ? String(u.age) : "");
+        setGender(u.gender ?? "Masculino");
+        setPhone(u.phone ?? "");
+        setEmail(u.email ?? "");
+        setDiabetesType(u.diabetes_type ?? "Tipo 2");
+        setSavedAvatarUrl(u.avatar_url ?? "");
+        setAvatarPreview(u.avatar_url ?? "");
+      } catch (err: any) {
         console.error("Erro ao carregar perfil:", err);
+        setError("Não foi possível carregar os dados do perfil.");
       } finally {
         setIsLoading(false);
       }
     };
-
     fetchProfile();
   }, [router]);
 
+  // ─── Submissão do formulário ─────────────────────────────────────────────
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    setIsSaving(true);
     setError("");
 
+    // Validações client-side
+    if (!name.trim()) { setError("O nome não pode estar vazio."); return; }
+    if (!email.trim()) { setError("O e-mail não pode estar vazio."); return; }
+    if (password && password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
     if (password && password !== confirmPassword) {
       setError("As senhas não coincidem.");
-      setIsSaving(false);
       return;
     }
 
-    try {
-      await updateUserProfile({
-        name,
-        email,
-        age: age ? parseInt(age) : null,
-        gender,
-        phone,
-        diabetes_type: diabetesType,
-        avatar_url: avatarUrl,
-        password: password || undefined
-      }, token);
+    const token = localStorage.getItem("token");
+    if (!token) { router.push("/login"); return; }
 
+    setIsSaving(true);
+
+    try {
+      // Monta o payload — avatar_url só é enviado se for uma URL real (não base64)
+      const payload: Record<string, any> = {
+        name:          name.trim(),
+        email:         email.trim(),
+        phone:         phone.trim() || null,
+        gender,
+        diabetes_type: diabetesType,
+        age:           age ? parseInt(age, 10) : null,
+      };
+
+      // Só envia avatar_url se for uma URL HTTP (não base64 local)
+      if (savedAvatarUrl && !savedAvatarUrl.startsWith("data:")) {
+        payload.avatar_url = savedAvatarUrl;
+      }
+
+      // Senha só se o usuário preencheu
+      if (password) {
+        payload.password = password;
+      }
+
+      await updateUserProfile(payload, token);
       setShowSuccess(true);
     } catch (err: any) {
-      setError(err.message || "Erro ao salvar alterações.");
+      console.error("Erro ao salvar perfil:", err);
+      setError(err.message ?? "Erro ao salvar alterações. Tente novamente.");
     } finally {
       setIsSaving(false);
     }
   };
 
+  // ─── Loading ─────────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <main className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      <main className="min-h-screen bg-[#F8F9FA] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <p className="text-gray-400 text-sm font-medium">Carregando perfil...</p>
+        </div>
       </main>
     );
   }
 
+  // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <main className="min-h-screen bg-white">
-      <Header title="Editar Perfil" variant="page" showNotification={true} />
-      <div className="max-w-md mx-auto w-full min-h-screen flex flex-col px-6 py-6 pb-24">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
+      <div className="max-w-5xl mx-auto w-full min-h-screen flex flex-col">
+        <Header
+          title="DiabetesCare"
+          titleColor="var(--dc-azul)"
+          variant="page"
+          showNotification={false}
+        />
 
-        <div className="flex flex-col items-center mb-8">
-          <Avatar 
-            src={avatarUrl} 
-            mode="edit" 
-            onImageSelected={(file) => {
-              const reader = new FileReader();
-              reader.onloadend = () => {
-                setAvatarUrl(reader.result as string);
-              };
-              reader.readAsDataURL(file);
-            }}
-          />
-          <span className="text-blue-500 text-sm font-medium mt-3">
-            Alterar Foto de Perfil
-          </span>
+        <div className="flex-1 px-4 md:px-6 py-6">
+          {/* Título */}
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-xl font-bold text-gray-900">Editar Perfil</h2>
+            <p className="text-gray-400 text-sm mt-1">
+              Atualize suas informações pessoais e de saúde
+            </p>
+          </div>
+
+          <form onSubmit={handleSave} noValidate>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+
+              {/* ── COLUNA ESQUERDA: Avatar + Tipo de Diabetes ── */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className="md:col-span-1 bg-white rounded-[28px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-6 flex flex-col items-center gap-5"
+              >
+                {/* Avatar */}
+                <div className="flex flex-col items-center gap-2">
+                  <Avatar
+                    src={avatarPreview}
+                    mode="edit"
+                    size={108}
+                    onImageSelected={(file) => {
+                      setAvatarFile(file);
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        // Preview local (base64) — NÃO vai para o banco diretamente
+                        setAvatarPreview(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  <span className="text-blue-600 text-xs font-semibold">
+                    Alterar Foto
+                  </span>
+                  {avatarFile && (
+                    <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
+                      Upload de foto em breve
+                    </span>
+                  )}
+                </div>
+
+                <div className="w-full h-px bg-gray-100" />
+
+                {/* Preview do nome */}
+                <div className="text-center">
+                  <p className="font-bold text-gray-900 text-base leading-tight">
+                    {name || "Seu Nome"}
+                  </p>
+                  <span className="inline-block bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1 rounded-full mt-2 tracking-wide uppercase">
+                    {diabetesType}
+                  </span>
+                </div>
+
+                {/* Seletor de Tipo de Diabetes */}
+                <div className="w-full">
+                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3 flex items-center gap-1.5">
+                    <MdBloodtype size={14} /> Tipo de Diabetes
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    {DIABETES_TYPES.map((tipo) => {
+                      const selected = diabetesType === tipo.value;
+                      return (
+                        <label
+                          key={tipo.value}
+                          className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
+                            selected
+                              ? "border-blue-300 bg-blue-50"
+                              : "border-gray-100 bg-gray-50 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="diabetesType"
+                            value={tipo.value}
+                            checked={selected}
+                            onChange={() => setDiabetesType(tipo.value)}
+                            className="w-4 h-4 accent-blue-600"
+                          />
+                          <span
+                            className={`text-sm font-semibold ${
+                              selected ? "text-blue-700" : "text-gray-700"
+                            }`}
+                          >
+                            {tipo.label}
+                          </span>
+                          {selected && (
+                            <MdCheckCircle className="ml-auto text-blue-500" size={16} />
+                          )}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Botão cancelar */}
+                <button
+                  type="button"
+                  onClick={() => router.push("/patient/profile")}
+                  className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl border border-gray-200 bg-gray-50 text-gray-600 text-sm font-semibold hover:bg-gray-100 transition-colors"
+                >
+                  <MdArrowBack size={18} />
+                  Cancelar e Voltar
+                </button>
+              </motion.div>
+
+              {/* ── COLUNA DIREITA: Formulário ── */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: 0.08 }}
+                className="md:col-span-2 flex flex-col gap-5"
+              >
+                {/* Banner de erro */}
+                <AnimatePresence mode="wait">
+                  {error && (
+                    <motion.div
+                      key="error"
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-2xl text-sm font-medium flex items-start gap-2"
+                    >
+                      <span className="shrink-0 mt-0.5">⚠️</span>
+                      <span>{error}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* ── Card: Dados Pessoais ── */}
+                <div className="bg-white rounded-[28px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-6">
+                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-5 flex items-center gap-2">
+                    <MdPerson size={16} className="text-blue-500" /> Dados Pessoais
+                  </h3>
+                  <div className="flex flex-col gap-4">
+
+                    {/* Nome */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                        Nome Completo *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="Seu nome completo"
+                          required
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pr-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
+                        />
+                        <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                      </div>
+                    </div>
+
+                    {/* Idade + Gênero */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                          Idade
+                        </label>
+                        <input
+                          type="number"
+                          min="1"
+                          max="120"
+                          value={age}
+                          onChange={(e) => setAge(e.target.value)}
+                          placeholder="Ex: 32"
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                          Gênero
+                        </label>
+                        <select
+                          value={gender}
+                          onChange={(e) => setGender(e.target.value)}
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all cursor-pointer"
+                        >
+                          <option value="Masculino">Masculino</option>
+                          <option value="Feminino">Feminino</option>
+                          <option value="Outro">Outro</option>
+                          <option value="Prefiro não informar">Prefiro não informar</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Card: Contato ── */}
+                <div className="bg-white rounded-[28px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-6">
+                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-5 flex items-center gap-2">
+                    <MdEmail size={16} className="text-blue-500" /> Contato
+                  </h3>
+                  <div className="flex flex-col gap-4">
+
+                    {/* E-mail */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                        E-mail *
+                      </label>
+                      <div className="relative">
+                        <MdEmail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="seu@email.com"
+                          required
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Telefone */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                        Telefone / WhatsApp
+                      </label>
+                      <div className="relative">
+                        <MdPhone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="(00) 00000-0000"
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Card: Segurança ── */}
+                <div className="bg-white rounded-[28px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-6">
+                  <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">
+                    <MdLock size={16} className="text-blue-500" /> Segurança
+                  </h3>
+                  <p className="text-gray-400 text-xs mb-5">
+                    Deixe em branco para manter a senha atual.
+                  </p>
+                  <div className="flex flex-col gap-4">
+
+                    {/* Nova Senha */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                        Nova Senha
+                      </label>
+                      <div className="relative">
+                        <MdLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Mínimo 6 caracteres"
+                          autoComplete="new-password"
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 pr-12 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((v) => !v)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
+                          aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                        >
+                          {showPassword ? <MdVisibilityOff size={18} /> : <MdVisibility size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Confirmar Senha */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                        Confirmar Nova Senha
+                      </label>
+                      <div className="relative">
+                        <MdLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Repita a nova senha"
+                          autoComplete="new-password"
+                          className={`w-full bg-gray-50 border rounded-2xl px-4 py-3.5 pl-11 pr-12 text-gray-900 font-medium focus:outline-none focus:ring-2 transition-all focus:bg-white ${
+                            confirmPassword && password !== confirmPassword
+                              ? "border-red-200 focus:ring-red-100"
+                              : "border-gray-100 focus:ring-blue-200 focus:border-blue-400"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword((v) => !v)}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
+                          aria-label={showConfirmPassword ? "Ocultar senha" : "Mostrar senha"}
+                        >
+                          {showConfirmPassword ? <MdVisibilityOff size={18} /> : <MdVisibility size={18} />}
+                        </button>
+                      </div>
+                      {confirmPassword && password !== confirmPassword && (
+                        <p className="text-red-500 text-xs px-1">As senhas não coincidem</p>
+                      )}
+                      {confirmPassword && password === confirmPassword && password.length >= 6 && (
+                        <p className="text-green-600 text-xs px-1 flex items-center gap-1">
+                          <MdCheckCircle size={13} /> Senhas coincidem
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Botão Salvar ── */}
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-base transition-all shadow-lg ${
+                    isSaving
+                      ? "bg-gray-400 cursor-not-allowed shadow-none"
+                      : "bg-blue-600 hover:bg-blue-700 shadow-blue-600/25 active:scale-[0.99]"
+                  }`}
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <MdSave size={20} />
+                      Salvar Alterações
+                    </>
+                  )}
+                </button>
+              </motion.div>
+            </div>
+          </form>
         </div>
 
-        {error && <div className="bg-red-50 text-red-500 p-4 rounded-2xl mb-6 text-sm text-center">{error}</div>}
-
-        <form className="flex-1 flex flex-col gap-6" onSubmit={handleSave}>
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-              Nome Completo
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-              <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-              E-mail
-            </label>
-            <div className="relative">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-              <MdEmail className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-              Telefone
-            </label>
-            <div className="relative">
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="(00) 00000-0000"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-              <MdPhone className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-4 mt-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-              Segurança
-            </label>
-            
-            <div className="flex flex-col gap-2">
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Nova Senha (deixe em branco para não alterar)"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirmar Nova Senha"
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-4">
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-                Idade
-              </label>
-              <input
-                type="number"
-                value={age}
-                onChange={(e) => setAge(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-                Gênero
-              </label>
-              <select 
-                value={gender}
-                onChange={(e) => setGender(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-4 text-gray-900 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-100"
-              >
-                <option value="Masculino">Masculino</option>
-                <option value="Feminino">Feminino</option>
-                <option value="Outro">Outro</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-3 mt-2">
-            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-              Tipo de Diabetes
-            </label>
-            {["Tipo 1", "Tipo 2", "Gestacional", "Pré-diabetes"].map((tipo) => (
-              <label
-                key={tipo}
-                className={`flex items-center gap-3 p-4 rounded-2xl border transition-all cursor-pointer ${
-                  diabetesType === tipo ? "border-blue-600 bg-blue-50/30" : "border-gray-100 bg-white hover:bg-gray-50"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="diabetesType"
-                  value={tipo}
-                  checked={diabetesType === tipo}
-                  onChange={() => setDiabetesType(tipo)}
-                  className="w-5 h-5 accent-blue-600"
-                />
-                <span className={`font-medium ${diabetesType === tipo ? "text-blue-700" : "text-gray-900"}`}>
-                  {tipo}
-                </span>
-              </label>
-            ))}
-          </div>
-
-          <div className="mt-6">
-            <button 
-              type="submit"
-              disabled={isSaving}
-              className={`w-full ${isSaving ? 'bg-gray-400' : 'bg-blue-600'} text-white font-bold py-4 rounded-full shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all`}
-            >
-              {isSaving ? "Salvando..." : "Salvar Alterações"}
-            </button>
-          </div>
-        </form>
-
-        <SuccessModal 
-          isOpen={showSuccess} 
-          message="Suas alterações foram salvas com sucesso no seu perfil." 
+        <SuccessModal
+          isOpen={showSuccess}
+          message="Suas alterações foram salvas com sucesso!"
           onClose={() => {
             setShowSuccess(false);
             router.push("/patient/profile");
-          }} 
+          }}
         />
       </div>
     </main>
   );
 }
-

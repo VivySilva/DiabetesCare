@@ -4,12 +4,41 @@ import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 import bcrypt from "bcrypt";
 
 /**
+ * Executa um UPDATE no Supabase com retry automático.
+ * Se uma coluna não existir no schema (PGRST204), ela é removida e o update é refeito.
+ * Isso garante funcionamento mesmo sem migrações de colunas opcionais aplicadas.
+ */
+async function performUpdate(
+  userId: string,
+  updates: Record<string, any>
+): Promise<{ error: any }> {
+  if (Object.keys(updates).length === 0) {
+    return { error: null };
+  }
+
+  const { error } = await supabase
+    .from("users")
+    .update(updates)
+    .eq("id", userId);
+
+  // PGRST204 = coluna não encontrada no schema cache
+  if (error?.code === "PGRST204") {
+    const match = error.message.match(/the '(.+?)' column/);
+    if (match) {
+      const missingCol = match[1];
+      console.warn(`[profile/update] Coluna '${missingCol}' não existe no banco — ignorando e reexecutando.`);
+      const retry = { ...updates };
+      delete retry[missingCol];
+      return performUpdate(userId, retry);
+    }
+  }
+
+  return { error };
+}
+
+/**
  * GET /api/user/me
- * 
  * Recupera os dados do perfil do usuário autenticado.
- * 
- * @param {NextRequest} req - Objeto de requisição.
- * @returns {Promise<Response>} Dados do usuário ou erro (401, 404, 500).
  */
 export async function GET(req: NextRequest) {
   const user = await verifyToken(req);
@@ -18,15 +47,31 @@ export async function GET(req: NextRequest) {
   try {
     const { data, error } = await supabase
       .from("users")
-      .select("id, name, email, role, avatar_url, age, gender, diabetes_type, phone, license_number")
+      .select("*")
       .eq("id", user.id)
       .single();
 
-    if (error || !data) {
+    if (error) {
+      console.error("Supabase GET error:", error);
+      return NextResponse.json(
+        { erro: "Erro ao buscar dados do usuário.", detalhe: error.message },
+        { status: 500 }
+      );
+    }
+
+    if (!data) {
       return NextResponse.json({ erro: "Usuário não encontrado." }, { status: 404 });
     }
 
-    return NextResponse.json({ user: data }, { status: 200 });
+    // Remove campos sensíveis antes de retornar ao cliente
+    const {
+      password_hash,
+      password_reset_token,
+      password_reset_expires,
+      ...safeUser
+    } = data as any;
+
+    return NextResponse.json({ user: safeUser }, { status: 200 });
   } catch (error) {
     console.error("Erro ao buscar perfil:", error);
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
@@ -35,20 +80,8 @@ export async function GET(req: NextRequest) {
 
 /**
  * PUT /api/user/me
- * 
  * Atualiza os dados do perfil do usuário autenticado.
- * 
- * @param {NextRequest} req - Objeto de requisição.
- * @param {Object} req.body - Dados para atualização.
- * @param {string} [req.body.name] - Novo nome.
- * @param {string} [req.body.email] - Novo e-mail.
- * @param {number} [req.body.age] - Nova idade.
- * @param {string} [req.body.gender] - Gênero.
- * @param {string} [req.body.diabetes_type] - Tipo de diabetes.
- * @param {string} [req.body.phone] - Novo telefone.
- * @param {string} [req.body.avatar_url] - Nova URL da imagem de perfil.
- * @param {string} [req.body.password] - Nova senha (será hasheada).
- * @returns {Promise<Response>} Perfil atualizado ou erro (401, 409, 500).
+ * Colunas ausentes no banco são ignoradas automaticamente (sem precisar de migração).
  */
 export async function PUT(req: NextRequest) {
   const user = await verifyToken(req);
@@ -56,8 +89,12 @@ export async function PUT(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { name, email, age, gender, diabetes_type, phone, avatar_url, password } = body;
+    const {
+      name, email, age, gender, diabetes_type, phone, avatar_url, password,
+      cpf, birth_date, specialty, crm, crm_uf, education, clinic_address, license_number,
+    } = body;
 
+    // Verifica e-mail duplicado em outra conta
     if (email) {
       const { data: existingUser } = await supabase
         .from("users")
@@ -74,36 +111,44 @@ export async function PUT(req: NextRequest) {
       }
     }
 
-    const updates: any = {
-      name,
-      email,
-      age,
-      gender,
-      diabetes_type,
-      phone,
-      avatar_url,
-      // license_number is kept for professional accounts
-      license_number: body.license_number,
-      updated_at: new Date().toISOString(),
-    };
+    // Monta o payload — só inclui campos que foram enviados (não undefined)
+    const updates: Record<string, any> = {};
 
+    if (name !== undefined)            updates.name            = name;
+    if (email !== undefined)           updates.email           = email;
+    if (age !== undefined)             updates.age             = age;
+    if (gender !== undefined)          updates.gender          = gender;
+    if (diabetes_type !== undefined)   updates.diabetes_type   = diabetes_type;
+    if (phone !== undefined)           updates.phone           = phone;
+    if (avatar_url !== undefined)      updates.avatar_url      = avatar_url;
+    // Campos do profissional — ignorados automaticamente se a coluna não existir
+    if (cpf !== undefined)             updates.cpf             = cpf;
+    if (birth_date !== undefined)      updates.birth_date      = birth_date;
+    if (specialty !== undefined)       updates.specialty       = specialty;
+    if (crm !== undefined)             updates.crm             = crm;
+    if (crm_uf !== undefined)          updates.crm_uf          = crm_uf;
+    if (education !== undefined)       updates.education       = education;
+    if (clinic_address !== undefined)  updates.clinic_address  = clinic_address;
+    if (license_number !== undefined)  updates.license_number  = license_number;
+
+    // Hash da nova senha se fornecida
     if (password && password.trim() !== "") {
       const salt = await bcrypt.genSalt(10);
       updates.password_hash = await bcrypt.hash(password, salt);
     }
 
-    const { data, error: updateError } = await supabase
-      .from("users")
-      .update(updates)
-      .eq("id", user.id)
-      .select()
-      .single();
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ mensagem: "Nenhum dado para atualizar." }, { status: 200 });
+    }
+
+    // Executa o update com retry automático para colunas ausentes
+    const { error: updateError } = await performUpdate(user.id, updates);
 
     if (updateError) {
-      console.error("SUPABASE UPDATE ERROR:", updateError);
+      console.error("SUPABASE UPDATE ERROR (final):", JSON.stringify(updateError));
       return NextResponse.json(
         {
-          erro: "Erro ao atualizar perfil no banco de dados.",
+          erro: `Erro ao atualizar perfil: ${updateError.message}`,
           detalhe: updateError.message,
           codigo: updateError.code,
         },
@@ -111,7 +156,7 @@ export async function PUT(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ mensagem: "Perfil atualizado!", user: data }, { status: 200 });
+    return NextResponse.json({ mensagem: "Perfil atualizado com sucesso!" }, { status: 200 });
   } catch (error) {
     console.error("Erro ao atualizar perfil:", error);
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });

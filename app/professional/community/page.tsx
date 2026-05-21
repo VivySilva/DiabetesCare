@@ -1,16 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import ArticleCard from "@/components/ui/ArticleCard";
 import ForumListScreen from "@/components/features/forum/ForumListScreen";
-import { COMMUNITY_POSTS } from "../../patient/community/data";
+import { getCommunityPosts } from "@/services/community/communityService";
 
 export default function ProfessionalCommunityPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'articles' | 'forum'>('articles');
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (activeTab !== 'articles') return;
+    getCommunityPosts()
+      .then((data) => setPosts(data.posts || []))
+      .catch(() => { })
+      .finally(() => setIsLoading(false));
+  }, [activeTab]);
 
   return (
     <main className="min-h-screen bg-[#F7F9FB] pb-[91px]">
@@ -43,9 +53,26 @@ export default function ProfessionalCommunityPage() {
             </p>
           </div>
 
+          {isLoading && (
+            <div className="w-full py-8 text-center text-gray-400 text-sm">Carregando artigos...</div>
+          )}
+
+          {!isLoading && posts.length === 0 && (
+            <div className="w-full py-8 text-center text-gray-400 text-sm">
+              Nenhum artigo publicado ainda.
+            </div>
+          )}
+
           <div className="flex flex-col gap-5 w-full pb-4">
-            {COMMUNITY_POSTS.map((post) => (
-              <ArticleCard key={post.id} post={post} isProfessional={true} />
+            {posts.map((post) => (
+              <ArticleCard key={post.id} post={{
+                id: post.id,
+                title: post.title,
+                author: post.users?.name || 'Autor',
+                date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
+                image: post.cover_image_url || '',
+                content: [post.content_html],
+              }} isProfessional={true} />
             ))}
           </div>
         </section>

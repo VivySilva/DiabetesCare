@@ -1,34 +1,45 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import ArticleCard from "@/components/ui/ArticleCard";
 import { useRouter } from "next/navigation";
+import { getCommunityPosts } from "@/services/community/communityService";
+import { getUserProfile } from "@/services/user/userService";
 
 export default function MyPostsPage() {
   const router = useRouter();
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const POSTS = [
-    {
-      id: "1",
-      title: "Como controlar a glicemia no dia a dia",
-      content: ["Manter uma rotina alimentar equilibrada é essencial para o controle glicêmico..."],
-      image: "https://images.unsplash.com/photo-1498837167922-ddd27525d352",
-      author: "Você",
-      date: "HOJE",
-      category: "Saúde",
-    },
-    {
-      id: "2",
-      title: "Exercícios físicos e diabetes: o que você precisa saber",
-      content: ["A prática regular de atividades físicas ajuda na sensibilidade à insulina..."],
-      image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b",
-      author: "Você",
-      date: "ONTEM",
-      category: "Exercícios",
-    }
-  ];
+  useEffect(() => {
+    const fetchMyPosts = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        router.push("/login");
+        return;
+      }
+
+      try {
+        const [profileRes, postsRes] = await Promise.all([
+          getUserProfile(token),
+          getCommunityPosts(),
+        ]);
+        const userId = profileRes.user.id;
+        const myPosts = (postsRes.posts || []).filter(
+          (p: any) => p.author_id === userId
+        );
+        setPosts(myPosts);
+      } catch (err) {
+        console.error("Erro ao buscar suas publicações:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMyPosts();
+  }, [router]);
 
   const handleEdit = (id: string) => {
     router.push(`/professional/edit-post/${id}`);
@@ -50,11 +61,28 @@ export default function MyPostsPage() {
           </p>
         </div>
 
+        {isLoading && (
+          <div className="w-full py-8 text-center text-gray-400 text-sm">Carregando publicações...</div>
+        )}
+
+        {!isLoading && posts.length === 0 && (
+          <div className="w-full py-8 text-center text-gray-400 text-sm bg-white rounded-[32px] border border-gray-100 p-6 shadow-sm">
+            Você ainda não publicou nenhum artigo.
+          </div>
+        )}
+
         <div className="flex flex-col gap-6">
-          {POSTS.map((post) => (
+          {posts.map((post) => (
             <ArticleCard 
               key={post.id} 
-              post={post} 
+              post={{
+                id: post.id,
+                title: post.title,
+                author: 'Você',
+                date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
+                image: post.cover_image_url || '',
+                content: [post.content_html],
+              }}
               isProfessional={true} 
               onEdit={handleEdit}
             />

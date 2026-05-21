@@ -2,9 +2,9 @@ import { httpClient } from "@/lib/httpClient";
 
 /**
  * Get current user profile.
- * 
+ *
  * Recupera os dados do perfil do usuário autenticado.
- * 
+ *
  * @param {string} token - Token de autenticação JWT.
  * @returns {Promise<any>} A resposta da API contendo os dados do perfil.
  */
@@ -14,21 +14,37 @@ export async function getUserProfile(token: string) {
 
 /**
  * Update user profile.
- * 
+ *
  * Atualiza os dados do perfil do usuário autenticado.
- * 
+ * Funciona tanto para pacientes quanto para profissionais de saúde —
+ * campos não enviados são ignorados no servidor (não sobrescrevem com undefined).
+ *
  * @param {Object} data - Os novos dados do perfil.
- * @param {string} [data.name] - Nome.
- * @param {string} [data.email] - E-mail.
- * @param {number} [data.age] - Idade.
- * @param {string} [data.gender] - Gênero.
- * @param {string} [data.diabetes_type] - Tipo de diabetes.
- * @param {string} [data.phone] - Telefone.
- * @param {string} [data.avatar_url] - Foto de perfil.
- * @param {string} [data.password] - Nova senha.
- * @param {string} token - Token de autenticação JWT.
+ * @param {string} [data.name]           - Nome completo.
+ * @param {string} [data.email]          - E-mail.
+ * @param {number} [data.age]            - Idade (paciente).
+ * @param {string} [data.gender]         - Gênero (paciente).
+ * @param {string} [data.diabetes_type]  - Tipo de diabetes (paciente).
+ * @param {string} [data.phone]          - Telefone.
+ * @param {string} [data.avatar_url]     - URL da foto de perfil.
+ * @param {string} [data.password]       - Nova senha (será hasheada no servidor).
+ * @param {string} [data.cpf]            - CPF (profissional).
+ * @param {string} [data.birth_date]     - Data de nascimento (profissional).
+ * @param {string} [data.specialty]      - Especialidade (profissional).
+ * @param {string} [data.crm]            - Número de registro CRM/CRN (profissional).
+ * @param {string} [data.crm_uf]         - UF do registro (profissional).
+ * @param {string} [data.education]      - Formação/instituição (profissional).
+ * @param {string} [data.clinic_address] - Endereço do consultório (profissional).
+ * @param {string | null} token          - Token de autenticação JWT.
  * @returns {Promise<any>} A resposta da API confirmando a atualização.
  */
-export async function updateUserProfile(data: any, token: string) {
-  return httpClient.put("/user/me", data, token);
+export async function updateUserProfile(data: Record<string, any>, token: string | null) {
+  if (!token) throw new Error("Sessão expirada. Faça login novamente.");
+
+  // Remove campos undefined do objeto antes de enviar
+  const payload = Object.fromEntries(
+    Object.entries(data).filter(([, v]) => v !== undefined)
+  );
+
+  return httpClient.put("/user/me", payload, token);
 }

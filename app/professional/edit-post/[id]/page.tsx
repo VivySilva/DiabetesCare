@@ -5,49 +5,88 @@ import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import { useRouter, useParams } from "next/navigation";
 import { MdOutlineImage, MdOutlineCategory, MdSave, MdDeleteOutline } from "react-icons/md";
+import { getCommunityPostById, updateCommunityPost, deleteCommunityPost } from "@/services/community/communityService";
 
 export default function EditPostPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id;
+  const id = params.id as string;
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [category, setCategory] = useState("Saúde");
   const [imageUrl, setImageUrl] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Simulação de carregamento de dados do post
   useEffect(() => {
-    // Em um cenário real, buscaríamos pelo id
-    if (id === "1") {
-      setTitle("Como controlar a glicemia no dia a dia");
-      setContent("Manter uma rotina alimentar equilibrada é essencial para o controle glicêmico...");
-      setCategory("Saúde");
-      setImageUrl("https://images.unsplash.com/photo-1498837167922-ddd27525d352");
-    } else if (id === "2") {
-      setTitle("Exercícios físicos e diabetes: o que você precisa saber");
-      setContent("A prática regular de atividades físicas ajuda na sensibilidade à insulina...");
-      setCategory("Exercícios");
-      setImageUrl("https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b");
-    }
-  }, [id]);
+    const fetchPost = async () => {
+      try {
+        const res = await getCommunityPostById(id);
+        const post = res.post;
+        setTitle(post.title || "");
+        setContent(post.content_html || "");
+        setCategory(post.category || "Saúde");
+        setImageUrl(post.cover_image_url || "");
+      } catch (err) {
+        console.error("Erro ao carregar post:", err);
+        alert("Não foi possível carregar a publicação.");
+        router.push("/professional/my-posts");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleSubmit = (e: React.FormEvent) => {
+    fetchPost();
+  }, [id, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSaving(true);
-    
-    // Simulação de salvamento
-    setTimeout(() => {
-      router.push('/professional/my-posts');
-    }, 1500);
-  };
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-  const handleDelete = () => {
-    if (confirm("Tem certeza que deseja excluir esta publicação?")) {
-      router.push('/professional/my-posts');
+    setIsSaving(true);
+
+    try {
+      await updateCommunityPost(id, {
+        title,
+        cover_image_url: imageUrl || null,
+        category,
+        content_html: content,
+      }, token);
+
+      router.push("/professional/my-posts");
+    } catch (err: any) {
+      alert(err.message || "Erro ao salvar as alterações.");
+    } finally {
+      setIsSaving(false);
     }
   };
+
+  const handleDelete = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    if (!confirm("Tem certeza que deseja excluir esta publicação?")) return;
+
+    try {
+      await deleteCommunityPost(id, token);
+      router.push("/professional/my-posts");
+    } catch (err: any) {
+      alert(err.message || "Erro ao excluir publicação.");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px]">
+        <Header title="Editar Publicação" variant="page" />
+        <main className="flex items-center justify-center flex-1">
+          <div className="w-10 h-10 border-4 border-azul border-t-transparent rounded-full animate-spin" />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px]">

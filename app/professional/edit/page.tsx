@@ -6,7 +6,7 @@ import Link from "next/link";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import Avatar from "@/components/ui/profile/avatar";
-import { getUserProfile } from "@/services/user/userService"; // Mantendo seu service centralizado
+import { getUserProfile, updateUserProfile } from "@/services/user/userService"; // Mantendo seu service centralizado
 import { MdSave, MdArrowBack, MdOutlineEmail, MdLocalPhone, MdBadge, MdCardMembership } from "react-icons/md";
 
 export default function ProfessionalProfileEdit() {
@@ -59,23 +59,14 @@ export default function ProfessionalProfileEdit() {
     const token = localStorage.getItem("token");
 
     try {
-      // Integração com sua rota interna de API para salvar as alterações
-      const response = await fetch("/api/profissional", {
-        method: "PUT",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-          email,
-          phone,
-          specialty,
-          crm,
-        }),
-      });
-
-      if (!response.ok) throw new Error("Erro ao atualizar dados");
+      // Integração com a API centralizada para salvar as alterações
+      await updateUserProfile({
+        name,
+        email,
+        phone,
+        specialty,
+        crm,
+      }, token);
 
       // Redireciona de volta para o perfil do profissional após salvar
       router.push("/professional/profile");

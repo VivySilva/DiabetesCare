@@ -54,3 +54,65 @@ export async function POST(
     return NextResponse.json({ erro: "Erro ao processar curtida." }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/forum/[id]/like
+ * 
+ * Remove a curtida de um usuário em um tópico do fórum.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} context - Contexto da rota.
+ * @param {Object} context.params - Parâmetros da URL.
+ * @param {string} context.params.id - ID do tópico.
+ * @returns {Promise<Response>} Status da operação ou erro (401, 404, 500).
+ */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await verifyToken(req);
+  if (!user) return unauthorizedResponse();
+
+  try {
+    const { id: topicId } = await params;
+
+    const { data: existing } = await supabase
+      .from("forum_likes")
+      .select("id")
+      .eq("topic_id", topicId)
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (!existing) {
+      return NextResponse.json(
+        { erro: "Curtida não encontrada." },
+        { status: 404 }
+      );
+    }
+
+    const { data: topic } = await supabase
+      .from("forum_topics")
+      .select("likes_count")
+      .eq("id", topicId)
+      .single();
+
+    const currentLikes = topic?.likes_count || 0;
+
+    await supabase.from("forum_likes").delete().eq("id", existing.id);
+
+    const newCount = Math.max(0, currentLikes - 1);
+    await supabase
+      .from("forum_topics")
+      .update({ likes_count: newCount })
+      .eq("id", topicId);
+
+    return NextResponse.json({
+      mensagem: "Curtida removida!",
+      liked: false,
+      likes_count: newCount,
+    });
+  } catch (error) {
+    console.error("General error removing like:", error);
+    return NextResponse.json({ erro: "Erro ao remover curtida." }, { status: 500 });
+  }
+}

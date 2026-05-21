@@ -21,3 +21,28 @@ export async function registerMedication(data: {
 }, token: string) {
   return httpClient.post("/medications", data, token);
 }
+
+/**
+ * Get medication records.
+ * 
+ * Recupera a lista de medicamentos cadastrados do usuário.
+ * 
+ * @param {string} token - Token de autenticação JWT.
+ * @returns {Promise<any>} A resposta da API contendo a lista de medicamentos.
+ */
+export async function getMedications(token: string) {
+  return httpClient.get("/medications", token);
+}
+
+/**
+ * Delete a medication record.
+ * 
+ * Remove um registro de medicamento pelo ID.
+ * 
+ * @param {string} id - ID do registro de medicamento a ser removido.
+ * @param {string} token - Token de autenticação JWT.
+ * @returns {Promise<any>} A resposta da API confirmando a remoção.
+ */
+export async function deleteMedication(id: string, token: string) {
+  return httpClient.delete(`/medications/${id}`, token);
+}

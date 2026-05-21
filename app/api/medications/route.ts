@@ -3,6 +3,40 @@ import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
 /**
+ * GET /api/medications
+ * 
+ * Recupera a lista de medicamentos do usuário autenticado.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @returns {Promise<Response>} Lista de medicamentos ou erro (401, 500).
+ */
+export async function GET(req: NextRequest) {
+  const user = await verifyToken(req);
+  if (!user) return unauthorizedResponse();
+
+  try {
+    const { data, error } = await supabase
+      .from("medication_records")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching medication records:", error);
+      return NextResponse.json(
+        { erro: "Erro ao buscar medicamentos." },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ records: data }, { status: 200 });
+  } catch (error) {
+    console.error("General error in medication listing:", error);
+    return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
+  }
+}
+
+/**
  * POST /api/medications
  * 
  * Registra um novo medicamento no cronograma do usuário.

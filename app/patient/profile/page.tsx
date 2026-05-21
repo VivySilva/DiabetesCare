@@ -9,6 +9,7 @@ import LogoutModal from "@/components/ui/modals/logout-modal";
 import {
   MdOutlinePictureAsPdf,
   MdLogout,
+  MdEdit,
 } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import { getUserProfile } from "@/services/user/userService";
@@ -148,9 +149,7 @@ export default function PatientProfile() {
           
           {/* Column 1: Profile Summary & Main Actions */}
           <div className="md:col-span-1 flex flex-col items-center bg-white rounded-[32px] p-6 border border-gray-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
-            <Link href="/patient/profile/edit" className="transition-transform hover:scale-105">
-              <Avatar mode="view" src={user?.avatar_url} />
-            </Link>
+            <Avatar mode="view" src={user?.avatar_url} />
 
             {isLoading ? (
               <div className="flex flex-col items-center mt-4 gap-2 w-full">
@@ -163,13 +162,26 @@ export default function PatientProfile() {
                   {user?.name || "Usuário"}
                 </h2>
                 <span className="bg-blue-50 text-blue-600 text-[10px] font-bold px-3 py-1.5 rounded-full mt-2 tracking-wide uppercase">
-                  {user?.role === "PROFESSIONAL" ? "Especialista" : user?.diabetes_type || "Paciente"}
+                  {user?.diabetes_type || "Paciente"}
                 </span>
               </>
             )}
 
             {/* Quick Action Buttons */}
             <div className="w-full bg-gray-50 rounded-[24px] p-2 mt-6 flex flex-col gap-1">
+
+              {/* ✏️ BOTÃO EDITAR PERFIL */}
+              <Link
+                href="/patient/profile/edit"
+                className="flex items-center justify-between p-3.5 rounded-2xl bg-white hover:bg-blue-50 text-blue-700 font-semibold text-sm transition-all border border-gray-100 shadow-sm"
+              >
+                <div className="flex items-center gap-3">
+                  <MdEdit size={20} />
+                  <span>Editar Perfil</span>
+                </div>
+                <span className="text-blue-400 text-sm">›</span>
+              </Link>
+
               <button
                 onClick={handleExportPDF}
                 disabled={isExporting}

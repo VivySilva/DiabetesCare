@@ -1,17 +1,44 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { COMMUNITY_POSTS } from "@/app/patient/community/data";
+import { getCommunityPostById } from "@/services/community/communityService";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 
 export default function PostDetail({ id }: { id: string }) {
   const router = useRouter();
-  const post = COMMUNITY_POSTS.find((p) => p.id === id);
+  const [post, setPost] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Caso o post não seja encontrado
-  if (!post) {
+  useEffect(() => {
+    const fetchPost = async () => {
+      try {
+        const res = await getCommunityPostById(id);
+        setPost(res.post);
+      } catch (err: any) {
+        setError(err.message || "Postagem não encontrada.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchPost();
+  }, [id]);
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-white pb-[91px]">
+        <Header title="Visualização de postagem" variant="page" />
+        <section className="flex flex-col items-center justify-center px-[33px] pt-24 gap-4 w-full text-center">
+          <div className="w-10 h-10 border-4 border-azul border-t-transparent rounded-full animate-spin" />
+          <p className="text-cinza-claro-texto">Carregando postagem...</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (error || !post) {
     return (
       <main className="min-h-screen bg-white pb-[91px]">
         <Header title="Visualização de postagem" variant="page" />
@@ -23,26 +50,27 @@ export default function PostDetail({ id }: { id: string }) {
     );
   }
 
-  // Verifica se uma linha do conteúdo é um tópico numerado (ex: "1. Algo", "2. Outro")
-  const isTopicHeading = (text: string) => /^\d+\./.test(text);
-  // Verifica se é um subtítulo (linha curta, sem ponto final, geralmente títulos de seção)
-  const isSectionHeading = (text: string) =>
-    text.length < 60 && !text.endsWith(".") && !isTopicHeading(text);
+  const authorName = post.users?.name || "Autor";
+  const authorInitial = authorName.charAt(0);
+  const publishedDate = new Date(post.created_at).toLocaleDateString("pt-BR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <main className="min-h-screen bg-white pb-[91px]">
-      <Header
-        title="Visualização de postagem"
-        variant="page"
-      />
+      <Header title="Visualização de postagem" variant="page" />
 
-      <div className="w-full overflow-hidden" style={{ height: "219.38px", flexShrink: 0 }}>
-        <img
-          src={post.image}
-          alt={post.title}
-          className="w-full h-full object-cover"
-        />
-      </div>
+      {post.cover_image_url && (
+        <div className="w-full overflow-hidden" style={{ height: "219.38px", flexShrink: 0 }}>
+          <img
+            src={post.cover_image_url}
+            alt={post.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
+      )}
 
       <section
         className="flex flex-col items-start pb-8 w-full"
@@ -67,7 +95,7 @@ export default function PostDetail({ id }: { id: string }) {
               className="text-azul font-bold"
               style={{ fontFamily: "var(--font-inter)", fontSize: "16px" }}
             >
-              {(post.author || 'A').charAt(0)}
+              {authorInitial}
             </span>
           </div>
           <div className="flex flex-col" style={{ gap: "4px" }}>
@@ -75,54 +103,22 @@ export default function PostDetail({ id }: { id: string }) {
               className="font-semibold text-texto"
               style={{ fontFamily: "var(--font-inter)", fontSize: "14px", lineHeight: 1.2 }}
             >
-              {post.author || 'Autor'}
+              {authorName}
             </span>
             <span
               className="text-cinza-claro-texto"
               style={{ fontFamily: "var(--font-inter)", fontSize: "12px" }}
             >
-              Publicado em {post.date}
+              Publicado em {publishedDate}
             </span>
           </div>
         </div>
 
-        <div className="flex flex-col gap-4 w-full">
-          {post.content.map((paragraph, i) => {
-            if (isTopicHeading(paragraph)) {
-              return (
-                <h2
-                  key={i}
-                  className="m-0 text-texto"
-                  style={{ fontFamily: "var(--font-manrope)", fontWeight: 700, fontSize: "16px" }}
-                >
-                  {paragraph}
-                </h2>
-              );
-            }
-
-            if (isSectionHeading(paragraph)) {
-              return (
-                <h2
-                  key={i}
-                  className="m-0 text-texto"
-                  style={{ fontFamily: "var(--font-manrope)", fontWeight: 700, fontSize: "16px" }}
-                >
-                  {paragraph}
-                </h2>
-              );
-            }
-
-            return (
-              <p
-                key={i}
-                className="m-0 text-cinza-escuro-texto"
-                style={{ fontFamily: "var(--font-inter)", fontSize: "14px", lineHeight: "1.7" }}
-              >
-                {paragraph}
-              </p>
-            );
-          })}
-        </div>
+        <div
+          className="flex flex-col gap-4 w-full text-cinza-escuro-texto prose prose-sm max-w-none"
+          style={{ fontFamily: "var(--font-inter)", fontSize: "14px", lineHeight: "1.7" }}
+          dangerouslySetInnerHTML={{ __html: post.content_html }}
+        />
       </section>
 
       <Footer />
