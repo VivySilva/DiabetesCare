@@ -35,6 +35,24 @@ export class DiabeticaService {
     `;
 
     try {
+      const DIABETICA_API_URL = process.env.DIABETICA_API_URL || 'http://localhost:5000/predict';
+      
+      const response = await fetch(DIABETICA_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: prompt, history: [] }),
+        signal: AbortSignal.timeout(60000)
+      });
+
+      if (!response.ok) {
+        throw new Error(`Falha na API da Diabetica: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.response || "A Diabetica não retornou dicas no momento.";
+    } catch (error) {
+      console.error("Erro ao chamar Diabetica LLM, usando fallback:", error);
+      
       if (summary.hypoglycemia_events > 3) {
         return "Notamos uma frequência alta de hipoglicemias. Revise sua dose de insulina basal com seu médico e certifique-se de carregar sempre um carboidrato de rápida absorção.";
       }
@@ -44,9 +62,6 @@ export class DiabeticaService {
       }
 
       return "Seu controle está excelente! Mantenha a rotina de exercícios e o monitoramento constante para continuar com esses ótimos resultados.";
-    } catch (error) {
-      console.error("Erro ao chamar Diabetica LLM:", error);
-      return "Não foi possível gerar dicas inteligentes no momento. Continue monitorando seus dados normalmente.";
     }
   }
 }

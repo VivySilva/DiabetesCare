@@ -13,10 +13,12 @@ import NotificationsScreen from "@/components/features/notifications/Notificatio
 import { getUserProfile } from "@/services/user/userService"
 import { getGlucoseRecords } from "@/services/glucose/glucoseService"
 import { getCommunityPosts } from "@/services/community/communityService";
+import DiabeticaChat from "@/Diabetica/DiabeticaChat";
 
 export default function Home() {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [userName, setUserName] = useState("");
   const [latestGlucose, setLatestGlucose] = useState<any>(null);
   const [allGlucoseRecords, setAllGlucoseRecords] = useState<any[]>([]);
@@ -156,6 +158,30 @@ export default function Home() {
         <GlucoseBoard records={allGlucoseRecords} />
 
       </section>
+
+      {/* Floating Chat Button */}
+      <button
+        onClick={() => setShowChat(!showChat)}
+        className="fixed bottom-24 md:bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors z-50"
+      >
+        <span className="text-white text-3xl">🤖</span>
+      </button>
+
+      {/* Chat Popover */}
+      {showChat && (
+        <div className="fixed bottom-40 md:bottom-24 right-6 z-50 w-[90vw] md:w-auto md:min-w-[400px]">
+          <div className="relative">
+             <button 
+               onClick={() => setShowChat(false)} 
+               className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 shadow-md z-10"
+               aria-label="Fechar chat"
+             >
+               ✕
+             </button>
+             <DiabeticaChat />
+          </div>
+        </div>
+      )}
 
       <Footer />
     </main>
