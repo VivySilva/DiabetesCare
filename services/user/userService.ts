@@ -22,14 +22,13 @@ export async function getUserProfile(token: string) {
  * @param {Object} data - Os novos dados do perfil.
  * @param {string} [data.name]           - Nome completo.
  * @param {string} [data.email]          - E-mail.
- * @param {number} [data.age]            - Idade (paciente).
+ * @param {string} [data.birth_date]     - Data de nascimento no formato YYYY-MM-DD (paciente).
  * @param {string} [data.gender]         - Gênero (paciente).
  * @param {string} [data.diabetes_type]  - Tipo de diabetes (paciente).
  * @param {string} [data.phone]          - Telefone.
  * @param {string} [data.avatar_url]     - URL da foto de perfil.
  * @param {string} [data.password]       - Nova senha (será hasheada no servidor).
  * @param {string} [data.cpf]            - CPF (profissional).
- * @param {string} [data.birth_date]     - Data de nascimento (profissional).
  * @param {string} [data.specialty]      - Especialidade (profissional).
  * @param {string} [data.crm]            - Número de registro CRM/CRN (profissional).
  * @param {string} [data.crm_uf]         - UF do registro (profissional).
@@ -47,4 +46,15 @@ export async function updateUserProfile(data: Record<string, any>, token: string
   );
 
   return httpClient.put("/user/me", payload, token);
+}
+
+/**
+ * Exclui permanentemente a conta de usuário atual.
+ * 
+ * @param {string | null} token - Token de autenticação JWT.
+ * @returns {Promise<any>} A confirmação de sucesso de exclusão.
+ */
+export async function deleteUserProfile(token: string | null) {
+  if (!token) throw new Error("Sessão expirada. Faça login novamente.");
+  return httpClient.delete("/user/me", token);
 }

@@ -162,3 +162,50 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/user/me
+ * 
+ * Exclui permanentemente a conta do usuário autenticado e todos os dados associados.
+ */
+export async function DELETE(req: NextRequest) {
+  const user = await verifyToken(req);
+  if (!user) return unauthorizedResponse();
+
+  try {
+    // 1. Excluir registros do paciente (Glicemias e Medicamentos)
+    await supabase.from("glucose_records").delete().eq("user_id", user.id);
+    await supabase.from("medication_records").delete().eq("user_id", user.id);
+
+    // 2. Excluir logs de login e notificações
+    await supabase.from("login_logs").delete().eq("user_id", user.id);
+    await supabase.from("notifications").delete().eq("user_id", user.id);
+
+    // 3. Excluir tópicos de fórum, respostas e likes
+    await supabase.from("forum_likes").delete().eq("user_id", user.id);
+    await supabase.from("forum_replies").delete().eq("user_id", user.id);
+    await supabase.from("forum_topics").delete().eq("user_id", user.id);
+
+    // 4. Excluir publicações da comunidade (caso profissional)
+    await supabase.from("community_posts").delete().eq("author_id", user.id);
+
+    // 5. Excluir a conta de usuário na tabela 'users'
+    const { error: deleteError } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", user.id);
+
+    if (deleteError) {
+      console.error("Erro ao excluir conta do Supabase:", deleteError);
+      return NextResponse.json(
+        { erro: "Erro ao excluir conta do banco de dados.", detalhe: deleteError.message },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ mensagem: "Conta excluída com sucesso!" }, { status: 200 });
+  } catch (error) {
+    console.error("Erro interno ao excluir conta:", error);
+    return NextResponse.json({ erro: "Erro interno ao processar a exclusão." }, { status: 500 });
+  }
+}

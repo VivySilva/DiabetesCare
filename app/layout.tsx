@@ -20,6 +20,9 @@ export const metadata: Metadata = {
   title: "DiabetesCare",
   description:
     "Plataforma web para monitoramento glicêmico e educação em saúde voltada para pacientes com diabetes.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({

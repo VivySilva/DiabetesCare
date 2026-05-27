@@ -6,9 +6,11 @@ import Link from "next/link";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import Avatar from "@/components/ui/profile/avatar";
-import { getUserProfile, updateUserProfile } from "@/services/user/userService";
+import { getUserProfile, updateUserProfile, deleteUserProfile } from "@/services/user/userService";
 import SuccessModal from "@/components/ui/modals/success-modal";
+import DeleteAccountModal from "@/components/ui/modals/delete-account-modal";
 import { motion, AnimatePresence } from "framer-motion";
+import { calculateAge, formatBirthDate, convertBrazilianDateToISO } from "@/lib/age-calculator";
 import {
   MdSave,
   MdArrowBack,
@@ -25,6 +27,8 @@ import {
   MdPerson,
   MdMedicalServices,
   MdBusiness,
+  MdEdit,
+  MdWarning,
 } from "react-icons/md";
 
 const SPECIALTIES = [
@@ -38,9 +42,9 @@ const SPECIALTIES = [
 ];
 
 const ESTADOS_BR = [
-  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA",
-  "MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN",
-  "RS","RO","RR","SC","SP","SE","TO",
+  "AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA",
+  "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN",
+  "RS", "RO", "RR", "SC", "SP", "SE", "TO",
 ];
 
 function InputField({
@@ -77,12 +81,39 @@ export default function ProfessionalProfileEdit() {
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    setErrorMsg("");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      await deleteUserProfile(token);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      router.push("/login");
+    } catch (err: any) {
+      console.error("Erro ao excluir conta:", err);
+      setErrorMsg(err.message ?? "Erro ao excluir conta. Tente novamente.");
+      setIsDeleteModalOpen(false);
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [cpf, setCpf] = useState("");
   const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("Masculino");
   const [specialty, setSpecialty] = useState("Endocrinologia");
   const [crm, setCrm] = useState("");
   const [crmUf, setCrmUf] = useState("SP");
@@ -96,6 +127,7 @@ export default function ProfessionalProfileEdit() {
   // Avatar separado: URL real do banco vs. preview local
   const [savedAvatarUrl, setSavedAvatarUrl] = useState<string>("");
   const [avatarPreview, setAvatarPreview] = useState<string>("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -112,12 +144,15 @@ export default function ProfessionalProfileEdit() {
         setEmail(res.user.email || "");
         setPhone(res.user.phone || "");
         setCpf(res.user.cpf || "");
-        setBirthDate(res.user.birth_date || "");
+        setBirthDate(res.user.birth_date ? formatBirthDate(res.user.birth_date) : "");
+        setGender(res.user.gender || "Masculino");
         setSpecialty(res.user.specialty || "Endocrinologia");
         setCrm(res.user.crm || "");
         setCrmUf(res.user.crm_uf || "SP");
         setEducation(res.user.education || "");
         setClinicAddress(res.user.clinic_address || "");
+        setSavedAvatarUrl(res.user.avatar_url || "");
+        setAvatarPreview(res.user.avatar_url || "");
       } catch (error) {
         console.error("Erro ao carregar dados para edição:", error);
       } finally {
@@ -145,17 +180,26 @@ export default function ProfessionalProfileEdit() {
     const token = localStorage.getItem("token");
 
     try {
+      const isoBirthDate = birthDate ? convertBrazilianDateToISO(birthDate) : null;
+      if (birthDate && !isoBirthDate) {
+        setErrorMsg("Data de nascimento inválida. Use o formato DD/MM/AAAA.");
+        setIsSaving(false);
+        return;
+      }
+
       const updateData: any = {
         name,
         email,
         phone,
         cpf,
-        birth_date: birthDate,
+        birth_date: isoBirthDate,
+        gender,
         specialty,
         crm,
         crm_uf: crmUf,
         education,
         clinic_address: clinicAddress,
+        avatar_url: avatarPreview || null,
       };
 
       if (password) updateData.password = password;
@@ -216,9 +260,26 @@ export default function ProfessionalProfileEdit() {
                   {isLoading ? (
                     <div className="w-[108px] h-[108px] rounded-full bg-gray-100 animate-pulse" />
                   ) : (
-                    <Avatar mode="edit" src={user?.avatar_url} size={108} />
+                    <Avatar
+                      src={avatarPreview}
+                      mode="edit"
+                      size={108}
+                      onImageSelected={(file) => {
+                        setAvatarFile(file);
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setAvatarPreview(reader.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }}
+                    />
                   )}
                   <span className="text-blue-600 text-xs font-semibold">Alterar Foto</span>
+                  {avatarFile && (
+                    <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-medium">
+                      Nova foto selecionada
+                    </span>
+                  )}
                 </div>
 
                 <div className="w-full h-px bg-gray-100" />
@@ -258,6 +319,25 @@ export default function ProfessionalProfileEdit() {
                   <MdArrowBack size={18} />
                   Cancelar e Voltar
                 </Link>
+
+                <div className="w-full h-px bg-gray-100 my-2" />
+
+                {/* ── Zona de Perigo ── */}
+                <div className="w-full bg-gradient-to-br from-red-50/80 via-rose-50/40 to-red-50/30 rounded-2xl border border-red-100 p-5 text-center flex flex-col gap-3 mt-4 shadow-[0_8px_20px_rgba(239,68,68,0.04)] hover:shadow-[0_8px_24px_rgba(239,68,68,0.06)] transition-all">
+                  <p className="text-xs font-bold text-red-600 uppercase tracking-widest flex items-center justify-center gap-2 m-0">
+                    <MdWarning className="text-red-500 animate-pulse" size={16} /> Zona de Perigo
+                  </p>
+                  <p className="text-[11.5px] text-red-700/80 leading-relaxed font-semibold m-0 text-center">
+                    A exclusão da conta é permanente e removerá de forma definitiva todas as suas informações clínicas, publicações e registros do sistema.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="w-full py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold hover:shadow-[0_4px_12px_rgba(220,38,38,0.25)] active:scale-[0.98] transition-all duration-200 mt-1 flex items-center justify-center gap-2"
+                  >
+                    Excluir Minha Conta
+                  </button>
+                </div>
               </motion.div>
 
               {/* RIGHT COLUMN — Form */}
@@ -290,9 +370,10 @@ export default function ProfessionalProfileEdit() {
                               value={name}
                               onChange={(e) => setName(e.target.value)}
                               placeholder="Dr. Nome Completo"
-                              className={inputWithIconClass}
+                              className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 pr-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all placeholder:text-gray-300"
                               required
                             />
+                            <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                           </div>
                         </InputField>
 
@@ -306,18 +387,74 @@ export default function ProfessionalProfileEdit() {
                                 value={cpf}
                                 onChange={(e) => setCpf(e.target.value)}
                                 placeholder="000.000.000-00"
-                                className={inputWithIconClass}
+                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 pr-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all placeholder:text-gray-300"
                               />
+                              <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                             </div>
                           </InputField>
 
                           {/* Data de Nascimento */}
-                          <InputField label="Data de Nascimento">
+                          <InputField label="Data de Nascimento (DD/MM/AAAA)">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                maxLength={10}
+                                placeholder="DD/MM/AAAA"
+                                value={birthDate}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  const clean = val.replace(/\D/g, "");
+                                  let formatted = "";
+                                  if (clean.length > 0) {
+                                    formatted += clean.substring(0, 2);
+                                    if (clean.length > 2) {
+                                      formatted += "/" + clean.substring(2, 4);
+                                      if (clean.length > 4) {
+                                        formatted += "/" + clean.substring(4, 8);
+                                      }
+                                    }
+                                  }
+                                  setBirthDate(formatted);
+                                }}
+                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pr-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all placeholder:text-gray-300"
+                              />
+                              <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                            </div>
+                          </InputField>
+
+                          {/* Gênero */}
+                          <InputField label="Gênero">
+                            <div className="relative">
+                              <select
+                                value={gender}
+                                onChange={(e) => setGender(e.target.value)}
+                                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all cursor-pointer"
+                              >
+                                <option value="Masculino">Masculino</option>
+                                <option value="Feminino">Feminino</option>
+                                <option value="Outro">Outro</option>
+                                <option value="Prefiro não informar">Prefiro não informar</option>
+                              </select>
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                                <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                                </svg>
+                              </div>
+                            </div>
+                          </InputField>
+
+                          {/* Idade (Calculada automaticamente) */}
+                          <InputField label="Idade">
                             <input
-                              type="date"
-                              value={birthDate}
-                              onChange={(e) => setBirthDate(e.target.value)}
-                              className={inputClass}
+                              type="text"
+                              value={
+                                birthDate && convertBrazilianDateToISO(birthDate)
+                                  ? `${calculateAge(convertBrazilianDateToISO(birthDate)!)} anos`
+                                  : "Não informada"
+                              }
+                              readOnly
+                              disabled
+                              className="w-full bg-gray-100 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-600 font-medium cursor-not-allowed focus:outline-none"
                             />
                           </InputField>
                         </div>
@@ -354,9 +491,9 @@ export default function ProfessionalProfileEdit() {
                                   value={crm}
                                   onChange={(e) => setCrm(e.target.value)}
                                   placeholder="Ex: 123456"
-                                  className={inputWithIconClass}
-                                  required
+                                  className={`${inputWithIconClass} pr-11`}
                                 />
+                                <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={18} />
                               </div>
                             </InputField>
                           </div>
@@ -384,8 +521,9 @@ export default function ProfessionalProfileEdit() {
                               value={education}
                               onChange={(e) => setEducation(e.target.value)}
                               placeholder="Ex: Residência em Endocrinologia — USP"
-                              className={inputWithIconClass}
+                              className={`${inputWithIconClass} pr-11`}
                             />
+                            <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={18} />
                           </div>
                         </InputField>
                       </div>
@@ -406,9 +544,10 @@ export default function ProfessionalProfileEdit() {
                                 type="email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
-                                className={inputWithIconClass}
+                                className={`${inputWithIconClass} pr-11`}
                                 required
                               />
+                              <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={18} />
                             </div>
                           </InputField>
 
@@ -421,8 +560,9 @@ export default function ProfessionalProfileEdit() {
                                 value={phone}
                                 onChange={(e) => setPhone(e.target.value)}
                                 placeholder="(11) 99999-0000"
-                                className={inputWithIconClass}
+                                className={`${inputWithIconClass} pr-11`}
                               />
+                              <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={18} />
                             </div>
                           </InputField>
                         </div>
@@ -436,8 +576,9 @@ export default function ProfessionalProfileEdit() {
                               onChange={(e) => setClinicAddress(e.target.value)}
                               placeholder={`Av. Paulista, 1000 - Sala 42\nSão Paulo, SP`}
                               rows={3}
-                              className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all resize-none placeholder:text-gray-300"
+                              className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 pr-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all resize-none placeholder:text-gray-300"
                             />
+                            <MdEdit className="absolute right-4 top-5 text-gray-300 pointer-events-none" size={18} />
                           </div>
                         </InputField>
                       </div>
@@ -480,11 +621,10 @@ export default function ProfessionalProfileEdit() {
                               value={confirmPassword}
                               onChange={(e) => setConfirmPassword(e.target.value)}
                               placeholder="Repita a nova senha"
-                              className={`w-full bg-gray-50 border rounded-2xl px-4 py-3.5 pl-11 pr-12 text-gray-900 font-medium focus:outline-none focus:ring-2 transition-all focus:bg-white placeholder:text-gray-300 ${
-                                confirmPassword && password !== confirmPassword
+                              className={`w-full bg-gray-50 border rounded-2xl px-4 py-3.5 pl-11 pr-12 text-gray-900 font-medium focus:outline-none focus:ring-2 transition-all focus:bg-white placeholder:text-gray-300 ${confirmPassword && password !== confirmPassword
                                   ? "border-red-200 focus:ring-red-100"
                                   : "border-gray-100 focus:ring-blue-200 focus:border-blue-400"
-                              }`}
+                                }`}
                             />
                             <button
                               type="button"
@@ -505,11 +645,10 @@ export default function ProfessionalProfileEdit() {
                     <button
                       type="submit"
                       disabled={isSaving}
-                      className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-base transition-all shadow-lg ${
-                        isSaving
+                      className={`w-full flex items-center justify-center gap-2 py-4 rounded-2xl font-bold text-white text-base transition-all shadow-lg ${isSaving
                           ? "bg-gray-400 cursor-not-allowed shadow-none"
                           : "bg-blue-600 hover:bg-blue-700 shadow-blue-600/25 active:scale-[0.99]"
-                      }`}
+                        }`}
                     >
                       {isSaving ? (
                         <>
@@ -540,6 +679,13 @@ export default function ProfessionalProfileEdit() {
           setShowSuccess(false);
           router.push("/professional/profile");
         }}
+      />
+
+      <DeleteAccountModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteAccount}
+        isDeleting={isDeletingAccount}
       />
     </main>
   );

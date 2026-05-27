@@ -9,6 +9,7 @@ import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import LogoutModal from "@/components/ui/modals/logout-modal";
 import { getUserProfile } from "@/services/user/userService";
+import { calculateAge } from "@/lib/age-calculator";
 import {
   MdSchool,
   MdOutlineEmail,
@@ -109,10 +110,9 @@ export default function ProfessionalProfile() {
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-2 pb-3 border-b border-gray-100">Informações Básicas</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InfoCard label="Idade" value={user?.age ? `${user.age} anos` : "Não informado"} />
+                <InfoCard label="Idade" value={user?.birth_date ? `${calculateAge(user.birth_date)} anos` : "Não informado"} />
                 <InfoCard label="Gênero" value={user?.gender || "Não informado"} />
                 <InfoCard label="CPF" value={user?.cpf || "Não informado"} />
-                <InfoCard label="Data de Nascimento" value={user?.birth_date || "Não informado"} />
               </div>
             </div>
 

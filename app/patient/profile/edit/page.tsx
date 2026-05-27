@@ -13,12 +13,15 @@ import {
   MdSave,
   MdBloodtype,
   MdCheckCircle,
+  MdWarning,
 } from "react-icons/md";
 import { useRouter } from "next/navigation";
 import Header from "@/components/ui/Header";
-import { getUserProfile, updateUserProfile } from "@/services/user/userService";
+import { getUserProfile, updateUserProfile, deleteUserProfile } from "@/services/user/userService";
 import SuccessModal from "@/components/ui/modals/success-modal";
+import DeleteAccountModal from "@/components/ui/modals/delete-account-modal";
 import { motion, AnimatePresence } from "framer-motion";
+import { calculateAge, formatBirthDate, convertBrazilianDateToISO } from "@/lib/age-calculator";
 
 const DIABETES_TYPES = [
   { value: "Tipo 1",       label: "Tipo 1" },
@@ -33,10 +36,36 @@ export default function EditPatientProfile() {
   const [isSaving, setIsSaving]         = useState(false);
   const [showSuccess, setShowSuccess]   = useState(false);
   const [error, setError]               = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    setError("");
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    try {
+      await deleteUserProfile(token);
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      router.push("/login");
+    } catch (err: any) {
+      console.error("Erro ao excluir conta:", err);
+      setError(err.message ?? "Erro ao excluir conta. Tente novamente.");
+      setIsDeleteModalOpen(false);
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
 
   // Campos do formulário
   const [name, setName]               = useState("");
-  const [age, setAge]                 = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender]           = useState("Masculino");
   const [phone, setPhone]             = useState("");
   const [email, setEmail]             = useState("");
@@ -61,7 +90,7 @@ export default function EditPatientProfile() {
         const res = await getUserProfile(token);
         const u = res.user;
         setName(u.name ?? "");
-        setAge(u.age != null ? String(u.age) : "");
+        setDateOfBirth(u.birth_date ? formatBirthDate(u.birth_date) : "");
         setGender(u.gender ?? "Masculino");
         setPhone(u.phone ?? "");
         setEmail(u.email ?? "");
@@ -101,20 +130,23 @@ export default function EditPatientProfile() {
     setIsSaving(true);
 
     try {
-      // Monta o payload — avatar_url só é enviado se for uma URL real (não base64)
+      const isoBirthDate = dateOfBirth ? convertBrazilianDateToISO(dateOfBirth) : null;
+      if (dateOfBirth && !isoBirthDate) {
+        setError("Data de nascimento inválida. Use o formato DD/MM/AAAA.");
+        setIsSaving(false);
+        return;
+      }
+
+      // Monta o payload — avatar_url é enviado diretamente como base64 se selecionado do PC
       const payload: Record<string, any> = {
         name:          name.trim(),
         email:         email.trim(),
         phone:         phone.trim() || null,
         gender,
         diabetes_type: diabetesType,
-        age:           age ? parseInt(age, 10) : null,
+        birth_date:    isoBirthDate,
+        avatar_url:    avatarPreview || null,
       };
-
-      // Só envia avatar_url se for uma URL HTTP (não base64 local)
-      if (savedAvatarUrl && !savedAvatarUrl.startsWith("data:")) {
-        payload.avatar_url = savedAvatarUrl;
-      }
 
       // Senha só se o usuário preencheu
       if (password) {
@@ -193,8 +225,8 @@ export default function EditPatientProfile() {
                     Alterar Foto
                   </span>
                   {avatarFile && (
-                    <span className="text-[10px] text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full font-medium">
-                      Upload de foto em breve
+                    <span className="text-[10px] text-green-600 bg-green-50 px-2 py-0.5 rounded-full font-medium">
+                      Nova foto selecionada
                     </span>
                   )}
                 </div>
@@ -261,6 +293,25 @@ export default function EditPatientProfile() {
                   <MdArrowBack size={18} />
                   Cancelar e Voltar
                 </button>
+
+                <div className="w-full h-px bg-gray-100 my-2" />
+
+                {/* ── Zona de Perigo ── */}
+                <div className="w-full bg-gradient-to-br from-red-50/80 via-rose-50/40 to-red-50/30 rounded-2xl border border-red-100 p-5 text-center flex flex-col gap-3 mt-4 shadow-[0_8px_20px_rgba(239,68,68,0.04)] hover:shadow-[0_8px_24px_rgba(239,68,68,0.06)] transition-all">
+                  <p className="text-xs font-bold text-red-600 uppercase tracking-widest flex items-center justify-center gap-2 m-0">
+                    <MdWarning className="text-red-500 animate-pulse" size={16} /> Zona de Perigo
+                  </p>
+                  <p className="text-[11.5px] text-red-700/80 leading-relaxed font-semibold m-0 text-center">
+                    A exclusão da conta é permanente e removerá de forma definitiva todas as suas informações, histórico de glicose e registros do sistema.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setIsDeleteModalOpen(true)}
+                    className="w-full py-3 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold hover:shadow-[0_4px_12px_rgba(220,38,38,0.25)] active:scale-[0.98] transition-all duration-200 mt-1 flex items-center justify-center gap-2"
+                  >
+                    Excluir Minha Conta
+                  </button>
+                </div>
               </motion.div>
 
               {/* ── COLUNA DIREITA: Formulário ── */}
@@ -311,37 +362,71 @@ export default function EditPatientProfile() {
                       </div>
                     </div>
 
-                    {/* Idade + Gênero */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-                          Idade
-                        </label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="120"
-                          value={age}
-                          onChange={(e) => setAge(e.target.value)}
-                          placeholder="Ex: 32"
-                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
-                          Gênero
-                        </label>
-                        <select
-                          value={gender}
-                          onChange={(e) => setGender(e.target.value)}
-                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all cursor-pointer"
-                        >
-                          <option value="Masculino">Masculino</option>
-                          <option value="Feminino">Feminino</option>
-                          <option value="Outro">Outro</option>
-                          <option value="Prefiro não informar">Prefiro não informar</option>
-                        </select>
-                      </div>
+                     {/* Data de Nascimento + Idade */}
+                     <div className="grid grid-cols-2 gap-4">
+                       <div className="flex flex-col gap-1.5">
+                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                           Data de Nascimento (DD/MM/AAAA)
+                         </label>
+                         <div className="relative">
+                           <input
+                             type="text"
+                             maxLength={10}
+                             placeholder="DD/MM/AAAA"
+                             value={dateOfBirth}
+                             onChange={(e) => {
+                               const val = e.target.value;
+                               const clean = val.replace(/\D/g, "");
+                               let formatted = "";
+                               if (clean.length > 0) {
+                                 formatted += clean.substring(0, 2);
+                                 if (clean.length > 2) {
+                                   formatted += "/" + clean.substring(2, 4);
+                                   if (clean.length > 4) {
+                                     formatted += "/" + clean.substring(4, 8);
+                                   }
+                                 }
+                               }
+                               setDateOfBirth(formatted);
+                             }}
+                             className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pr-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
+                           />
+                           <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                         </div>
+                       </div>
+                       <div className="flex flex-col gap-1.5">
+                         <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                           Idade
+                         </label>
+                         <input
+                           type="text"
+                           value={
+                             dateOfBirth && convertBrazilianDateToISO(dateOfBirth)
+                               ? `${calculateAge(convertBrazilianDateToISO(dateOfBirth)!)} anos`
+                               : "Não informada"
+                           }
+                           readOnly
+                           disabled
+                           className="w-full bg-gray-100 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-600 font-medium focus:outline-none cursor-not-allowed"
+                         />
+                       </div>
+                     </div>
+
+                    {/* Gênero */}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                        Gênero
+                      </label>
+                      <select
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all cursor-pointer"
+                      >
+                        <option value="Masculino">Masculino</option>
+                        <option value="Feminino">Feminino</option>
+                        <option value="Outro">Outro</option>
+                        <option value="Prefiro não informar">Prefiro não informar</option>
+                      </select>
                     </div>
                   </div>
                 </div>
@@ -366,8 +451,9 @@ export default function EditPatientProfile() {
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="seu@email.com"
                           required
-                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 pr-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
                         />
+                        <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                       </div>
                     </div>
 
@@ -383,8 +469,9 @@ export default function EditPatientProfile() {
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="(00) 00000-0000"
-                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
+                          className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 pr-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
                         />
+                        <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
                       </div>
                     </div>
                   </div>
@@ -500,6 +587,13 @@ export default function EditPatientProfile() {
             setShowSuccess(false);
             router.push("/patient/profile");
           }}
+        />
+
+        <DeleteAccountModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeleteAccount}
+          isDeleting={isDeletingAccount}
         />
       </div>
     </main>

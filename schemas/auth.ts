@@ -11,8 +11,11 @@ export const registerSchema = z.object({
   password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
   confirmPassword: z.string(),
   role: z.enum(["patient", "professional"]),
+  dateOfBirth: z.string().optional(), // Data de nascimento no formato YYYY-MM-DD
   licenseNumber: z.string().optional(),
   phone: z.string().optional(),
+  diabetesType: z.string().optional(),
+  gender: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],

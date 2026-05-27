@@ -15,6 +15,7 @@ import { successResponse, errorResponse } from "@/lib/api-response";
  * @param {string} req.body.email - Endereço de e-mail.
  * @param {string} req.body.password - Senha.
  * @param {"patient" | "professional"} req.body.role - Papel do usuário.
+ * @param {string} [req.body.dateOfBirth] - Data de nascimento no formato YYYY-MM-DD (opcional).
  * @param {string} [req.body.licenseNumber] - Registro profissional (obrigatório para profissionais).
  * @param {string} [req.body.phone] - Telefone opcional.
  * @returns {Promise<Response>} Resposta JSON com status 201 (criado) ou erro (400, 500).
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
       return errorResponse(result.error.issues[0].message, 400);
     }
 
-    const { name, email, password, role, licenseNumber, phone } = result.data;
+    const { name, email, password, role, licenseNumber, phone, dateOfBirth, diabetesType, gender } = result.data;
 
     const userRole = role === 'professional' ? 'PROFESSIONAL' : 'PATIENT';
 
@@ -58,9 +59,12 @@ export async function POST(req: NextRequest) {
           role: userRole,
           license_number: userRole === 'PROFESSIONAL' ? licenseNumber : null,
           phone: phone || null,
+          birth_date: dateOfBirth || null,
+          diabetes_type: userRole === 'PATIENT' ? diabetesType : null,
+          gender: gender || null,
         },
       ])
-      .select("id, name, email, role, license_number, phone")
+      .select("id, name, email, role, license_number, phone, birth_date, diabetes_type, gender")
       .single();
 
     if (insertError) {

@@ -173,44 +173,31 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
             const isMe = reply.author_id === currentUserId;
             
             return (
-              <div key={reply.id} className={`flex flex-col gap-2 ${isMe ? 'items-end' : isExpert ? 'items-center' : 'items-start'}`}>
+              <div key={reply.id} className={`flex flex-col gap-2 ${isMe ? 'items-end' : 'items-start'}`}>
                 {!isMe && (
-                  <div className={`flex items-center gap-2 ${isExpert ? 'flex-col mb-1' : 'mb-1'}`}>
-                    <div className={`w-8 h-8 rounded-full overflow-hidden border shadow-sm ${isExpert ? 'w-12 h-12 border-blue-100' : 'border-gray-50'}`}>
+                  <div className={`flex items-center gap-2 mb-1`}>
+                    <div className={`w-15 h-15 rounded-full overflow-hidden border shadow-sm border-gray-50`}>
                       {reply.users?.avatar_url ? (
                         <img src={reply.users.avatar_url} className="w-full h-full object-cover" />
                       ) : (
-                        <div className={`w-full h-full flex items-center justify-center text-[10px] font-bold ${isExpert ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                        <div className="w-full h-full flex items-center justify-center text-[10px] font-bold bg-gray-100 text-gray-400">
                           {reply.users?.name?.substring(0, 2).toUpperCase() || '??'}
                         </div>
                       )}
                     </div>
-                    <div className={`flex flex-col ${isExpert ? 'items-center' : 'items-start'}`}>
-                      <span className="text-[11px] font-bold text-gray-900">{reply.users?.name}</span>
+                    <div className={`flex flex-col items-start`}>
+                      <span className="text-[11px] font-bold text-gray-900">{isExpert ? (<><strong>Especialista </strong>{reply.users?.name}</>) : reply.users?.name}</span>
                       <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{timeAgo(reply.created_at)}</span>
                     </div>
                   </div>
                 )}
 
                 {isMe && (
-                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest px-2">{timeAgo(reply.created_at)}</span>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2">{timeAgo(reply.created_at)}</span>
                 )}
 
-                <div className={`relative max-w-[85%] p-4 rounded-[24px] ${
-                  isMe 
-                    ? 'bg-blue-600 text-white shadow-md rounded-tr-none' 
-                    : isExpert
-                    ? 'bg-white text-blue-700 shadow-xl shadow-blue-100/50 text-center italic font-medium border-2 border-blue-100'
-                    : 'bg-white text-gray-600 border border-gray-100 shadow-sm rounded-tl-none'
-                }`}>
-                  {isExpert && (
-                     <div className="flex justify-center mb-2">
-                        <span className="bg-blue-50 text-blue-600 text-[8px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border border-blue-100">
-                          Especialista
-                        </span>
-                     </div>
-                  )}
-                  <p className="text-[14px] leading-relaxed">
+                <div className={`relative max-w-[90%] p-6 rounded-[24px] bg-white text-gray-600 border border-gray-100 shadow-sm rounded-tl-none`}>
+                  <p className="text-[16px] leading-relaxed">
                     {reply.content}
                   </p>
                 </div>
@@ -221,14 +208,14 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
       </main>
 
       <footer className="fixed bottom-0 w-full max-w-4xl left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl border-t border-gray-100 p-4 pb-8 flex items-center gap-3 z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-        <div className="flex-1 bg-gray-50 border border-gray-100 rounded-[28px] flex items-center px-6 py-3.5 focus-within:bg-white focus-within:border-blue-200 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
+        <div className="flex-1 bg-gray-50 border border-gray-100 rounded-[28px] h-12 flex items-center px-6 max-w-[98%] mx-auto focus-within:bg-white focus-within:border-blue-200 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
           <input
             type="text"
             placeholder={isProfessional ? "Responder como especialista..." : "Escreva sua resposta..."}
             value={replyText}
             onChange={(e) => setReplyText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSendReply()}
-            className="bg-transparent w-full focus:outline-none text-[15px] text-gray-700 placeholder-gray-400 font-medium"
+            className="h-12 w-full bg-transparent focus:outline-none text-[16px] text-gray-700 placeholder-gray-400 font-medium flex items-center"
           />
         </div>
         <button

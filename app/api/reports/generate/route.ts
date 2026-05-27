@@ -3,6 +3,7 @@ import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 import { ReportService } from "@/services/reports/report-service";
 import { DiabeticaService } from "@/services/reports/diabetica-service";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import supabase from "@/config/supabase";
 
 export const dynamic = "force-dynamic";
 
@@ -28,11 +29,19 @@ export async function GET(req: NextRequest) {
     const summary = await ReportService.getSummary(user.id, periodDays);
     const aiTips = await DiabeticaService.getAITips(summary);
 
+    // Buscar dados atualizados do banco (o token do JWT não contém diabetes_type)
+    const { data: dbUser } = await supabase
+      .from("users")
+      .select("name, diabetes_type")
+      .eq("id", user.id)
+      .single();
+
     return successResponse({
       summary,
       aiTips,
       generatedAt: new Date().toISOString(),
-      patientName: user.name
+      patientName: dbUser?.name || user.name,
+      diabetesType: dbUser?.diabetes_type || "Não informado"
     });
   } catch (error) {
     console.error("Erro ao gerar relatório:", error);
