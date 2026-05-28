@@ -148,7 +148,7 @@ export default function ProfessionalProfile() {
                       Registro (CRM / CRN)
                     </span>
                     <span className="text-blue-600 font-bold text-base">
-                      {user?.crm || "Não informado"} {user?.crm_uf ? `- ${user.crm_uf}` : ""}
+                      {user?.license_number || "Não informado"}
                     </span>
                   </div>
                 </div>

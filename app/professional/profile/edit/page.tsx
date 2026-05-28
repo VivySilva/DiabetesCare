@@ -147,7 +147,7 @@ export default function ProfessionalProfileEdit() {
         setBirthDate(res.user.birth_date ? formatBirthDate(res.user.birth_date) : "");
         setGender(res.user.gender || "Masculino");
         setSpecialty(res.user.specialty || "Endocrinologia");
-        setCrm(res.user.crm || "");
+        setCrm(res.user.license_number || "");
         setCrmUf(res.user.crm_uf || "SP");
         setEducation(res.user.education || "");
         setClinicAddress(res.user.clinic_address || "");
@@ -195,7 +195,7 @@ export default function ProfessionalProfileEdit() {
         birth_date: isoBirthDate,
         gender,
         specialty,
-        crm,
+        license_number: crm,
         crm_uf: crmUf,
         education,
         clinic_address: clinicAddress,
