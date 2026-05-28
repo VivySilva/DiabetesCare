@@ -117,7 +117,7 @@ export default function ResetPasswordPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center px-6 py-12">
       <Suspense fallback={<div>Carregando...</div>}>
         {showContent && <ResetPasswordContent />}
       </Suspense>

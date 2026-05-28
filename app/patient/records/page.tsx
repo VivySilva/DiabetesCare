@@ -11,7 +11,7 @@ export default function RegistrosPage() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen bg-white pb-[91px] md:pb-12">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[91px] md:pb-12">
       <Header
         title="Registros"
         variant="page"

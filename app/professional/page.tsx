@@ -59,7 +59,7 @@ export default function ProfissionalPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px] md:pb-12">
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <Header title="DiabetesCare" variant="home" titleColor="var(--dc-azul)" />
 
       {/* Centralized Container with Max Width */}

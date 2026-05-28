@@ -135,7 +135,7 @@ export default function CadastroGlicemia() {
   };
 
   return (
-    <main className="min-h-screen bg-white pb-[91px]">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[91px]">
       <Header
         title="Glicemia"
         variant="page"

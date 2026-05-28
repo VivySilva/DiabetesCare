@@ -46,7 +46,7 @@ export default function MyPostsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px]">
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] pb-[100px]">
       <Header 
         title="Minhas Publicações" 
         variant="page" 

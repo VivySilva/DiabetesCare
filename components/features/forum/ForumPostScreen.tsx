@@ -99,7 +99,7 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto bg-white min-h-screen flex flex-col font-sans relative">
+    <div className="w-full max-w-4xl mx-auto bg-[#F8F9FA] min-h-screen flex flex-col font-sans relative">
       <Header title="Tópico" variant="page" showNotification={true} />
 
       <main 
@@ -207,8 +207,8 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 w-full max-w-4xl left-1/2 -translate-x-1/2 bg-white/95 backdrop-blur-xl border-t border-gray-100 p-4 pb-8 flex items-center gap-3 z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-        <div className="flex-1 bg-gray-50 border border-gray-100 rounded-[28px] h-12 flex items-center px-6 max-w-[98%] mx-auto focus-within:bg-white focus-within:border-blue-200 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
+      <footer className="sticky bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-100 p-4 pb-8 flex items-center gap-3 z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+        <div className="flex-1 bg-gray-50 border border-gray-100 rounded-[28px] h-12 flex items-center px-6 focus-within:bg-white focus-within:border-blue-200 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
           <input
             type="text"
             placeholder={isProfessional ? "Responder como especialista..." : "Escreva sua resposta..."}

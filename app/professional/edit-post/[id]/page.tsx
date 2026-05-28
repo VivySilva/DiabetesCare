@@ -79,7 +79,7 @@ export default function EditPostPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px]">
+      <div className="flex flex-col min-h-screen bg-[#F8F9FA] pb-[100px]">
         <Header title="Editar Publicação" variant="page" />
         <main className="flex items-center justify-center flex-1">
           <div className="w-10 h-10 border-4 border-azul border-t-transparent rounded-full animate-spin" />
@@ -89,7 +89,7 @@ export default function EditPostPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px]">
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] pb-[100px]">
       <Header 
         title="Editar Publicação" 
         variant="page" 

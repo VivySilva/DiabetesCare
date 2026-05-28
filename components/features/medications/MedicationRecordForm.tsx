@@ -55,7 +55,7 @@ export default function CadastroRemedios() {
   };
 
   return (
-    <main className="min-h-screen bg-white pb-[91px]">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[91px]">
       <Header
         title="Remédios"
         variant="page"

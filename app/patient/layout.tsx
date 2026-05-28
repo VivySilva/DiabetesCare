@@ -8,7 +8,7 @@ export default function PatientLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[#F7F9FB] flex flex-row">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-row">
       {/* Responsive Desktop Sidebar */}
       <Sidebar />
 
