@@ -19,27 +19,51 @@ export async function GET(
   try {
     const { id } = await params;
 
-    const { data: topic, error: topicError } = await supabase
+    const { data: topicData, error } = await supabase
       .from("forum_topics")
-      .select("id, title, preview, is_moderated, likes_count, created_at, author_id, users(name, avatar_url, role)")
+      .select("id, title, preview, is_moderated, likes_count, created_at, author_id")
       .eq("id", id)
-      .maybeSingle();
+      .single();
 
-    if (topicError || !topic) {
+    if (error) {
+      console.error("Error fetching topic:", error);
       return NextResponse.json({ erro: "Tópico não encontrado." }, { status: 404 });
     }
 
-    const { data: replies, error: repliesError } = await supabase
+    let authorInfo = null;
+    if (topicData.author_id) {
+      const { data: patient } = await supabase.from("patients").select("name, avatar_url, role").eq("id", topicData.author_id).maybeSingle();
+      if (patient) authorInfo = patient;
+      else {
+        const { data: prof } = await supabase.from("professionals").select("name, avatar_url, role").eq("id", topicData.author_id).maybeSingle();
+        if (prof) authorInfo = prof;
+      }
+    }
+
+    const topic = { ...topicData, users: authorInfo };
+
+    const { data: repliesData } = await supabase
       .from("forum_replies")
-      .select("id, content, created_at, author_id, users(name, avatar_url, role)")
+      .select("id, content, created_at, author_id")
       .eq("topic_id", id)
       .order("created_at", { ascending: true });
 
-    if (repliesError) {
-      console.error("Error fetching replies:", repliesError);
+    let finalReplies = repliesData || [];
+    const replyAuthorIds = Array.from(new Set(finalReplies.map((r: any) => r.author_id)));
+    if (replyAuthorIds.length > 0) {
+      let usersMap: Record<string, any> = {};
+      const { data: patients } = await supabase.from("patients").select("name, avatar_url, role, id").in("id", replyAuthorIds);
+      const { data: profs } = await supabase.from("professionals").select("name, avatar_url, role, id").in("id", replyAuthorIds);
+      patients?.forEach(p => usersMap[p.id] = p);
+      profs?.forEach(p => usersMap[p.id] = p);
+      
+      finalReplies = finalReplies.map((r: any) => ({
+        ...r,
+        users: usersMap[r.author_id] || null
+      }));
     }
 
-    return NextResponse.json({ topic, replies: replies || [] }, { status: 200 });
+    return NextResponse.json({ topic, replies: finalReplies }, { status: 200 });
   } catch (error) {
     console.error("General error fetching topic:", error);
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });

@@ -3,6 +3,7 @@ import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 import { ReportService } from "@/services/reports/report-service";
 import { DiabeticaService } from "@/services/reports/diabetica-service";
 import { successResponse, errorResponse } from "@/lib/api-response";
+import { z } from "zod";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,10 @@ export async function GET(req: NextRequest) {
   if (!user) return unauthorizedResponse();
 
   const { searchParams } = new URL(req.url);
-  const period = searchParams.get("period") || "7";
+  const periodParam = searchParams.get("period") || "7";
+  
+  const periodSchema = z.enum(["7", "15", "30"]).catch("7");
+  const period = periodSchema.parse(periodParam);
   const periodDays = parseInt(period);
 
   try {

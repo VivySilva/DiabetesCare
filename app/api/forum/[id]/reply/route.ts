@@ -15,6 +15,8 @@ import { verifyToken, unauthorizedResponse } from "@/lib/auth";
  * @param {string} req.body.content - Texto da resposta.
  * @returns {Promise<Response>} Resposta criada ou erro (400, 401, 404, 500).
  */
+import { forumReplySchema } from "@/schemas/forum";
+
 export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -24,12 +26,17 @@ export async function POST(
 
   try {
     const { id: topicId } = await params;
-    const body = await req.json();
-    const { content } = body;
+    const jsonBody = await req.json();
+    const result = forumReplySchema.safeParse(jsonBody);
 
-    if (!content?.trim()) {
-      return NextResponse.json({ erro: "O conteúdo da resposta é obrigatório." }, { status: 400 });
+    if (!result.success) {
+      return NextResponse.json(
+        { erro: "Dados inválidos.", detalhes: result.error.issues },
+        { status: 400 }
+      );
     }
+
+    const { content } = result.data;
 
     const { data: topic } = await supabase
       .from("forum_topics")
@@ -41,16 +48,30 @@ export async function POST(
       return NextResponse.json({ erro: "Tópico não encontrado." }, { status: 404 });
     }
 
-    const { data, error } = await supabase
+    const { data: newReply, error: insertError } = await supabase
       .from("forum_replies")
-      .insert([{ topic_id: topicId, author_id: user.id, content }])
-      .select("id, content, created_at, author_id, users(name, avatar_url, role)")
+      .insert([
+        {
+          topic_id: topicId,
+          content,
+          author_id: user.id,
+        },
+      ])
+      .select("id, content, created_at, author_id")
       .single();
 
-    if (error) {
-      console.error("Error creating reply:", error);
-      return NextResponse.json({ erro: "Erro ao enviar resposta.", detalhe: error.message }, { status: 500 });
+    if (insertError) {
+      console.error("Error inserting reply:", insertError);
+      return NextResponse.json({ erro: "Erro ao adicionar resposta." }, { status: 500 });
     }
+
+    const { data: authorData } = await supabase
+      .from(user.role.toLowerCase() === 'professional' ? 'professionals' : 'patients')
+      .select("name, avatar_url, role")
+      .eq("id", user.id)
+      .single();
+      
+    (newReply as any).users = authorData;
 
     if (topic.author_id !== user.id) {
       await supabase.from("notifications").insert([
@@ -64,7 +85,7 @@ export async function POST(
       ]);
     }
 
-    return NextResponse.json({ mensagem: "Resposta enviada com sucesso!", reply: data }, { status: 201 });
+    return NextResponse.json({ mensagem: "Resposta enviada com sucesso!", reply: newReply }, { status: 201 });
   } catch (error) {
     console.error("General error replying:", error);
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });

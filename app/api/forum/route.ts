@@ -13,12 +13,23 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("forum_topics")
-      .select("id, title, preview, is_moderated, likes_count, created_at, author_id, users(name, avatar_url, role)")
+      .select("id, title, preview, is_moderated, likes_count, created_at, author_id")
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching forum topics:", error);
       return NextResponse.json({ erro: "Erro ao buscar tópicos do fórum." }, { status: 500 });
+    }
+
+    const authorIds = Array.from(new Set((data || []).map(post => post.author_id)));
+    
+    let usersMap: Record<string, any> = {};
+    if (authorIds.length > 0) {
+      const { data: patients } = await supabase.from("patients").select("id, name, avatar_url, role").in("id", authorIds);
+      const { data: professionals } = await supabase.from("professionals").select("id, name, avatar_url, role").in("id", authorIds);
+      
+      patients?.forEach(p => usersMap[p.id] = p);
+      professionals?.forEach(p => usersMap[p.id] = p);
     }
 
     const topicIds = (data || []).map((t: any) => t.id);
@@ -55,17 +66,25 @@ export async function GET() {
  * @param {string} [req.body.preview] - Breve descrição ou resumo.
  * @returns {Promise<Response>} Tópico criado ou erro (400, 401, 500).
  */
+import { forumTopicSchema } from "@/schemas/forum";
+
 export async function POST(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
 
   try {
-    const body = await req.json();
-    const { title, preview } = body;
+    const jsonBody = await req.json();
+    const result = forumTopicSchema.safeParse(jsonBody);
 
-    if (!title) {
-      return NextResponse.json({ erro: "O título do tópico é obrigatório." }, { status: 400 });
+    if (!result.success) {
+      return NextResponse.json(
+        { erro: "Dados inválidos.", detalhes: result.error.issues },
+        { status: 400 }
+      );
     }
+
+    const { title, content } = result.data;
+    const preview = content; // Usamos o content validado como preview/content
 
     const { data, error } = await supabase
       .from("forum_topics")

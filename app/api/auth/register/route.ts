@@ -36,31 +36,42 @@ export async function POST(req: NextRequest) {
       return errorResponse("Profissionais de saúde devem informar o número de registro (CRM ou CRN).", 400);
     }
 
-    const { data: existingUser, error: searchError } = await supabase
-      .from("users")
+    const table = userRole === 'PROFESSIONAL' ? "professionals" : "patients";
+
+    const { data: existingPatient } = await supabase
+      .from("patients")
       .select("id")
       .eq("email", email)
       .maybeSingle();
 
-    if (existingUser) {
+    const { data: existingProfessional } = await supabase
+      .from("professionals")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (existingPatient || existingProfessional) {
       return errorResponse("Este email já está cadastrado.", 400);
     }
 
     const passwordHash = await hashPassword(password);
 
+    const insertData: any = {
+      name,
+      email,
+      password_hash: passwordHash,
+      role: userRole,
+      phone: phone || null,
+    };
+
+    if (userRole === 'PROFESSIONAL') {
+      insertData.license_number = licenseNumber;
+    }
+
     const { data: newUser, error: insertError } = await supabase
-      .from("users")
-      .insert([
-        {
-          name,
-          email,
-          password_hash: passwordHash,
-          role: userRole,
-          license_number: userRole === 'PROFESSIONAL' ? licenseNumber : null,
-          phone: phone || null,
-        },
-      ])
-      .select("id, name, email, role, license_number, phone")
+      .from(table)
+      .insert([insertData])
+      .select(userRole === 'PROFESSIONAL' ? "id, name, email, role, license_number, phone" : "id, name, email, role, phone")
       .single();
 
     if (insertError) {

@@ -9,6 +9,7 @@ import bcrypt from "bcrypt";
  * Isso garante funcionamento mesmo sem migrações de colunas opcionais aplicadas.
  */
 async function performUpdate(
+  table: string,
   userId: string,
   updates: Record<string, any>
 ): Promise<{ error: any }> {
@@ -17,7 +18,7 @@ async function performUpdate(
   }
 
   const { error } = await supabase
-    .from("users")
+    .from(table)
     .update(updates)
     .eq("id", userId);
 
@@ -29,7 +30,7 @@ async function performUpdate(
       console.warn(`[profile/update] Coluna '${missingCol}' não existe no banco — ignorando e reexecutando.`);
       const retry = { ...updates };
       delete retry[missingCol];
-      return performUpdate(userId, retry);
+      return performUpdate(table, userId, retry);
     }
   }
 
@@ -45,8 +46,9 @@ export async function GET(req: NextRequest) {
   if (!user) return unauthorizedResponse();
 
   try {
+    const table = user.role === 'PROFESSIONAL' ? 'professionals' : 'patients';
     const { data, error } = await supabase
-      .from("users")
+      .from(table)
       .select("*")
       .eq("id", user.id)
       .single();
@@ -83,27 +85,37 @@ export async function GET(req: NextRequest) {
  * Atualiza os dados do perfil do usuário autenticado.
  * Colunas ausentes no banco são ignoradas automaticamente (sem precisar de migração).
  */
+import { updateUserSchema } from "@/schemas/user";
+
 export async function PUT(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
 
   try {
-    const body = await req.json();
+    const jsonBody = await req.json();
+    const result = updateUserSchema.safeParse(jsonBody);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { erro: "Dados inválidos.", detalhes: result.error.issues },
+        { status: 400 }
+      );
+    }
+
+    const body = result.data;
     const {
       name, email, age, gender, diabetes_type, phone, avatar_url, password,
       cpf, birth_date, specialty, crm, crm_uf, education, clinic_address, license_number,
     } = body;
 
+    const table = user.role === 'PROFESSIONAL' ? 'professionals' : 'patients';
+
     // Verifica e-mail duplicado em outra conta
     if (email) {
-      const { data: existingUser } = await supabase
-        .from("users")
-        .select("id")
-        .eq("email", email)
-        .neq("id", user.id)
-        .maybeSingle();
+      const { data: existingPatient } = await supabase.from("patients").select("id").eq("email", email).neq("id", user.id).maybeSingle();
+      const { data: existingProfessional } = await supabase.from("professionals").select("id").eq("email", email).neq("id", user.id).maybeSingle();
 
-      if (existingUser) {
+      if (existingPatient || existingProfessional) {
         return NextResponse.json(
           { erro: "Este e-mail já está sendo usado por outra conta." },
           { status: 409 }
@@ -142,7 +154,7 @@ export async function PUT(req: NextRequest) {
     }
 
     // Executa o update com retry automático para colunas ausentes
-    const { error: updateError } = await performUpdate(user.id, updates);
+    const { error: updateError } = await performUpdate(table, user.id, updates);
 
     if (updateError) {
       console.error("SUPABASE UPDATE ERROR (final):", JSON.stringify(updateError));

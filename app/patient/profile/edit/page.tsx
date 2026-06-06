@@ -381,7 +381,7 @@ export default function EditPatientProfile() {
                         <input
                           type="tel"
                           value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
+                          onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                           placeholder="(00) 00000-0000"
                           className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all"
                         />

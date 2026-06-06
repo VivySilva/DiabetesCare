@@ -30,7 +30,7 @@ export function signToken(payload: AuthUser, expiresIn: string = "1d"): string {
   if (!JWT_SECRET) {
     throw new Error("JWT_SECRET is not defined");
   }
-  return jwt.sign(payload, JWT_SECRET, { expiresIn });
+  return jwt.sign(payload, JWT_SECRET as jwt.Secret, { expiresIn } as jwt.SignOptions);
 }
 
 /**

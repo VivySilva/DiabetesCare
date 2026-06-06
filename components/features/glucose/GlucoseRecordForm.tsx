@@ -173,10 +173,21 @@ export default function CadastroGlicemia() {
                   Glicose
                 </span>
                 <div 
-                  className="px-4 py-2 rounded-full font-bold detail2 transition-colors duration-300 text-white" 
+                  className="flex items-center justify-center px-4 py-1.5 rounded-full font-bold detail2 transition-colors duration-300 text-white gap-1" 
                   style={{ fontSize: 14, backgroundColor: statusColor }}
                 >
-                  {glucoseValue} mg/dL
+                  <input
+                    type="number"
+                    min="0"
+                    max="600"
+                    value={glucoseValue}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (val >= 0 && val <= 600) setGlucoseValue(val);
+                    }}
+                    className="bg-transparent text-white text-center font-bold outline-none w-[38px] p-0 m-0 [-moz-appearance:_textfield] [&::-webkit-inner-spin-button]:m-0 [&::-webkit-inner-spin-button]:appearance-none focus:ring-2 focus:ring-white focus:ring-opacity-50 rounded"
+                  />
+                  <span>mg/dL</span>
                 </div>
               </div>
 

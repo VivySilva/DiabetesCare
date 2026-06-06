@@ -22,15 +22,31 @@ export async function GET(
 
     const { data, error } = await supabase
       .from("community_posts")
-      .select("id, title, cover_image_url, category, content_html, is_moderated, created_at, author_id, users(name, avatar_url, role, license_number)")
+      .select("id, title, cover_image_url, category, content_html, is_moderated, created_at, author_id")
       .eq("id", id)
-      .maybeSingle();
+      .single();
 
-    if (error || !data) {
+    if (error) {
+      console.error("Error fetching community post:", error);
       return NextResponse.json({ erro: "Publicação não encontrada." }, { status: 404 });
     }
 
-    return NextResponse.json({ post: data }, { status: 200 });
+    let authorInfo = null;
+    if (data.author_id) {
+      const { data: patient } = await supabase.from("patients").select("name, avatar_url, role").eq("id", data.author_id).maybeSingle();
+      if (patient) authorInfo = patient;
+      else {
+        const { data: prof } = await supabase.from("professionals").select("name, avatar_url, role, license_number").eq("id", data.author_id).maybeSingle();
+        if (prof) authorInfo = prof;
+      }
+    }
+
+    const formattedData = {
+      ...data,
+      users: authorInfo
+    };
+
+    return NextResponse.json(formattedData, { status: 200 });
   } catch (error) {
     console.error("General error fetching post:", error);
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });

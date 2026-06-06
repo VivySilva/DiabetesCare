@@ -31,13 +31,21 @@ export async function POST(req: NextRequest) {
       return errorResponse("Senha inválida", 400);
     }
 
-    const { data: user, error: searchError } = await supabase
-      .from("users")
+    const { data: patientUser } = await supabase
+      .from("patients")
+      .select("id, name, email, password_hash, role")
+      .eq("email", validatedEmail)
+      .maybeSingle();
+
+    const { data: professionalUser } = await supabase
+      .from("professionals")
       .select("id, name, email, password_hash, role, license_number")
       .eq("email", validatedEmail)
       .maybeSingle();
 
-    if (searchError || !user) {
+    const user = patientUser || professionalUser;
+
+    if (!user) {
       return errorResponse("Credenciais inválidas", 401);
     }
 
@@ -78,7 +86,7 @@ export async function POST(req: NextRequest) {
         name: user.name,
         email: user.email,
         role: user.role,
-        license_number: user.license_number,
+        license_number: (user as any).license_number || null,
       },
     });
   } catch (error) {

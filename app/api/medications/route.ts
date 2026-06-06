@@ -49,20 +49,24 @@ export async function GET(req: NextRequest) {
  * @param {boolean} req.body.notify - Se deseja receber notificação.
  * @returns {Promise<Response>} Registro criado ou erro (400, 401, 500).
  */
+import { medicationSchema } from "@/schemas/medication";
+
 export async function POST(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
 
   try {
-    const body = await req.json();
-    const { category, medication_name, time, notify } = body;
+    const jsonBody = await req.json();
+    const result = medicationSchema.safeParse(jsonBody);
 
-    if (!category || !medication_name || !time || notify === undefined) {
+    if (!result.success) {
       return NextResponse.json(
-        { erro: "Categoria, nome do medicamento, horário e notificação são obrigatórios." },
+        { erro: "Dados inválidos.", detalhes: result.error.issues },
         { status: 400 }
       );
     }
+
+    const { category, medication_name, time, notify } = result.data;
 
     const { data, error } = await supabase
       .from("medication_records")

@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
+const chatSchema = z.object({
+  message: z.string().min(1, 'A mensagem é obrigatória.').max(1000, 'A mensagem é muito longa.'),
+  history: z.array(z.any()).optional().default([]),
+});
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, history } = body;
+    const result = chatSchema.safeParse(body);
 
-    if (!message) {
-      return NextResponse.json({ error: 'A mensagem é obrigatória.' }, { status: 400 });
+    if (!result.success) {
+      return NextResponse.json({ error: 'Dados inválidos.', detalhes: result.error.issues }, { status: 400 });
     }
+    
+    const { message, history } = result.data;
     
     // URL do serviço API Diabetica (Python Flask)
     const DIABETICA_API_URL = process.env.DIABETICA_API_URL || 'http://localhost:5000/predict';

@@ -13,7 +13,7 @@ export async function GET() {
   try {
     const { data, error } = await supabase
       .from("community_posts")
-      .select("id, title, cover_image_url, category, content_html, is_moderated, created_at, author_id, users(name, avatar_url, role, license_number)")
+      .select("id, title, cover_image_url, category, content_html, is_moderated, created_at, author_id")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -21,7 +21,23 @@ export async function GET() {
       return NextResponse.json({ erro: "Erro ao buscar publicações." }, { status: 500 });
     }
 
-    return NextResponse.json({ posts: data }, { status: 200 });
+    const authorIds = Array.from(new Set((data || []).map(post => post.author_id)));
+    
+    let usersMap: Record<string, any> = {};
+    if (authorIds.length > 0) {
+      const { data: patients } = await supabase.from("patients").select("id, name, avatar_url, role").in("id", authorIds);
+      const { data: professionals } = await supabase.from("professionals").select("id, name, avatar_url, role, license_number").in("id", authorIds);
+      
+      patients?.forEach(p => usersMap[p.id] = p);
+      professionals?.forEach(p => usersMap[p.id] = p);
+    }
+
+    const formattedData = data?.map(post => ({
+      ...post,
+      users: usersMap[post.author_id] || null
+    })) || [];
+
+    return NextResponse.json(formattedData, { status: 200 });
   } catch (error) {
     console.error("General error listing posts:", error);
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
@@ -41,17 +57,24 @@ export async function GET() {
  * @param {string} req.body.content_html - Conteúdo da postagem em HTML.
  * @returns {Promise<Response>} Post criado ou erro (400, 401, 500).
  */
+import { communityPostSchema } from "@/schemas/community";
+
 export async function POST(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
 
   try {
-    const body = await req.json();
-    const { title, cover_image_url, category, content_html } = body;
+    const jsonBody = await req.json();
+    const result = communityPostSchema.safeParse(jsonBody);
 
-    if (!title || !content_html) {
-      return NextResponse.json({ erro: "Título e conteúdo são obrigatórios." }, { status: 400 });
+    if (!result.success) {
+      return NextResponse.json(
+        { erro: "Dados inválidos.", detalhes: result.error.issues },
+        { status: 400 }
+      );
     }
+
+    const { title, cover_image_url, category, content_html } = result.data;
 
     const { data, error } = await supabase
       .from("community_posts")
