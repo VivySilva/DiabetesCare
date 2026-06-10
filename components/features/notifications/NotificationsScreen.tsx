@@ -4,6 +4,7 @@ import { IoMdArrowBack } from 'react-icons/io';
 import { MdMedication, MdVaccines, MdWaterDrop, MdCheckCircle } from 'react-icons/md';
 import Header from "@/components/ui/Header";
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from "@/services/notifications/notificationService";
 
 interface Notification {
@@ -35,6 +36,7 @@ const TYPE_COLOR: Record<string, { bg: string; text: string }> = {
 };
 
 export default function NotificationsScreen({ onBack }: NotificationsProps) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -66,11 +68,11 @@ export default function NotificationsScreen({ onBack }: NotificationsProps) {
   const read = notifications.filter(n => n.read);
 
   return (
-    <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-10 font-sans">
+    <div className="w-full max-w-5xl mx-auto bg-[#F8F9FA] min-h-screen pb-10 font-sans">
       <Header
         title="Notificações"
         variant="page"
-        onBackClick={onBack}
+        onBackClick={onBack ?? (() => router.back())}
         rightElement={
           unread.length > 0 ? (
             <button
@@ -83,7 +85,7 @@ export default function NotificationsScreen({ onBack }: NotificationsProps) {
         }
       />
 
-      <main className="px-6 py-4 space-y-8">
+      <main className="w-full max-w-5xl mx-auto px-6 md:px-8 mt-6 py-4 space-y-8">
         {isLoading && (
           <div className="py-12 text-center text-gray-400 text-sm">Carregando notificações...</div>
         )}

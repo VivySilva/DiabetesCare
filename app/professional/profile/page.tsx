@@ -9,6 +9,7 @@ import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import LogoutModal from "@/components/ui/modals/logout-modal";
 import { getUserProfile } from "@/services/user/userService";
+import { calculateAge } from "@/lib/age-calculator";
 import {
   MdSchool,
   MdOutlineEmail,
@@ -51,7 +52,7 @@ export default function ProfessionalProfile() {
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <div className="max-w-5xl mx-auto w-full bg-[#F8F9FA] min-h-screen relative flex flex-col">
-        <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="page" showNotification={true} />
+        <Header title="Perfil Profissional" variant="page" showNotification={true} />
 
         {/* Layout em Grid Responsivo */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8 px-6 pb-12 items-start">
@@ -109,10 +110,9 @@ export default function ProfessionalProfile() {
             <div>
               <h3 className="text-lg font-bold text-gray-900 mb-2 pb-3 border-b border-gray-100">Informações Básicas</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InfoCard label="Idade" value={user?.age ? `${user.age} anos` : "Não informado"} />
+                <InfoCard label="Idade" value={user?.birth_date ? `${calculateAge(user.birth_date)} anos` : "Não informado"} />
                 <InfoCard label="Gênero" value={user?.gender || "Não informado"} />
                 <InfoCard label="CPF" value={user?.cpf || "Não informado"} />
-                <InfoCard label="Data de Nascimento" value={user?.birth_date || "Não informado"} />
               </div>
             </div>
 
@@ -148,7 +148,7 @@ export default function ProfessionalProfile() {
                       Registro (CRM / CRN)
                     </span>
                     <span className="text-blue-600 font-bold text-base">
-                      {user?.crm || "Não informado"} {user?.crm_uf ? `- ${user.crm_uf}` : ""}
+                      {user?.license_number || "Não informado"}
                     </span>
                   </div>
                 </div>

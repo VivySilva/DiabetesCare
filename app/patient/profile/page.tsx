@@ -16,6 +16,7 @@ import { getUserProfile } from "@/services/user/userService";
 import { useEffect } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { calculateAge } from "@/lib/age-calculator";
 
 export default function PatientProfile() {
   const router = useRouter();
@@ -62,7 +63,7 @@ export default function PatientProfile() {
       if (!response.ok) throw new Error("Erro ao buscar dados do relatório");
 
       const resData = await response.json();
-      const { summary, aiTips, patientName } = resData.data;
+      const { summary, aiTips, patientName, diabetesType } = resData.data;
 
       // 2. Iniciar a geração do PDF com jsPDF
       const doc = new jsPDF();
@@ -85,11 +86,12 @@ export default function PatientProfile() {
       doc.text("Dados do Paciente", 14, 42);
       doc.setFont("helvetica", "normal");
       doc.text(`Nome: ${patientName}`, 14, 48);
-      doc.text(`Período analisado: Últimos 30 dias`, 14, 54);
+      doc.text(`Tipo de Diabetes: ${diabetesType || "Não informado"}`, 14, 54);
+      doc.text(`Período analisado: Últimos 30 dias`, 14, 60);
 
       // Tabela de Métricas Clínicas
       autoTable(doc, {
-        startY: 65,
+        startY: 71,
         head: [['Métrica', 'Valor']],
         body: [
           ['Média Glicêmica', `${summary.glucose_average} mg/dL`],
@@ -219,8 +221,9 @@ export default function PatientProfile() {
             <h3 className="text-lg font-bold text-gray-900 mb-2 pb-3 border-b border-gray-100">Informações Pessoais</h3>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InfoCard label="Idade" value={user?.age ? `${user.age} anos` : "Não informado"} />
+              <InfoCard label="Idade" value={user?.birth_date ? `${calculateAge(user.birth_date)} anos` : "Não informado"} />
               <InfoCard label="Gênero" value={user?.gender || "Não informado"} />
+              <InfoCard label="Tipo de Diabetes" value={user?.diabetes_type || "Não informado"} />
             </div>
 
             <div className="flex flex-col gap-4">

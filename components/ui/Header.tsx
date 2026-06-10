@@ -8,7 +8,6 @@ import { usePathname, useRouter } from "next/navigation";
 import LogoutModal from "@/components/ui/modals/logout-modal";
 import { getNotifications } from "@/services/notifications/notificationService"
 import { getUserProfile } from "@/services/user/userService";
-import NotificationsScreen from "@/components/features/notifications/NotificationsScreen";
 import Avatar from "@/components/ui/profile/avatar";
 
 interface HeaderProps {
@@ -38,7 +37,6 @@ export default function Header({
   const pathname = usePathname();
   const router = useRouter();
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>("patient");
@@ -126,11 +124,11 @@ export default function Header({
               <IoMdArrowBack size={24} />
             </button>
           )}
-          <Link href={homeHref} className="no-underline overflow-hidden">
+          <div className="overflow-hidden">
             <h1 style={{ color: titleColor, fontSize: isHome ? "24px" : "20px" }} className="font-bold truncate">
               {title}
             </h1>
-          </Link>
+          </div>
         </div>
 
         <div className="flex items-center gap-4 shrink-0">
@@ -140,7 +138,7 @@ export default function Header({
             <>
               {(isHome || showNotification) && (
                 <button
-                  onClick={onNotificationClick || (() => setIsNotificationsOpen(true))}
+                  onClick={onNotificationClick || (() => router.push(isProfessional ? '/professional/notifications' : '/patient/notifications'))}
                   className="relative flex items-center justify-center text-[var(--dc-cinza-fundo)] hover:opacity-70 transition-opacity"
                   aria-label="Notificações"
                 >
@@ -178,9 +176,7 @@ export default function Header({
         onConfirm={handleLogoutConfirm}
       />
 
-      {isNotificationsOpen && (
-        <NotificationsScreen onBack={() => setIsNotificationsOpen(false)} />
-      )}
+
     </>
   );
 }

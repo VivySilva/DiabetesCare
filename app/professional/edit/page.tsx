@@ -179,7 +179,6 @@ export default function ProfessionalProfileEdit() {
                         onChange={(e) => setCrm(e.target.value)}
                         placeholder="Ex: CRM/SP 123456"
                         className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 pl-12 text-gray-900 placeholder:text-gray-400 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all shadow-inner"
-                        required
                       />
                     </div>
                   </div>
