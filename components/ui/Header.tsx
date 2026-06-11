@@ -114,6 +114,7 @@ export default function Header({
           paddingRight: isHome ? "33px" : "24px",
         }}
       >
+        <div className="flex items-center justify-between w-full max-w-5xl mx-auto md:px-2">
         <div className="flex items-center gap-3 overflow-hidden">
           {!isHome && (
             <button
@@ -167,6 +168,7 @@ export default function Header({
           >
             <MdLogout size={24} />
           </button>
+        </div>
         </div>
       </header>
 

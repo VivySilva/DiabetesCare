@@ -144,7 +144,11 @@ export default function PatientProfile() {
     <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       {/* Centralized Container with Max Width */}
       <div className="max-w-5xl mx-auto w-full bg-[#F8F9FA] min-h-screen relative flex flex-col">
-        <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="page" showNotification={true} />
+        <Header 
+          title="Seu Perfil" 
+          variant="page" 
+          showNotification={true} 
+        />
 
         {/* Responsive Grid Layout */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8 px-6 pb-12 items-start">

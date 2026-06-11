@@ -135,14 +135,14 @@ export default function CadastroGlicemia() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F8F9FA] pb-[91px]">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <Header
         title="Glicemia"
         variant="page"
         showNotification={true}
       />
 
-      <section className="flex flex-col items-start px-[33px] pt-6 gap-6 w-full">
+      <section className="flex flex-col items-start px-6 md:px-8 pt-6 gap-6 w-full max-w-5xl mx-auto">
         <div className="flex flex-col gap-2 w-full">
           <h1>Glicemia</h1>
           <p className="m-0 text-cinza-claro-texto">

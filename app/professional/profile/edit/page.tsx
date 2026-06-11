@@ -222,7 +222,11 @@ export default function ProfessionalProfileEdit() {
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <div className="max-w-5xl mx-auto w-full bg-[#F8F9FA] min-h-screen relative flex flex-col">
-        <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="page" showNotification={false} />
+        <Header 
+          title="Edição de Perfil" 
+          variant="page" 
+          showNotification={false} 
+        />
 
         <div className="flex-1 px-4 md:px-6 py-6">
           {/* Page Title */}

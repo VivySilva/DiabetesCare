@@ -77,7 +77,7 @@ export default function Home() {
   }, [router]);
 
   return (
-    <main className="min-h-screen bg-[#F8F9FA] pb-[91px] md:pb-12">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <Header
         title="DiabetesCare"
         titleColor="var(--dc-azul-escuro)"
@@ -93,15 +93,17 @@ export default function Home() {
       )}
 
       {/* Desktop top bar (replaces hidden Header on home variant) */}
-      <div className="hidden md:flex items-center justify-between px-8 py-5 sticky top-0 z-50 w-full backdrop-blur-[6px]" style={{ background: 'rgba(247, 249, 251, 0.85)' }}>
-        <span className="font-display font-extrabold text-xl text-azul-escuro tracking-tight">DiabetesCare</span>
-        <button
-          onClick={() => setShowNotifications(true)}
-          className="relative flex items-center justify-center text-cinza-fundo hover:opacity-70 transition-opacity"
-          aria-label="Notificações"
-        >
-          <IoMdNotificationsOutline size={26} />
-        </button>
+      <div className="hidden md:flex items-center justify-between sticky top-0 z-50 w-full backdrop-blur-[6px]" style={{ background: 'rgba(247, 249, 251, 0.85)' }}>
+        <div className="w-full max-w-5xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
+          <span className="font-display font-extrabold text-xl text-azul-escuro tracking-tight">DiabetesCare</span>
+          <button
+            onClick={() => setShowNotifications(true)}
+            className="relative flex items-center justify-center text-cinza-fundo hover:opacity-70 transition-opacity"
+            aria-label="Notificações"
+          >
+            <IoMdNotificationsOutline size={26} />
+          </button>
+        </div>
       </div>
 
       {/* Centralized Container with Max Width */}

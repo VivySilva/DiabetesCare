@@ -180,8 +180,7 @@ export default function EditPatientProfile() {
     <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <div className="max-w-5xl mx-auto w-full min-h-screen flex flex-col">
         <Header
-          title="DiabetesCare"
-          titleColor="var(--dc-azul)"
+          title="Edição de Perfil"
           variant="page"
           showNotification={false}
         />
