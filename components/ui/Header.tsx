@@ -154,20 +154,6 @@ export default function Header({
             </>
           )}
 
-          {/* Mini User Icon — hidden on desktop (Sidebar handles it) */}
-          <Link 
-            href={profileLink}
-            className="flex items-center justify-center active:scale-95 transition-all md:hidden"
-          >
-            <Avatar src={userAvatar || undefined} size={34} mode="view" />
-          </Link>
-          <button
-            onClick={() => setIsLogoutOpen(true)}
-            className="flex items-center justify-center text-red-500 hover:opacity-70 transition-opacity md:hidden"
-            aria-label="Sair"
-          >
-            <MdLogout size={24} />
-          </button>
         </div>
         </div>
       </header>
