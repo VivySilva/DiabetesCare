@@ -35,10 +35,17 @@ export async function GET(req: NextRequest) {
 
     // Buscar dados atualizados do banco (o token do JWT não contém diabetes_type)
     const { data: dbUser } = await supabase
+<<<<<<< HEAD
       .from("patients")
       .select("name, diabetes_type")
       .eq("id", user.id)
       .maybeSingle();
+=======
+      .from("users")
+      .select("name, diabetes_type")
+      .eq("id", user.id)
+      .single();
+>>>>>>> 1b5eebbad9ca76095f790a597d0ebff20d249336
 
     return successResponse({
       summary,

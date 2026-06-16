@@ -239,8 +239,13 @@ export async function DELETE(req: NextRequest) {
 
   try {
     // 1. Excluir registros do paciente (Glicemias e Medicamentos)
+<<<<<<< HEAD
     await supabase.from("glucose_records").delete().eq("patient_id", user.id);
     await supabase.from("medication_records").delete().eq("patient_id", user.id);
+=======
+    await supabase.from("glucose_records").delete().eq("user_id", user.id);
+    await supabase.from("medication_records").delete().eq("user_id", user.id);
+>>>>>>> 1b5eebbad9ca76095f790a597d0ebff20d249336
 
     // 2. Excluir logs de login e notificações
     await supabase.from("login_logs").delete().eq("user_id", user.id);
