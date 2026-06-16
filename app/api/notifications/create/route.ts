@@ -29,11 +29,7 @@ export async function POST(req: NextRequest) {
           user_id: user.id,
           title,
           body,
-<<<<<<< HEAD
           type: type || "SYSTEM",
-=======
-          type: type || "geral",
->>>>>>> 1b5eebbad9ca76095f790a597d0ebff20d249336
           scheduled_for: scheduled_for || null,
           read: false,
         },

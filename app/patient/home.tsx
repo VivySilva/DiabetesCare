@@ -161,14 +161,11 @@ export default function Home() {
             aria-label="Notificações"
           >
             <IoMdNotificationsOutline size={26} />
-<<<<<<< HEAD
             {unreadNotifications > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
                 {unreadNotifications > 9 ? '9+' : unreadNotifications}
               </span>
             )}
-=======
->>>>>>> 1b5eebbad9ca76095f790a597d0ebff20d249336
           </button>
         </div>
       </div>
