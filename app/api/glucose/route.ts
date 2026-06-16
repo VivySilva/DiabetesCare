@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("glucose_records")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("patient_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
       .from("glucose_records")
       .insert([
         {
-          user_id: user.id,
+          patient_id: user.id, // ID na tabela users = ID na tabela patients
           glucose_value,
           period,
           took_insulin,
@@ -98,6 +98,47 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error("Error inserting glucose record:", error);
       return errorResponse("Erro interno ao criar registro de glicose.", 500);
+    }
+
+    // Gatilho para Notificação (Paciente)
+    let alertBody = null;
+    let alertTitle = null;
+
+    if (glucose_value > 180) {
+      alertTitle = "Atenção: Glicose Alta (Hiperglicemia)";
+      alertBody = `Sua glicose registrou ${glucose_value} mg/dL. Recomendamos hidratação e acompanhamento.`;
+    } else if (glucose_value < 70) {
+      alertTitle = "Atenção: Glicose Baixa (Hipoglicemia)";
+      alertBody = `Sua glicose registrou ${glucose_value} mg/dL. Ingira carboidratos de ação rápida.`;
+    }
+
+    if (alertTitle && alertBody) {
+      // Criar notificação para o paciente
+      const { error: notifError } = await supabase.from("notifications").insert([{
+        user_id: user.id,
+        title: alertTitle,
+        body: alertBody,
+        type: "GLUCOSE"
+      }]);
+      
+      if (notifError) console.error("Error creating patient notification:", notifError);
+
+      // Bônus: Criar notificação para profissionais logados ou admins (simulado)
+      // Como não temos vínculo direto paciente-profissional, enviamos uma notificação
+      // de emergência se for muito grave (< 50 ou > 300).
+      if (glucose_value < 50 || glucose_value > 300) {
+        const { data: professionals } = await supabase.from("users").select("id").eq("role", "PROFESSIONAL").limit(10);
+        if (professionals && professionals.length > 0) {
+          const profNotifs = professionals.map(prof => ({
+            user_id: prof.id,
+            title: `Alerta Crítico: Paciente precisa de atenção!`,
+            body: `Um paciente registrou glicemia de ${glucose_value} mg/dL.`,
+            type: "SYSTEM"
+          }));
+          const { error: profError } = await supabase.from("notifications").insert(profNotifs);
+          if (profError) console.error("Error creating professional notifications:", profError);
+        }
+      }
     }
 
     return successResponse({ mensagem: "Registro criado com sucesso!", record: data }, 201);

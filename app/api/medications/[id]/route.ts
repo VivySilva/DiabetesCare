@@ -27,7 +27,7 @@ export async function DELETE(
       .from("medication_records")
       .select("id")
       .eq("id", id)
-      .eq("user_id", user.id)
+      .eq("patient_id", user.id)
       .maybeSingle();
 
     if (!existingRecord) {

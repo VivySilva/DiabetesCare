@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     const { data, error } = await supabase
       .from("medication_records")
       .select("*")
-      .eq("user_id", user.id)
+      .eq("patient_id", user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
       .from("medication_records")
       .insert([
         {
-          user_id: user.id,
+          patient_id: user.id,
           category,
           medication_name,
           time,
@@ -90,17 +90,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (notify) {
-      await supabase.from("notifications").insert([
-        {
-          user_id: user.id,
-          type: "MEDICATION_REMINDER",
-          title: "Lembrete de Medicamento",
-          body: `Está quase na hora de tomar seu ${medication_name} (${time}).`,
-          read: false,
-        },
-      ]);
-    }
+    // Sempre cria uma notificação para dar feedback ao usuário (mesmo sem background jobs reais ainda)
+    const { error: notifError } = await supabase.from("notifications").insert([
+      {
+        user_id: user.id,
+        type: "MEDICATION",
+        title: "Lembrete de Medicamento configurado!",
+        body: `Você configurou o alarme para ${medication_name} às ${time}.`,
+        read: false,
+      },
+    ]);
+    if (notifError) console.error("Error creating medication notification:", notifError);
 
     return NextResponse.json(
       { mensagem: "Registro criado com sucesso!", record: data },

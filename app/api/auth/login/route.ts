@@ -31,45 +31,53 @@ export async function POST(req: NextRequest) {
       return errorResponse("Senha inválida", 400);
     }
 
-    const { data: patientUser } = await supabase
-      .from("patients")
-      .select("id, name, email, password_hash, role")
+    // 1. Buscar usuário na tabela base
+    const { data: authUser } = await supabase
+      .from("users")
+      .select("id, email, password_hash, role")
       .eq("email", validatedEmail)
       .maybeSingle();
 
-    const { data: professionalUser } = await supabase
-      .from("professionals")
-      .select("id, name, email, password_hash, role, license_number")
-      .eq("email", validatedEmail)
-      .maybeSingle();
-
-    const user = patientUser || professionalUser;
-
-    if (!user) {
+    if (!authUser) {
       return errorResponse("Credenciais inválidas", 401);
     }
 
+    // 2. Validar a senha
     const validPassword = await comparePassword(
       validatedPassword,
-      user.password_hash
+      authUser.password_hash
     );
 
     if (!validPassword) {
       return errorResponse("Credenciais inválidas", 401);
     }
 
+    // 3. Buscar dados específicos baseado na role
+    let userData = { id: authUser.id, email: authUser.email, role: authUser.role, name: "", license_number: null };
+
+    if (authUser.role === 'PATIENT') {
+      const { data: patient } = await supabase.from("patients").select("name").eq("id", authUser.id).maybeSingle();
+      if (patient) userData.name = patient.name;
+    } else {
+      const { data: professional } = await supabase.from("professionals").select("name, license_number").eq("id", authUser.id).maybeSingle();
+      if (professional) {
+        userData.name = professional.name;
+        userData.license_number = professional.license_number;
+      }
+    }
+
     const token = signToken({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
+      id: userData.id,
+      name: userData.name,
+      email: userData.email,
+      role: userData.role,
     });
 
     try {
       const ipAddress = req.headers.get("x-forwarded-for") || "unknown";
       await supabase.from("login_logs").insert([
         {
-          user_id: user.id,
+          user_id: userData.id,
           action: "LOGIN_SUCCESS",
           ip_address: ipAddress,
         },
@@ -82,11 +90,11 @@ export async function POST(req: NextRequest) {
       mensagem: "Login realizado com sucesso!",
       token,
       user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        license_number: (user as any).license_number || null,
+        id: userData.id,
+        name: userData.name,
+        email: userData.email,
+        role: userData.role,
+        license_number: (userData as any).license_number || null,
       },
     });
   } catch (error) {

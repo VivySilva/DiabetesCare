@@ -25,11 +25,28 @@ export async function GET() {
     
     let usersMap: Record<string, any> = {};
     if (authorIds.length > 0) {
-      const { data: patients } = await supabase.from("patients").select("id, name, avatar_url, role").in("id", authorIds);
-      const { data: professionals } = await supabase.from("professionals").select("id, name, avatar_url, role, license_number").in("id", authorIds);
+      // 1. Busca dados comuns na tabela users
+      const { data: authUsers } = await supabase.from("users").select("id, avatar_url, role").in("id", authorIds);
       
-      patients?.forEach(p => usersMap[p.id] = p);
-      professionals?.forEach(p => usersMap[p.id] = p);
+      // 2. Busca nomes na tabela patients
+      const { data: patients } = await supabase.from("patients").select("id, name").in("id", authorIds);
+      
+      // 3. Busca nomes na tabela professionals
+      const { data: professionals } = await supabase.from("professionals").select("id, name, license_number").in("id", authorIds);
+      
+      // 4. Combina os dados
+      authUsers?.forEach(u => {
+        const p = patients?.find(pat => pat.id === u.id);
+        const prof = professionals?.find(pr => pr.id === u.id);
+        
+        usersMap[u.id] = {
+          id: u.id,
+          avatar_url: u.avatar_url,
+          role: u.role,
+          name: p?.name || prof?.name || "Usuário Anônimo",
+          license_number: prof?.license_number || null
+        };
+      });
     }
 
     const formattedData = data?.map(post => ({
@@ -37,7 +54,7 @@ export async function GET() {
       users: usersMap[post.author_id] || null
     })) || [];
 
-    return NextResponse.json(formattedData, { status: 200 });
+    return NextResponse.json({ posts: formattedData }, { status: 200 });
   } catch (error) {
     console.error("General error listing posts:", error);
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });

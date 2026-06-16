@@ -36,7 +36,7 @@ export class ReportService {
     const { data: glucoseRecords, error: glucoseError } = await supabase
       .from("glucose_records")
       .select("glucose_value, created_at")
-      .eq("user_id", userId)
+      .eq("patient_id", userId)
       .gte("created_at", startDate.toISOString());
 
     if (glucoseError) throw glucoseError;
@@ -44,7 +44,7 @@ export class ReportService {
     const { data: medicationRecords, error: medError } = await supabase
       .from("medication_records")
       .select("*")
-      .eq("user_id", userId)
+      .eq("patient_id", userId)
       .gte("created_at", startDate.toISOString());
 
     if (medError) throw medError;

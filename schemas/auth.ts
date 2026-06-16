@@ -15,6 +15,9 @@ export const registerSchema = z.object({
   phone: z.string()
     .regex(/^\d{10,11}$/, "O telefone deve conter apenas números e ter entre 10 e 11 dígitos")
     .optional(),
+  dateOfBirth: z.string().optional(),
+  diabetesType: z.string().optional(),
+  gender: z.string().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],

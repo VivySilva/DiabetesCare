@@ -77,8 +77,10 @@ export async function POST(req: NextRequest) {
     const result = forumTopicSchema.safeParse(jsonBody);
 
     if (!result.success) {
+      // Pega a primeira mensagem de erro do Zod (ex: "Título muito curto")
+      const errorMessage = result.error.issues[0]?.message || "Dados inválidos.";
       return NextResponse.json(
-        { erro: "Dados inválidos.", detalhes: result.error.issues },
+        { erro: errorMessage, detalhes: result.error.issues },
         { status: 400 }
       );
     }

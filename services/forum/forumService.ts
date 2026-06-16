@@ -34,7 +34,7 @@ export async function getForumTopicById(id: string) {
  * @param {string} token - Token de autenticação JWT do autor.
  * @returns {Promise<any>} A resposta da API confirmando a criação.
  */
-export async function createForumTopic(data: { title: string; preview?: string }, token: string) {
+export async function createForumTopic(data: { title: string; content?: string }, token: string) {
   return httpClient.post("/forum", data, token);
 }
 

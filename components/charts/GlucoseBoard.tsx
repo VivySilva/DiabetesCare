@@ -49,30 +49,76 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
   const avgPos = getSummaryAverage(["Pós-Desjejum", "Pós-Prandial", "Pós-Jantar"]);
   const avgSono = getSummaryAverage("dormir");
 
-  // Mock de dados para o gráfico baseado nos registros reais (últimos 7 dias)
-  const days = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-  const today = new Date().getDay();
-  const sortedDays = [...days.slice(today + 1), ...days.slice(0, today + 1)];
-
-  const chartData = sortedDays.map((dayName, index) => {
-    // Calcula a data para cada dia do gráfico (retrocedendo a partir de hoje)
-    const targetDate = new Date();
-    targetDate.setDate(targetDate.getDate() - (sortedDays.length - 1 - index));
-    const dateStr = targetDate.toISOString().split('T')[0];
-
-    // Filtra registros para este dia específico
-    const dayRecords = records.filter(r => {
-      const rDate = new Date(r.created_at).toISOString().split('T')[0];
-      return rDate === dateStr;
-    });
-
-    return {
-      day: dayName,
-      jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
-      pos: dayRecords.find(r => r.period.includes("Pós"))?.glucose_value || 0,
-      sono: dayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,
-    };
-  });
+  // Dados para o gráfico baseados no período selecionado
+  const chartData = React.useMemo(() => {
+    const todayDate = new Date();
+    
+    if (period === "Diário") {
+      const dateStr = todayDate.toISOString().split('T')[0];
+      const todayRecords = records.filter(r => new Date(r.created_at).toISOString().split('T')[0] === dateStr);
+      
+      return [
+        {
+          label: "Manhã",
+          jejum: todayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
+          pos: todayRecords.find(r => r.period === "Pós-Desjejum")?.glucose_value || 0,
+          sono: 0,
+        },
+        {
+          label: "Tarde",
+          jejum: todayRecords.find(r => r.period === "Pré-Prandial")?.glucose_value || 0,
+          pos: todayRecords.find(r => r.period === "Pós-Prandial")?.glucose_value || 0,
+          sono: 0,
+        },
+        {
+          label: "Noite",
+          jejum: todayRecords.find(r => r.period === "Pré-Jantar")?.glucose_value || 0,
+          pos: todayRecords.find(r => r.period === "Pós-Jantar")?.glucose_value || 0,
+          sono: todayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,
+        }
+      ];
+    } 
+    else if (period === "Mensal") {
+      const data = [];
+      for(let i = 29; i >= 0; i--) {
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() - i);
+        const dateStr = targetDate.toISOString().split('T')[0];
+        const dayRecords = records.filter(r => new Date(r.created_at).toISOString().split('T')[0] === dateStr);
+        
+        // Label só aparece a cada 5 dias para não amontoar
+        const label = i % 5 === 0 || i === 0 || i === 29 ? targetDate.getDate().toString().padStart(2, '0') : "";
+        
+        data.push({
+          label: label,
+          jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
+          pos: dayRecords.find(r => r.period.includes("Pós"))?.glucose_value || 0,
+          sono: dayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,
+        });
+      }
+      return data;
+    } 
+    else { // Semanal
+      const days = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
+      const currentDay = todayDate.getDay();
+      const sortedDays = [...days.slice(currentDay + 1), ...days.slice(0, currentDay + 1)];
+      
+      return sortedDays.map((dayName, index) => {
+        const targetDate = new Date();
+        targetDate.setDate(targetDate.getDate() - (sortedDays.length - 1 - index));
+        const dateStr = targetDate.toISOString().split('T')[0];
+        
+        const dayRecords = records.filter(r => new Date(r.created_at).toISOString().split('T')[0] === dateStr);
+        
+        return {
+          label: dayName,
+          jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
+          pos: dayRecords.find(r => r.period.includes("Pós"))?.glucose_value || 0,
+          sono: dayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,
+        };
+      });
+    }
+  }, [period, records]);
 
   // Função para converter valor de glicose em Y no SVG (0-400 mg/dL -> 300-0 Y)
   const getY = (val: number) => 300 - (val / 400) * 300;
@@ -168,9 +214,11 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
             {/* Generate Path dynamically */}
             {["jejum", "pos", "sono"].map((type, i) => {
               const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
+              const spacing = 700 / Math.max(chartData.length, 1);
+              
               // Filtramos apenas pontos que possuem valor maior que 0 para não quebrar o gráfico
               const points = chartData
-                .map((d, idx) => ({ x: idx * 100 + 50, y: d[type as keyof typeof d] as number }))
+                .map((d, idx) => ({ x: idx * spacing + (spacing / 2), y: d[type as keyof typeof d] as number }))
                 .filter(p => p.y > 0)
                 .map(p => `${p.x},${getY(p.y)}`);
 
@@ -189,24 +237,30 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
               );
             })}
 
-            {/* Points for Today (last point) */}
+            {/* Points for All Points (to show dots even without lines) */}
             {["jejum", "pos", "sono"].map((type, i) => {
               const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
-              const lastVal = chartData[chartData.length - 1][type as keyof typeof chartData[0]] as number;
+              const spacing = 700 / Math.max(chartData.length, 1);
               
-              if (lastVal === 0) return null;
+              return chartData.map((d, idx) => {
+                const val = d[type as keyof typeof d] as number;
+                if (val === 0) return null;
 
-              return (
-                <circle 
-                  key={type}
-                  cx="650" 
-                  cy={getY(lastVal)} 
-                  r="6" 
-                  fill="white" 
-                  stroke={colors[i]} 
-                  strokeWidth="3" 
-                />
-              );
+                // Destaca o último ponto (Hoje) com um círculo maior
+                const isLastPoint = idx === chartData.length - 1;
+
+                return (
+                  <circle 
+                    key={`${type}-${idx}`}
+                    cx={idx * spacing + (spacing / 2)} 
+                    cy={getY(val)} 
+                    r={isLastPoint ? "6" : "4"} 
+                    fill="white" 
+                    stroke={colors[i]} 
+                    strokeWidth={isLastPoint ? "3" : "2"} 
+                  />
+                );
+              });
             })}
           </svg>
         </div>
@@ -215,10 +269,10 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
         <div className="flex justify-between px-2 mt-2">
           {chartData.map((d, idx) => (
             <span
-              key={d.day}
+              key={`${d.label}-${idx}`}
               className={`text-[9px] font-bold tracking-widest ${idx === chartData.length - 1 ? "text-azul" : "text-gray-300"}`}
             >
-              {d.day}
+              {d.label}
             </span>
           ))}
         </div>

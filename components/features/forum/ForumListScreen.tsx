@@ -74,7 +74,7 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
 
     try {
       const res = await likeForumTopic(topicId, token);
-      setTopics(prev => prev.map(t => 
+      setTopics(prev => prev.map(t =>
         t.id === topicId ? { ...t, likes_count: res.likes_count } : t
       ));
     } catch (err) {
@@ -119,7 +119,7 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
 
       {/* List */}
       {!isLoading && !error && (
-        <main className="px-6 flex-1 space-y-4">
+        <main className="px-8 flex-1 space-y-4">
           {filtered.length === 0 && (
             <div className="py-12 text-center text-gray-400 text-sm">
               {search ? 'Nenhum tópico encontrado.' : 'Seja o primeiro a criar um tópico!'}
@@ -151,7 +151,7 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
                     </span>
                   </div>
                 </div>
-                
+
                 <span className="bg-gray-50 text-gray-400 text-[9px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest border border-gray-100">
                   {timeAgo(topic.created_at)}
                 </span>
@@ -171,7 +171,7 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
                   <div className="flex items-center gap-1.5 bg-blue-50/50 text-blue-600 px-3 py-1.5 rounded-full text-[11px] font-bold border border-blue-50">
                     <MdChatBubbleOutline size={14} /> {topic.replies_count}
                   </div>
-                  <div 
+                  <div
                     onClick={(e) => handleLike(e, topic.id)}
                     className="flex items-center gap-1.5 bg-gray-50 text-gray-500 px-3 py-1.5 rounded-full text-[11px] font-bold border border-gray-100 hover:bg-blue-50 hover:text-blue-600 transition-colors"
                   >

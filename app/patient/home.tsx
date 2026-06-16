@@ -10,19 +10,24 @@ import GlucoseBoard from "@/components/charts/GlucoseBoard";
 import Footer from "@/components/ui/Footer";
 import ArticleCard from "@/components/ui/ArticleCard";
 import NotificationsScreen from "@/components/features/notifications/NotificationsScreen";
+import MedicationsModal from "@/components/features/medications/MedicationsModal";
 import { getUserProfile } from "@/services/user/userService"
 import { getGlucoseRecords } from "@/services/glucose/glucoseService"
 import { getCommunityPosts } from "@/services/community/communityService";
+import { httpClient } from "@/lib/httpClient";
 import DiabeticaChat from "@/Diabetica/DiabeticaChat";
 
 export default function Home() {
   const router = useRouter();
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showMedications, setShowMedications] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [userName, setUserName] = useState("");
   const [latestGlucose, setLatestGlucose] = useState<any>(null);
   const [allGlucoseRecords, setAllGlucoseRecords] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
+  const [medications, setMedications] = useState<any[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -66,6 +71,20 @@ export default function Home() {
           setPosts(postsRes.posts?.slice(0, 2) || []);
         } catch (e) { console.error("Erro posts:", e); }
 
+        // Busca Notificações
+        try {
+          const { getNotifications } = await import('@/services/notifications/notificationService');
+          const notifRes = await getNotifications(token);
+          const notifs = notifRes.data?.notifications || notifRes.notifications || [];
+          setUnreadNotifications(notifs.filter((n: any) => !n.read).length);
+        } catch (e) { console.error("Erro notificações:", e); }
+
+        // Busca Remédios para monitoramento
+        try {
+          const medsRes = await httpClient.get("/medications", token);
+          setMedications(medsRes.records || []);
+        } catch (e) { console.error("Erro remédios:", e); }
+
       } catch (err) {
         console.error("Erro geral na home:", err);
       } finally {
@@ -76,8 +95,48 @@ export default function Home() {
     fetchData();
   }, [router]);
 
+  // Monitoramento de Horários de Remédios
+  useEffect(() => {
+    if (medications.length === 0) return;
+
+    const interval = setInterval(() => {
+      const now = new Date();
+      const currentHHmm = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      // Usamos a data atual formatada como chave para não notificar duas vezes no mesmo dia/minuto
+      const today = now.toLocaleDateString('pt-BR');
+
+      medications.forEach((med) => {
+        // A hora no banco pode vir como HH:mm:ss, cortamos para HH:mm
+        const medHHmm = med.time?.substring(0, 5); 
+        if (medHHmm === currentHHmm) {
+          const storageKey = `notified_${med.id}_${today}_${currentHHmm}`;
+          if (!localStorage.getItem(storageKey)) {
+            localStorage.setItem(storageKey, 'true');
+            
+            // 1. Exibe alerta na tela
+            alert(`💊 Hora do Remédio!\n\nEstá na hora de tomar seu(sua) ${med.medication_name}.`);
+            
+            // 2. Cria notificação real no banco para o sininho
+            const token = localStorage.getItem("token");
+            if (token) {
+               httpClient.post("/notifications", {
+                 title: "Lembrete de Medicamento",
+                 body: `Está na hora de tomar seu ${med.medication_name} (${medHHmm}).`,
+                 type: "MEDICATION"
+               }, token).then(() => {
+                 setUnreadNotifications(prev => prev + 1);
+               }).catch(e => console.error("Erro ao registrar notificação:", e));
+            }
+          }
+        }
+      });
+    }, 30000); // Checa a cada 30 segundos
+
+    return () => clearInterval(interval);
+  }, [medications]);
+
   return (
-    <main className="min-h-screen bg-white pb-[91px] md:pb-12">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <Header
         title="DiabetesCare"
         titleColor="var(--dc-azul-escuro)"
@@ -93,24 +152,39 @@ export default function Home() {
       )}
 
       {/* Desktop top bar (replaces hidden Header on home variant) */}
-      <div className="hidden md:flex items-center justify-between px-8 py-5 sticky top-0 z-50 w-full backdrop-blur-[6px]" style={{ background: 'rgba(247, 249, 251, 0.85)' }}>
-        <span className="font-display font-extrabold text-xl text-azul-escuro tracking-tight">DiabetesCare</span>
-        <button
-          onClick={() => setShowNotifications(true)}
-          className="relative flex items-center justify-center text-cinza-fundo hover:opacity-70 transition-opacity"
-          aria-label="Notificações"
-        >
-          <IoMdNotificationsOutline size={26} />
-        </button>
+      <div className="hidden md:flex items-center justify-between sticky top-0 z-50 w-full backdrop-blur-[6px]" style={{ background: 'rgba(247, 249, 251, 0.85)' }}>
+        <div className="w-full max-w-5xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
+          <span className="font-display font-extrabold text-xl text-azul-escuro tracking-tight">DiabetesCare</span>
+          <button
+            onClick={() => setShowNotifications(true)}
+            className="relative flex items-center justify-center text-cinza-fundo hover:opacity-70 transition-opacity"
+            aria-label="Notificações"
+          >
+            <IoMdNotificationsOutline size={26} />
+            {unreadNotifications > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm">
+                {unreadNotifications > 9 ? '9+' : unreadNotifications}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Centralized Container with Max Width */}
       <section className="w-full max-w-5xl mx-auto px-6 md:px-8 pt-6 pb-12 flex flex-col gap-8">
         
         {/* Title / Greetings Area */}
-        <div className="flex flex-col w-full gap-1">
-          <h1 className="text-texto text-2xl md:text-3xl font-bold">Olá, {userName || "carregando..."}</h1>
-          <p className="text-cinza-claro-texto text-sm">Como está seu controle hoje?</p>
+        <div className="flex flex-col md:flex-row w-full justify-between items-start md:items-center gap-4">
+          <div className="flex flex-col gap-1">
+            <h1 className="text-texto text-2xl md:text-3xl font-bold">Olá, {userName || "carregando..."}</h1>
+            <p className="text-cinza-claro-texto text-sm">Como está seu controle hoje?</p>
+          </div>
+          <button
+            onClick={() => setShowMedications(true)}
+            className="bg-blue-50 text-blue-600 hover:bg-blue-100 px-6 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-sm transition-colors"
+          >
+            💊 Ver Meus Remédios
+          </button>
         </div>
 
         {/* ── ROW 1: Resumo Glicemia | Artigos Recentes ── */}
@@ -181,6 +255,11 @@ export default function Home() {
              <DiabeticaChat />
           </div>
         </div>
+      )}
+
+      {/* Medications Modal */}
+      {showMedications && (
+        <MedicationsModal onClose={() => setShowMedications(false)} />
       )}
 
       <Footer />

@@ -29,7 +29,7 @@ export default function NewQuestionScreen({ onClose, onSubmit }: NewQuestionProp
       setError('');
       const data = await createForumTopic({ 
         title: title, 
-        preview: content
+        content: content
       }, token);
       onSubmit(data.topic);
     } catch (err: any) {

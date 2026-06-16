@@ -4,6 +4,7 @@ import { IoMdArrowBack } from 'react-icons/io';
 import { MdMedication, MdVaccines, MdWaterDrop, MdCheckCircle } from 'react-icons/md';
 import Header from "@/components/ui/Header";
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from "@/services/notifications/notificationService";
 
 interface Notification {
@@ -21,20 +22,21 @@ interface NotificationsProps {
 }
 
 const TYPE_ICON: Record<string, React.ReactNode> = {
-  MEDICATION_REMINDER: <MdMedication size={24} />,
-  INSULIN_REMINDER: <MdVaccines size={24} />,
-  GLUCOSE_REMINDER: <MdWaterDrop size={24} />,
-  PERSONALIZED_TIP: <MdCheckCircle size={24} />,
+  MEDICATION: <MdMedication size={24} />,
+  SYSTEM: <MdVaccines size={24} />,
+  GLUCOSE: <MdWaterDrop size={24} />,
+  APPOINTMENT: <MdCheckCircle size={24} />,
 };
 
 const TYPE_COLOR: Record<string, { bg: string; text: string }> = {
-  MEDICATION_REMINDER: { bg: 'bg-blue-100', text: 'text-blue-600' },
-  INSULIN_REMINDER: { bg: 'bg-indigo-50', text: 'text-indigo-400' },
-  GLUCOSE_REMINDER: { bg: 'bg-orange-50', text: 'text-orange-400' },
-  PERSONALIZED_TIP: { bg: 'bg-green-50', text: 'text-green-500' },
+  MEDICATION: { bg: 'bg-blue-100', text: 'text-blue-600' },
+  SYSTEM: { bg: 'bg-indigo-50', text: 'text-indigo-400' },
+  GLUCOSE: { bg: 'bg-orange-50', text: 'text-orange-400' },
+  APPOINTMENT: { bg: 'bg-green-50', text: 'text-green-500' },
 };
 
 export default function NotificationsScreen({ onBack }: NotificationsProps) {
+  const router = useRouter();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -43,7 +45,7 @@ export default function NotificationsScreen({ onBack }: NotificationsProps) {
     if (!token) { setIsLoading(false); return; }
 
     getNotifications(token)
-      .then((data) => setNotifications(data.notifications || []))
+      .then((data) => setNotifications(data?.data?.notifications || data?.notifications || []))
       .catch(() => {})
       .finally(() => setIsLoading(false));
   }, []);
@@ -66,11 +68,11 @@ export default function NotificationsScreen({ onBack }: NotificationsProps) {
   const read = notifications.filter(n => n.read);
 
   return (
-    <div className="max-w-md mx-auto bg-gray-50 min-h-screen pb-10 font-sans">
+    <div className="w-full max-w-5xl mx-auto bg-[#F8F9FA] min-h-screen pb-10 font-sans">
       <Header
         title="Notificações"
         variant="page"
-        onBackClick={onBack}
+        onBackClick={onBack ?? (() => router.back())}
         rightElement={
           unread.length > 0 ? (
             <button
@@ -83,7 +85,7 @@ export default function NotificationsScreen({ onBack }: NotificationsProps) {
         }
       />
 
-      <main className="px-6 py-4 space-y-8">
+      <main className="w-full max-w-5xl mx-auto px-6 md:px-8 mt-6 py-4 space-y-8">
         {isLoading && (
           <div className="py-12 text-center text-gray-400 text-sm">Carregando notificações...</div>
         )}

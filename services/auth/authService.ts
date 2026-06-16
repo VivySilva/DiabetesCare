@@ -24,6 +24,7 @@ export async function loginUser(email: string, password: string) {
  * @param {string} data.password - Senha escolhida.
  * @param {string} data.confirmPassword - Confirmação da senha.
  * @param {"patient" | "professional"} data.role - Papel do usuário no sistema.
+ * @param {string} [data.dateOfBirth] - Data de nascimento no formato YYYY-MM-DD (opcional).
  * @param {string} [data.licenseNumber] - Número do registro profissional (obrigatório para profissionais).
  * @param {string} [data.phone] - Número de telefone opcional.
  * @returns {Promise<any>} A resposta da API confirmando o registro.
@@ -34,8 +35,11 @@ export async function registerUser(data: {
   password: string;
   confirmPassword: string;
   role: "patient" | "professional";
+  dateOfBirth?: string;
   licenseNumber?: string;
   phone?: string;
+  diabetesType?: string;
+  gender?: string;
 }) {
   return httpClient.post("/auth/register", data);
 }

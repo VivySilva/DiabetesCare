@@ -5,15 +5,19 @@ import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import ArticleCard from "@/components/ui/ArticleCard";
 import { MdAdd, MdTrendingUp } from "react-icons/md";
+import { IoMdNotificationsOutline } from "react-icons/io";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getCommunityPosts, deleteCommunityPost } from "@/services/community/communityService";
 import { getUserProfile } from "@/services/user/userService";
+import NotificationsScreen from "@/components/features/notifications/NotificationsScreen";
 
 export default function ProfissionalPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [userName, setUserName] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
     const validateSession = async () => {
@@ -29,6 +33,7 @@ export default function ProfissionalPage() {
         // Valida a sessão buscando o perfil
         const profileRes = await getUserProfile(token);
         const user = profileRes.user;
+        setUserName(user.name?.split(' ')[0] || "");
 
         // Busca posts da comunidade
         const data = await getCommunityPosts();
@@ -59,16 +64,37 @@ export default function ProfissionalPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F9FB] pb-[100px] md:pb-12">
-      <Header title="DiabetesCare" variant="home" titleColor="var(--dc-azul)" />
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
+      <Header title="DiabetesCare" variant="home" titleColor="var(--dc-azul)" onNotificationClick={() => setShowNotifications(true)} />
+
+      {/* Mobile: floating notification overlay */}
+      {showNotifications && (
+        <div className="fixed inset-0 z-[60]">
+          <NotificationsScreen onBack={() => setShowNotifications(false)} />
+        </div>
+      )}
+
+      {/* Desktop top bar */}
+      <div className="hidden md:flex items-center justify-between sticky top-0 z-50 w-full backdrop-blur-[6px]" style={{ background: 'rgba(247, 249, 251, 0.85)' }}>
+        <div className="w-full max-w-5xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
+          <span className="font-display font-extrabold text-xl text-azul-escuro tracking-tight">DiabetesCare</span>
+          <button
+            onClick={() => setShowNotifications(true)}
+            className="relative flex items-center justify-center text-cinza-fundo hover:opacity-70 transition-opacity"
+            aria-label="Notificações"
+          >
+            <IoMdNotificationsOutline size={26} />
+          </button>
+        </div>
+      </div>
 
       {/* Centralized Container with Max Width */}
       <main className="w-full max-w-5xl mx-auto px-6 md:px-8 mt-6 pb-12 flex flex-col gap-8">
         
         {/* Title and Description */}
-        <div className="flex flex-col gap-2">
-          <h1 className="text-texto text-2xl md:text-3xl font-bold">Painel</h1>
-          <p className="text-cinza-claro-texto">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-texto text-2xl md:text-3xl font-bold">Olá, {userName || "carregando..."}</h1>
+          <p className="text-cinza-claro-texto text-sm">
             Gerencie suas publicações e compartilhe conhecimento com a comunidade.
           </p>
         </div>

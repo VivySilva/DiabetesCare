@@ -39,7 +39,7 @@ export async function PUT(
       .from("glucose_records")
       .select("id")
       .eq("id", id)
-      .eq("user_id", user.id)
+      .eq("patient_id", user.id)
       .maybeSingle();
 
     if (!existingRecord) {
@@ -119,7 +119,7 @@ export async function DELETE(
       .from("glucose_records")
       .select("id")
       .eq("id", id)
-      .eq("user_id", user.id)
+      .eq("patient_id", user.id)
       .maybeSingle();
 
     if (!existingRecord) {

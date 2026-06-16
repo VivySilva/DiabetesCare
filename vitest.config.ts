@@ -1,12 +1,11 @@
-import { defineConfig } from 'vitest/config';
-import path from 'path';
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  resolve: {
+    tsconfigPaths: true,
+  },
   test: {
-    environment: 'jsdom',
+    environment: "jsdom", // Isso avisa ao Vitest para simular um navegador!
     globals: true,
-    alias: {
-      '@': path.resolve(__dirname, './')
-    }
-  }
+  },
 });

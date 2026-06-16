@@ -25,6 +25,7 @@ async function request(endpoint: string, options: RequestInit = {}, token?: stri
   }
 
   const response = await fetch(`${API_URL}${endpoint}`, {
+    cache: "no-store", // Desabilita o cache agressivo do Next.js
     ...options,
     headers,
   });

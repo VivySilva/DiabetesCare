@@ -11,7 +11,10 @@ export default function RegisterPage() {
   const [isProfessional, setIsProfessional] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [phone, setPhone] = useState('');
+  const [gender, setGender] = useState('Masculino');
+  const [diabetesType, setDiabetesType] = useState('Tipo 2');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
@@ -38,7 +41,10 @@ export default function RegisterPage() {
         password,
         confirmPassword,
         role: isProfessional ? 'professional' : 'patient',
+        dateOfBirth: dateOfBirth || undefined,
+        diabetesType: !isProfessional ? diabetesType : undefined,
         licenseNumber: isProfessional ? licenseNumber : undefined,
+        gender,
       });
       
       setShowSuccess(true);
@@ -50,7 +56,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 py-12">
+    <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center px-6 py-12">
       {/* Logo Section */}
       <div className="flex flex-col items-center mb-8">
         <div className="w-20 h-20 bg-azul-escuro rounded-2xl flex items-center justify-center shadow-lg mb-4">
@@ -116,6 +122,22 @@ export default function RegisterPage() {
           />
 
           <Input 
+            label="Data de Nascimento" 
+            type="date"
+            placeholder="DD/MM/AAAA"
+            value={dateOfBirth}
+            onChange={(e) => setDateOfBirth(e.target.value)}
+            icon={
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            }
+          />
+
+          <Input 
             label="Telefone" 
             type="tel"
             placeholder="(00) 00000-0000"
@@ -127,6 +149,29 @@ export default function RegisterPage() {
               </svg>
             }
           />
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+              Gênero
+            </label>
+            <div className="relative">
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all cursor-pointer"
+              >
+                <option value="Masculino">Masculino</option>
+                <option value="Feminino">Feminino</option>
+                <option value="Outro">Outro</option>
+                <option value="Prefiro não informar">Prefiro não informar</option>
+              </select>
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </div>
+            </div>
+          </div>
 
           <Input 
             label="Senha" 
@@ -161,6 +206,24 @@ export default function RegisterPage() {
               </svg>
             }
           />
+
+          {!isProfessional && (
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                Tipo de Diabetes
+              </label>
+              <select
+                value={diabetesType}
+                onChange={(e) => setDiabetesType(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all cursor-pointer"
+              >
+                <option value="Tipo 1">Tipo 1</option>
+                <option value="Tipo 2">Tipo 2</option>
+                <option value="Gestacional">Gestacional</option>
+                <option value="Pré-diabetes">Pré-diabetes</option>
+              </select>
+            </div>
+          )}
 
           {isProfessional && (
             <Input 

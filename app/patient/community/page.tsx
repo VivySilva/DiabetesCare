@@ -25,7 +25,7 @@ export default function CommunityPage() {
   }, [activeTab]);
 
   return (
-    <main className="min-h-screen bg-[#F7F9FB] pb-[91px] md:pb-12">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="home" />
 
       {/* Centralized Container with Max Width */}

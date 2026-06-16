@@ -73,8 +73,9 @@ export default function PublishPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7F9FB] flex flex-col">
-      {/* ── TOP BAR ── */}
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
+      <div className="max-w-5xl mx-auto w-full bg-[#F8F9FA] min-h-screen relative flex flex-col">
+        {/* ── TOP BAR ── */}
       <Header 
         title="Criar Publicação" 
         variant="page" 
@@ -100,7 +101,7 @@ export default function PublishPage() {
       />
 
       {/* ── SCROLLABLE CONTENT ── */}
-      <main className="flex-1 overflow-y-auto px-5 pb-32 flex flex-col gap-5">
+      <main className="flex-1 overflow-y-auto w-full max-w-5xl mx-auto px-6 md:px-8 mt-6 pb-32 flex flex-col gap-5">
 
         {/* Cover image */}
         <button
@@ -190,7 +191,7 @@ export default function PublishPage() {
       </main>
 
       {/* ── STICKY PUBLISH BUTTON ── */}
-      <div className="fixed bottom-0 left-0 right-0 px-5 pb-8 pt-4 bg-gradient-to-t from-[#F7F9FB] to-transparent max-w-md mx-auto">
+      <div className="fixed bottom-0 left-0 right-0 px-6 md:px-8 pb-8 pt-4 bg-gradient-to-t from-[#F7F9FB] to-transparent w-full max-w-5xl mx-auto">
         <button
           type="button"
           onClick={handleSubmit}
@@ -230,6 +231,7 @@ export default function PublishPage() {
           )}
         </button>
       </div>
-    </div>
+      </div>
+    </main>
   );
 }
