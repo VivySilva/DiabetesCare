@@ -3,6 +3,12 @@ from flask import Flask, request, jsonify
 from transformers import AutoTokenizer, AutoModelForCausalLM, TextIteratorStreamer
 from threading import Thread
 import random
+import logging
+import traceback
+
+# Configurando o logger
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
@@ -14,7 +20,7 @@ app = Flask(__name__)
 MODEL_PATH = 'WaltonFuture/Diabetica-1.5B'
 device = "cuda"      
 
-print(f"Carregando modelo {MODEL_PATH} no dispositivo: {device}...")
+logger.info(f"Carregando modelo {MODEL_PATH} no dispositivo: {device}...")
 
 # Carregar Tokenizer e Modelo (Isso pode levar tempo e exigir muita memória)
 # Em um ambiente de produção real, isso seria feito com otimizações
@@ -25,9 +31,10 @@ try:
         torch_dtype="auto",
         device_map="auto" if torch.cuda.is_available() else None
     ).eval()
-    print("Modelo carregado com sucesso!")
+    logger.info("Modelo carregado com sucesso!")
 except Exception as e:
-    print(f"Erro ao carregar o modelo: {e}")
+    logger.error(f"Erro ao carregar o modelo: {e}")
+    logger.error(traceback.format_exc())
     model = None
     tokenizer = None
 
@@ -47,30 +54,35 @@ def generate_response(message, history):
     # Adicionar mensagem atual
     messages.append({"role": "user", "content": message})
 
-    text = tokenizer.apply_chat_template(
-        messages,
-        tokenize=False,
-        add_generation_prompt=True
-    )
-    
-    model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
-    
-    # Configuração de geração simples (não-streaming para a API REST básica)
-    generated_ids = model.generate(
-        model_inputs.input_ids,
-        max_new_tokens=256,
-        do_sample=True,
-        temperature=0.7,
-        top_p=0.9
-    )
-    
-    # Remover os tokens de entrada da saída gerada
-    response_ids = [
-        output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
-    ]
-    
-    response = tokenizer.batch_decode(response_ids, skip_special_tokens=True)[0]
-    return response
+    try:
+        text = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+        
+        model_inputs = tokenizer([text], return_tensors="pt").to(model.device)
+        
+        # Configuração de geração simples (não-streaming para a API REST básica)
+        generated_ids = model.generate(
+            model_inputs.input_ids,
+            max_new_tokens=256,
+            do_sample=True,
+            temperature=0.7,
+            top_p=0.9
+        )
+        
+        # Remover os tokens de entrada da saída gerada
+        response_ids = [
+            output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+        ]
+        
+        response = tokenizer.batch_decode(response_ids, skip_special_tokens=True)[0]
+        return response
+    except Exception as e:
+        logger.error("Erro durante a geração de resposta pelo modelo:")
+        logger.error(traceback.format_exc())
+        raise Exception(f"Falha na geração do modelo: {str(e)}")
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -85,7 +97,8 @@ def predict():
         response = generate_response(message, history)
         return jsonify({"response": response})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Erro no endpoint /predict: {e}")
+        return jsonify({"error": "Erro interno durante o processamento do assistente", "details": str(e)}), 500
 
 @app.route('/health', methods=['GET'])
 def health():

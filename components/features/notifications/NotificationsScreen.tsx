@@ -5,6 +5,7 @@ import { MdMedication, MdVaccines, MdWaterDrop, MdCheckCircle } from 'react-icon
 import Header from "@/components/ui/Header";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from "@/services/notifications/notificationService";
 
 interface Notification {
@@ -100,33 +101,40 @@ export default function NotificationsScreen({ onBack }: NotificationsProps) {
           <section>
             <h2 className="text-sm font-semibold text-gray-700 mb-4">Novas</h2>
             <div className="space-y-4">
-              {unread.map((n) => {
-                const colors = TYPE_COLOR[n.type] || { bg: 'bg-gray-100', text: 'text-gray-500' };
-                return (
-                  <div
-                    key={n.id}
-                    className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-3"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className={`${colors.bg} ${colors.text} p-3 rounded-full`}>
-                        {TYPE_ICON[n.type] || <MdCheckCircle size={24} />}
+              <AnimatePresence>
+                {unread.map((n) => {
+                  const colors = TYPE_COLOR[n.type] || { bg: 'bg-gray-100', text: 'text-gray-500' };
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.2 }}
+                      key={n.id}
+                      className="bg-white p-5 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-3"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className={`${colors.bg} ${colors.text} p-3 rounded-full`}>
+                          {TYPE_ICON[n.type] || <MdCheckCircle size={24} />}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-bold text-gray-800">{n.title}</h3>
+                          {n.body && <p className="text-sm text-gray-500 mt-1">{n.body}</p>}
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-gray-800">{n.title}</h3>
-                        {n.body && <p className="text-sm text-gray-500 mt-1">{n.body}</p>}
+                      <div className="ml-16">
+                        <button
+                          onClick={() => handleMarkRead(n.id)}
+                          className="bg-blue-700 text-white text-sm font-medium py-2 px-5 rounded-full hover:bg-blue-800 transition"
+                        >
+                          Marcar como lida
+                        </button>
                       </div>
-                    </div>
-                    <div className="ml-16">
-                      <button
-                        onClick={() => handleMarkRead(n.id)}
-                        className="bg-blue-700 text-white text-sm font-medium py-2 px-5 rounded-full hover:bg-blue-800 transition"
-                      >
-                        Marcar como lida
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
           </section>
         )}
@@ -135,23 +143,29 @@ export default function NotificationsScreen({ onBack }: NotificationsProps) {
           <section>
             <h2 className="text-sm font-semibold text-gray-400 mb-4">Anteriores</h2>
             <div className="space-y-3">
-              {read.map((n) => {
-                const colors = TYPE_COLOR[n.type] || { bg: 'bg-gray-100', text: 'text-gray-400' };
-                return (
-                  <div
-                    key={n.id}
-                    className="bg-white p-4 rounded-3xl border border-gray-50 flex items-start gap-4 opacity-60"
-                  >
-                    <div className={`${colors.bg} ${colors.text} p-3 rounded-full`}>
-                      {TYPE_ICON[n.type] || <MdCheckCircle size={24} />}
-                    </div>
-                    <div>
-                      <h3 className="font-bold text-gray-700 text-sm">{n.title}</h3>
-                      {n.body && <p className="text-xs text-gray-400 mt-0.5">{n.body}</p>}
-                    </div>
-                  </div>
-                );
-              })}
+              <AnimatePresence>
+                {read.map((n) => {
+                  const colors = TYPE_COLOR[n.type] || { bg: 'bg-gray-100', text: 'text-gray-400' };
+                  return (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                      key={n.id}
+                      className="bg-white p-4 rounded-3xl border border-gray-50 flex items-start gap-4 opacity-60"
+                    >
+                      <div className={`${colors.bg} ${colors.text} p-3 rounded-full`}>
+                        {TYPE_ICON[n.type] || <MdCheckCircle size={24} />}
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-gray-700 text-sm">{n.title}</h3>
+                        {n.body && <p className="text-xs text-gray-400 mt-0.5">{n.body}</p>}
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </AnimatePresence>
             </div>
           </section>
         )}

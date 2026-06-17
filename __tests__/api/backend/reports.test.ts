@@ -1,6 +1,10 @@
 import { test, expect, vi, describe, beforeEach } from "vitest";
 import { NextRequest } from "next/server";
 
+process.env.SUPABASE_URL = "https://mock.supabase.co";
+process.env.SUPABASE_KEY = "mock-key";
+process.env.JWT_SECRET = "mock-jwt-secret-12345";
+
 // 1. MOCKS (DUBLÊS)
 vi.mock("@/lib/auth", () => ({
   verifyToken: vi.fn(),
@@ -8,6 +12,14 @@ vi.mock("@/lib/auth", () => ({
     () =>
       new Response(JSON.stringify({ erro: "Não autorizado" }), { status: 401 }),
   ),
+}));
+
+vi.mock("@/config/env", () => ({
+  env: {
+    SUPABASE_URL: "https://mock.supabase.co",
+    SUPABASE_KEY: "mock-key",
+    JWT_SECRET: "mock-jwt-secret-12345",
+  },
 }));
 
 // Dublê do serviço que calcula a média e a A1C

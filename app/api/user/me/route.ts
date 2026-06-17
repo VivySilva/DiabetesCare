@@ -72,6 +72,10 @@ export async function GET(req: NextRequest) {
     }
 
     const combinedUser = { ...authData, ...specificData };
+    
+    // Remover campos sensíveis por precaução (caso venham no select '*')
+    delete combinedUser.password_hash;
+    delete combinedUser.password_reset_token;
 
     return NextResponse.json({ user: combinedUser }, { status: 200 });
   } catch (error) {

@@ -60,6 +60,8 @@ describe("Tela de Publicar Artigo (PublishPage)", () => {
       "div[contentEditable]",
     ) as HTMLElement;
     if (contentDiv) {
+      contentDiv.textContent =
+        "Aqui vai o conteúdo da publicação para passar na sua validação rigorosa.";
       contentDiv.innerHTML =
         "Aqui vai o conteúdo da publicação para passar na sua validação rigorosa.";
     }

@@ -23,11 +23,11 @@ export default function EditPostPage() {
     const fetchPost = async () => {
       try {
         const res = await getCommunityPostById(id);
-        const post = res.post;
-        setTitle(post.title || "");
-        setContent(post.content_html || "");
-        setCategory(post.category || "Saúde");
-        setImageUrl(post.cover_image_url || "");
+        const post = res.post || res.data || res;
+        setTitle(post?.title || "");
+        setContent(post?.content_html || "");
+        setCategory(post?.category || "Saúde");
+        setImageUrl(post?.cover_image_url || "");
       } catch (err) {
         console.error("Erro ao carregar post:", err);
         alert("Não foi possível carregar a publicação.");

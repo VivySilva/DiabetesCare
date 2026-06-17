@@ -32,11 +32,24 @@ export async function GET(
 
     let authorInfo = null;
     if (topicData.author_id) {
-      const { data: patient } = await supabase.from("patients").select("name, avatar_url, role").eq("id", topicData.author_id).maybeSingle();
-      if (patient) authorInfo = patient;
-      else {
-        const { data: prof } = await supabase.from("professionals").select("name, avatar_url, role").eq("id", topicData.author_id).maybeSingle();
-        if (prof) authorInfo = prof;
+      const { data: authUser } = await supabase.from("users").select("role, avatar_url").eq("id", topicData.author_id).maybeSingle();
+      
+      if (authUser) {
+        if (authUser.role === 'professional') {
+          const { data: prof } = await supabase.from("professionals").select("name, license_number").eq("id", topicData.author_id).maybeSingle();
+          authorInfo = {
+            role: authUser.role,
+            avatar_url: authUser.avatar_url,
+            name: prof?.name || "Profissional de Saúde",
+            license_number: prof?.license_number || null
+          };
+        } else {
+          authorInfo = {
+            role: authUser.role,
+            avatar_url: null, // Mantém anonimato
+            name: "Usuário Anônimo"
+          };
+        }
       }
     }
 
@@ -52,10 +65,28 @@ export async function GET(
     const replyAuthorIds = Array.from(new Set(finalReplies.map((r: any) => r.author_id)));
     if (replyAuthorIds.length > 0) {
       let usersMap: Record<string, any> = {};
-      const { data: patients } = await supabase.from("patients").select("name, avatar_url, role, id").in("id", replyAuthorIds);
-      const { data: profs } = await supabase.from("professionals").select("name, avatar_url, role, id").in("id", replyAuthorIds);
-      patients?.forEach(p => usersMap[p.id] = p);
-      profs?.forEach(p => usersMap[p.id] = p);
+      const { data: authUsers } = await supabase.from("users").select("id, role, avatar_url").in("id", replyAuthorIds);
+      const { data: professionals } = await supabase.from("professionals").select("id, name, license_number").in("id", replyAuthorIds);
+      
+      authUsers?.forEach(u => {
+        if (u.role === 'professional') {
+          const prof = professionals?.find(pr => pr.id === u.id);
+          usersMap[u.id] = {
+            id: u.id,
+            avatar_url: u.avatar_url,
+            role: u.role,
+            name: prof?.name || "Profissional de Saúde",
+            license_number: prof?.license_number || null
+          };
+        } else {
+          usersMap[u.id] = {
+            id: u.id,
+            avatar_url: null,
+            role: u.role,
+            name: "Usuário Anônimo"
+          };
+        }
+      });
       
       finalReplies = finalReplies.map((r: any) => ({
         ...r,

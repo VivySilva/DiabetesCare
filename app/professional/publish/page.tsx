@@ -21,8 +21,9 @@ export default function PublishPage() {
 
   const [title, setTitle] = useState("");
   const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [category, setCategory] = useState("Saúde");
+  const [category, setCategory] = useState("GERAL");
   const [isPublishing, setIsPublishing] = useState(false);
+  const [error, setError] = useState("");
 
   /* ---------- image upload ---------- */
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,8 +48,20 @@ export default function PublishPage() {
 
   /* ---------- submit ---------- */
   const handleSubmit = async () => {
+    setError("");
     const content = contentRef.current?.innerHTML ?? "";
-    if (!title.trim() || !content.trim()) return;
+    
+    if (!title.trim() || title.length < 5) {
+      setError("O título deve ter no mínimo 5 caracteres.");
+      return;
+    }
+    
+    // Simplificamos tirando as tags HTML para contar os caracteres reais
+    const textOnly = contentRef.current?.textContent ?? "";
+    if (textOnly.trim().length < 10) {
+      setError("O conteúdo deve ter no mínimo 10 caracteres.");
+      return;
+    }
 
     const token = localStorage.getItem('token');
     if (!token) {
@@ -91,14 +104,20 @@ export default function PublishPage() {
               onChange={(e) => setCategory(e.target.value)}
               className="appearance-none bg-[var(--dc-azul-claro)] text-[var(--dc-azul)] text-xs font-semibold pl-7 pr-3 py-1.5 rounded-full outline-none cursor-pointer"
             >
-              <option value="Saúde">Saúde</option>
-              <option value="Nutrição">Nutrição</option>
-              <option value="Exercícios">Exercícios</option>
-              <option value="Dicas">Dicas</option>
+              <option value="GERAL">Saúde Geral</option>
+              <option value="ALIMENTACAO">Nutrição</option>
+              <option value="EXERCICIO">Exercícios</option>
+              <option value="MEDICACAO">Medicação</option>
             </select>
           </div>
         }
       />
+      
+      {error && (
+        <div className="mx-6 md:mx-8 mt-4 bg-red-50 text-red-500 text-sm p-3 rounded-xl text-center">
+          {error}
+        </div>
+      )}
 
       {/* ── SCROLLABLE CONTENT ── */}
       <main className="flex-1 overflow-y-auto w-full max-w-5xl mx-auto px-6 md:px-8 mt-6 pb-32 flex flex-col gap-5">

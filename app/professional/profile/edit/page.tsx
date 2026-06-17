@@ -167,6 +167,11 @@ export default function ProfessionalProfileEdit() {
     e.preventDefault();
     setErrorMsg("");
 
+    if (!name.trim()) { setErrorMsg("O nome não pode estar vazio."); return; }
+    if (!email.trim() || !email.includes("@")) { setErrorMsg("E-mail inválido."); return; }
+    if (!cpf.trim() || cpf.replace(/\D/g, '').length !== 11) { setErrorMsg("CPF inválido."); return; }
+    if (!crm.trim()) { setErrorMsg("O número de registro (CRM/CRN) é obrigatório."); return; }
+
     if (password && password !== confirmPassword) {
       setErrorMsg("As senhas não coincidem.");
       return;

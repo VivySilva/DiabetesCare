@@ -16,7 +16,7 @@ export default function PostDetail({ id }: { id: string }) {
     const fetchPost = async () => {
       try {
         const res = await getCommunityPostById(id);
-        setPost(res.post);
+        setPost(res.post || res.data || res);
       } catch (err: any) {
         setError(err.message || "Postagem não encontrada.");
       } finally {

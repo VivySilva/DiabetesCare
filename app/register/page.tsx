@@ -25,8 +25,27 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
+    // Validações Frontend
+    if (!name.trim()) {
+      setError('Por favor, preencha o seu nome.');
+      return;
+    }
+    if (!email.trim() || !email.includes('@')) {
+      setError('Por favor, digite um e-mail válido.');
+      return;
+    }
+    if (password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.');
+      return;
+    }
     if (password !== confirmPassword) {
       setError('As senhas não coincidem.');
+      return;
+    }
+    if (isProfessional && !licenseNumber.trim()) {
+      setError('Por favor, preencha o seu registro no conselho (CRM/CRN).');
       return;
     }
     

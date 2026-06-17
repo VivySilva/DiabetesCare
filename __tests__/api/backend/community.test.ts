@@ -90,9 +90,9 @@ describe("API da Comunidade (/api/community)", () => {
       const json = await res.json();
 
       // Valida se o backend fez a "costura" corretamente
-      expect(json[0].title).toBe("Dica de Saúde");
-      expect(json[0].users).toBeDefined();
-      expect(json[0].users.name).toBe("Maria da Silva");
+      expect(json.posts[0].title).toBe("Dica de Saúde");
+      expect(json.posts[0].users).toBeDefined();
+      expect(json.posts[0].users.name).toBe("Maria da Silva");
     });
   });
 

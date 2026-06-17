@@ -24,8 +24,12 @@ export default function CadastroRemedios() {
     e.preventDefault();
     setError('');
 
-    if (!medicationName.trim()) {
-      setError("Por favor, informe o nome do medicamento.");
+    if (!medicationName.trim() || medicationName.trim().length < 2) {
+      setError("Por favor, informe um nome válido para o medicamento (mínimo 2 caracteres).");
+      return;
+    }
+    if (!time) {
+      setError("Por favor, informe o horário do medicamento.");
       return;
     }
 

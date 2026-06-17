@@ -15,7 +15,7 @@ import { getUserProfile } from "@/services/user/userService"
 import { getGlucoseRecords } from "@/services/glucose/glucoseService"
 import { getCommunityPosts } from "@/services/community/communityService";
 import { httpClient } from "@/lib/httpClient";
-import DiabeticaChat from "@/Diabetica/DiabeticaChat";
+import DiabeticaChat from '@/components/features/diabetica/DiabeticaChat';
 
 export default function Home() {
   const router = useRouter();

@@ -25,11 +25,31 @@ export async function GET() {
     
     let usersMap: Record<string, any> = {};
     if (authorIds.length > 0) {
-      const { data: patients } = await supabase.from("patients").select("id, name, avatar_url, role").in("id", authorIds);
-      const { data: professionals } = await supabase.from("professionals").select("id, name, avatar_url, role").in("id", authorIds);
+      // 1. Busca todos da tabela users
+      const { data: authUsers } = await supabase.from("users").select("id, avatar_url, role").in("id", authorIds);
       
-      patients?.forEach(p => usersMap[p.id] = p);
-      professionals?.forEach(p => usersMap[p.id] = p);
+      // 2. Busca profissionais
+      const { data: professionals } = await supabase.from("professionals").select("id, name, license_number").in("id", authorIds);
+      
+      authUsers?.forEach(u => {
+        if (u.role === 'professional') {
+          const prof = professionals?.find(pr => pr.id === u.id);
+          usersMap[u.id] = {
+            id: u.id,
+            avatar_url: u.avatar_url, // Mantém a foto
+            role: u.role,
+            name: prof?.name || "Profissional de Saúde",
+            license_number: prof?.license_number || null
+          };
+        } else {
+          usersMap[u.id] = {
+            id: u.id,
+            avatar_url: null, // Sem foto real
+            role: u.role,
+            name: "Usuário Anônimo"
+          };
+        }
+      });
     }
 
     const topicIds = (data || []).map((t: any) => t.id);
@@ -45,6 +65,7 @@ export async function GET() {
 
     const topicsWithCounts = (data || []).map((topic: any) => ({
       ...topic,
+      users: usersMap[topic.author_id] || { name: "Usuário Anônimo", role: "PATIENT" },
       replies_count: countMap[topic.id] || 0,
     }));
 

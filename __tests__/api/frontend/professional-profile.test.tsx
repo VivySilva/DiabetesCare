@@ -31,8 +31,7 @@ describe("Tela de Perfil do Profissional", () => {
         name: "Dra. Ana",
         role: "PROFESSIONAL",
         specialty: "Endocrinologia",
-        crm: "12345",
-        crm_uf: "SP",
+        license_number: "12345 - SP",
         clinic_address: "Rua da Cura, 100",
       },
     });

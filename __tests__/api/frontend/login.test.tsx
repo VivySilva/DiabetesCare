@@ -31,6 +31,7 @@ describe("Tela de Login (LoginPage)", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     // Toda vez que a tela tentar usar o router.push, ela vai chamar o nosso mockPush
     vi.mocked(useRouter).mockReturnValue({ push: mockPush } as any);
   });
@@ -107,5 +108,29 @@ describe("Tela de Login (LoginPage)", () => {
       // Verifica se a tela redirecionou para o painel do paciente
       expect(mockPush).toHaveBeenCalledWith("/patient");
     });
+  });
+
+  test("Deve exibir a mensagem de erro que vem da API se as credenciais estiverem incorretas", async () => {
+    // Simulamos que a API devolveu um erro
+    vi.mocked(loginUser).mockRejectedValue(new Error("Usuário ou senha incorretos."));
+
+    render(<LoginPage />);
+
+    // Preenche corretamente mas com senha errada
+    fireEvent.change(screen.getByPlaceholderText("Seu e-mail cadastrado"), {
+      target: { value: "paciente@teste.com" },
+    });
+    fireEvent.change(screen.getByPlaceholderText("••••••••"), {
+      target: { value: "senhaErrada123" },
+    });
+
+    fireEvent.submit(screen.getByText("Entrar"));
+
+    // Espera a mensagem de erro aparecer na tela
+    const mensagemErro = await screen.findByText("Usuário ou senha incorretos.");
+    expect(mensagemErro).toBeTruthy();
+    
+    // Garante que não redirecionou
+    expect(mockPush).not.toHaveBeenCalled();
   });
 });

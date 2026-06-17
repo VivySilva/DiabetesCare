@@ -105,6 +105,17 @@ export default function CadastroGlicemia() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validações Frontend
+    if (glucoseValue <= 0) {
+      setError("O valor da glicemia deve ser maior que zero.");
+      return;
+    }
+    if (glucoseValue > 600) {
+      setError("O valor da glicemia não pode ultrapassar 600 mg/dL.");
+      return;
+    }
+
     setIsLoading(true);
 
     const token = localStorage.getItem("token");

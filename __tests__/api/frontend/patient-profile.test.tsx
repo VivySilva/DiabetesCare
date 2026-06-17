@@ -20,18 +20,21 @@ vi.mock("next/link", () => ({
 // Dublê para a biblioteca de PDF (evita que o Vitest tente desenhar um PDF de verdade)
 vi.mock("jspdf", () => {
   return {
-    default: vi.fn(() => ({
-      setFontSize: vi.fn(),
-      setTextColor: vi.fn(),
-      text: vi.fn(),
-      line: vi.fn(),
-      setFont: vi.fn(),
-      splitTextToSize: vi.fn((text) => text),
-      internal: {
-        pageSize: { getWidth: vi.fn(() => 200), getHeight: vi.fn(() => 300) },
-      },
-      save: vi.fn(),
-    })),
+    default: vi.fn().mockImplementation(function() {
+      return {
+        setFontSize: vi.fn(),
+        setTextColor: vi.fn(),
+        text: vi.fn(),
+        line: vi.fn(),
+        setFont: vi.fn(),
+        splitTextToSize: vi.fn((text) => [text]),
+        lastAutoTable: { finalY: 50 },
+        internal: {
+          pageSize: { getWidth: vi.fn(() => 200), getHeight: vi.fn(() => 300) },
+        },
+        save: vi.fn(),
+      };
+    }),
   };
 });
 vi.mock("jspdf-autotable", () => ({ default: vi.fn() }));
@@ -54,7 +57,7 @@ describe("Tela de Perfil do Paciente", () => {
     vi.mocked(getUserProfile).mockResolvedValue({
       user: {
         name: "João Paciente",
-        age: 45,
+        birth_date: "1979-01-01",
         diabetes_type: "Tipo 2",
         email: "joao@teste.com",
       },
@@ -65,8 +68,8 @@ describe("Tela de Perfil do Paciente", () => {
     // Espera o carregamento sumir e os dados aparecerem
     const nome = await screen.findByText("João Paciente");
     expect(nome).toBeTruthy();
-    expect(screen.getByText("45 anos")).toBeTruthy();
-    expect(screen.getByText("Tipo 2")).toBeTruthy();
+    expect(screen.getByText(/anos/i)).toBeTruthy();
+    expect(screen.getAllByText("Tipo 2").length).toBeGreaterThan(0);
     expect(screen.getByText("joao@teste.com")).toBeTruthy();
   });
 

@@ -114,7 +114,7 @@ export default function EditPatientProfile() {
 
     // Validações client-side
     if (!name.trim()) { setError("O nome não pode estar vazio."); return; }
-    if (!email.trim()) { setError("O e-mail não pode estar vazio."); return; }
+    if (!email.trim() || !email.includes("@")) { setError("E-mail inválido."); return; }
     if (password && password.length < 6) {
       setError("A senha deve ter pelo menos 6 caracteres.");
       return;
