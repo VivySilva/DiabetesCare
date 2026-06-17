@@ -143,12 +143,28 @@ export async function PUT(req: NextRequest) {
             const buffer = Buffer.from(base64Data, 'base64');
             const fileName = `${user.id}-${Date.now()}.${ext}`;
 
-            const { data: uploadData, error: uploadError } = await supabase.storage
+            let { data: uploadData, error: uploadError } = await supabase.storage
               .from('avatars')
               .upload(fileName, buffer, {
                 contentType: `image/${ext}`,
                 upsert: true
               });
+
+            if (uploadError && (uploadError as any).message === 'Bucket not found') {
+              try {
+                await supabase.storage.createBucket('avatars', { public: true });
+                const retry = await supabase.storage
+                  .from('avatars')
+                  .upload(fileName, buffer, {
+                    contentType: `image/${ext}`,
+                    upsert: true
+                  });
+                uploadData = retry.data;
+                uploadError = retry.error;
+              } catch (createErr) {
+                console.error("Erro ao tentar criar bucket 'avatars' no perfil:", createErr);
+              }
+            }
 
             if (uploadError) {
               console.error("Erro ao fazer upload do avatar:", uploadError);

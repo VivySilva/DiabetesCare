@@ -21,7 +21,7 @@ export default function PublishPage() {
 
   const [title, setTitle] = useState("");
   const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [category, setCategory] = useState("GERAL");
+  const [category, setCategory] = useState("Geral");
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState("");
 
@@ -104,10 +104,10 @@ export default function PublishPage() {
               onChange={(e) => setCategory(e.target.value)}
               className="appearance-none bg-[var(--dc-azul-claro)] text-[var(--dc-azul)] text-xs font-semibold pl-7 pr-3 py-1.5 rounded-full outline-none cursor-pointer"
             >
-              <option value="GERAL">Saúde Geral</option>
-              <option value="ALIMENTACAO">Nutrição</option>
-              <option value="EXERCICIO">Exercícios</option>
-              <option value="MEDICACAO">Medicação</option>
+              <option value="Geral">Saúde Geral</option>
+              <option value="Nutrição">Nutrição</option>
+              <option value="Exercícios">Exercícios</option>
+              <option value="Tratamento">Medicação</option>
             </select>
           </div>
         }

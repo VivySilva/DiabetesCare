@@ -45,7 +45,7 @@ export default function Home() {
           if (profileRes.user) {
             setUserName(profileRes.user.name.split(' ')[0]);
           }
-        } catch (e: any) { 
+        } catch (e: any) {
           console.error("Erro perfil/sessão:", e);
           // Se falhar ao buscar o perfil, a sessão provavelmente expirou ou é inválida
           localStorage.removeItem('token');
@@ -95,46 +95,6 @@ export default function Home() {
     fetchData();
   }, [router]);
 
-  // Monitoramento de Horários de Remédios
-  useEffect(() => {
-    if (medications.length === 0) return;
-
-    const interval = setInterval(() => {
-      const now = new Date();
-      const currentHHmm = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      // Usamos a data atual formatada como chave para não notificar duas vezes no mesmo dia/minuto
-      const today = now.toLocaleDateString('pt-BR');
-
-      medications.forEach((med) => {
-        // A hora no banco pode vir como HH:mm:ss, cortamos para HH:mm
-        const medHHmm = med.time?.substring(0, 5); 
-        if (medHHmm === currentHHmm) {
-          const storageKey = `notified_${med.id}_${today}_${currentHHmm}`;
-          if (!localStorage.getItem(storageKey)) {
-            localStorage.setItem(storageKey, 'true');
-            
-            // 1. Exibe alerta na tela
-            alert(`💊 Hora do Remédio!\n\nEstá na hora de tomar seu(sua) ${med.medication_name}.`);
-            
-            // 2. Cria notificação real no banco para o sininho
-            const token = localStorage.getItem("token");
-            if (token) {
-               httpClient.post("/notifications", {
-                 title: "Lembrete de Medicamento",
-                 body: `Está na hora de tomar seu ${med.medication_name} (${medHHmm}).`,
-                 type: "MEDICATION"
-               }, token).then(() => {
-                 setUnreadNotifications(prev => prev + 1);
-               }).catch(e => console.error("Erro ao registrar notificação:", e));
-            }
-          }
-        }
-      });
-    }, 30000); // Checa a cada 30 segundos
-
-    return () => clearInterval(interval);
-  }, [medications]);
-
   return (
     <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <Header
@@ -172,7 +132,7 @@ export default function Home() {
 
       {/* Centralized Container with Max Width */}
       <section className="w-full max-w-5xl mx-auto px-6 md:px-8 pt-6 pb-12 flex flex-col gap-8">
-        
+
         {/* Title / Greetings Area */}
         <div className="flex flex-col md:flex-row w-full justify-between items-start md:items-center gap-4">
           <div className="flex flex-col gap-1">
@@ -189,12 +149,12 @@ export default function Home() {
 
         {/* ── ROW 1: Resumo Glicemia | Artigos Recentes ── */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full items-start">
-          
+
           {/* Resumo de Glicemia */}
-          <GlucoseSummary 
-            value={latestGlucose?.glucose_value} 
-            moment={latestGlucose?.period} 
-            status={latestGlucose ? (latestGlucose.glucose_value > 150 ? "Atenção" : "Estável") : undefined} 
+          <GlucoseSummary
+            value={latestGlucose?.glucose_value}
+            moment={latestGlucose?.period}
+            status={latestGlucose ? (latestGlucose.glucose_value > 150 ? "Atenção" : "Estável") : undefined}
           />
 
           {/* Artigos Recentes */}
@@ -245,14 +205,14 @@ export default function Home() {
       {showChat && (
         <div className="fixed bottom-40 md:bottom-24 right-6 z-50 w-[90vw] md:w-auto md:min-w-[400px]">
           <div className="relative">
-             <button 
-               onClick={() => setShowChat(false)} 
-               className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 shadow-md z-10"
-               aria-label="Fechar chat"
-             >
-               ✕
-             </button>
-             <DiabeticaChat />
+            <button
+              onClick={() => setShowChat(false)}
+              className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 shadow-md z-10"
+              aria-label="Fechar chat"
+            >
+              ✕
+            </button>
+            <DiabeticaChat />
           </div>
         </div>
       )}

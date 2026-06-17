@@ -1,6 +1,7 @@
 "use client";
 
 import Sidebar from "@/components/ui/Sidebar";
+import MedicationWatcher from "@/components/features/medications/MedicationWatcher";
 
 export default function PatientLayout({
   children,
@@ -9,6 +10,9 @@ export default function PatientLayout({
 }) {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-row">
+      {/* Monitoramento global de remédios do paciente */}
+      <MedicationWatcher />
+
       {/* Responsive Desktop Sidebar */}
       <Sidebar />
 

@@ -93,13 +93,63 @@ export async function POST(req: NextRequest) {
 
     const { title, cover_image_url, category, content_html } = result.data;
 
+    let uploadedImageUrl = cover_image_url;
+
+    if (cover_image_url && cover_image_url.startsWith('data:image')) {
+      try {
+        const matches = cover_image_url.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          const ext = matches[1];
+          const base64Data = matches[2];
+          const buffer = Buffer.from(base64Data, 'base64');
+          const fileName = `post-cover-${user.id}-${Date.now()}.${ext}`;
+
+          let { data: uploadData, error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(fileName, buffer, {
+              contentType: `image/${ext}`,
+              upsert: true
+            });
+
+          if (uploadError && (uploadError as any).message === 'Bucket not found') {
+            try {
+              await supabase.storage.createBucket('avatars', { public: true });
+              const retry = await supabase.storage
+                .from('avatars')
+                .upload(fileName, buffer, {
+                  contentType: `image/${ext}`,
+                  upsert: true
+                });
+              uploadData = retry.data;
+              uploadError = retry.error;
+            } catch (createErr) {
+              console.error("Erro ao tentar criar bucket 'avatars':", createErr);
+            }
+          }
+
+          if (uploadError) {
+            console.error("Erro ao fazer upload da imagem de capa:", uploadError);
+            throw uploadError;
+          }
+
+          const { data: { publicUrl } } = supabase.storage
+            .from('avatars')
+            .getPublicUrl(fileName);
+
+          uploadedImageUrl = publicUrl;
+        }
+      } catch (e) {
+        console.error("Falha ao processar cover_image base64:", e);
+      }
+    }
+
     const { data, error } = await supabase
       .from("community_posts")
       .insert([
         {
           author_id: user.id,
           title,
-          cover_image_url: cover_image_url || null,
+          cover_image_url: uploadedImageUrl || null,
           category: category || "Saúde",
           content_html,
           is_moderated: false,

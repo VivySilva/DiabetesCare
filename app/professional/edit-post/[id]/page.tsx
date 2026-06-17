@@ -139,10 +139,11 @@ export default function EditPostPage() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-white border border-gray-100 rounded-2xl p-4 pl-12 text-texto appearance-none focus:ring-2 focus:ring-azul outline-none transition-all shadow-sm cursor-pointer"
               >
+                <option value="Geral">Geral</option>
                 <option value="Saúde">Saúde</option>
                 <option value="Nutrição">Nutrição</option>
                 <option value="Exercícios">Exercícios</option>
-                <option value="Dicas">Dicas</option>
+                <option value="Tratamento">Tratamento</option>
               </select>
               <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-cinza-claro-fundo">
                 <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
