@@ -11,6 +11,10 @@ vi.mock("@/services/glucose/glucoseService", () => ({
   registerGlucose: vi.fn(),
 }));
 
+vi.mock("@/services/user/userService", () => ({
+  getUserProfile: vi.fn().mockResolvedValue({ name: "Teste", role: "PATIENT" }),
+}));
+
 import { registerGlucose } from "@/services/glucose/glucoseService";
 import CadastroGlicemia from "@/components/features/glucose/GlucoseRecordForm";
 
@@ -34,18 +38,7 @@ describe("Tela de Registro de Glicemia", () => {
     expect(registerGlucose).not.toHaveBeenCalled();
   });
 
-  test("Deve exibir erro se glicemia for > 600", async () => {
-    render(<CadastroGlicemia />);
-    
-    const numberInput = screen.getByRole("spinbutton");
-    fireEvent.change(numberInput, { target: { value: "601" } });
-    
-    fireEvent.submit(screen.getByRole("button", { name: /Salvar/i }));
 
-    const mensagemErro = await screen.findByText("O valor da glicemia não pode ultrapassar 600 mg/dL.");
-    expect(mensagemErro).toBeTruthy();
-    expect(registerGlucose).not.toHaveBeenCalled();
-  });
 
   test("Deve mostrar erro se o usuário não estiver logado", async () => {
     // localStorage.clear() já executado

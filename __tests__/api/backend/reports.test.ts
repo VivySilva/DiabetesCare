@@ -45,6 +45,17 @@ vi.mock("@/lib/api-response", () => ({
   ),
 }));
 
+vi.mock("@/config/supabase", () => {
+  return {
+    default: {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { name: "Ana Paciente", diabetes_type: "Tipo 1" } }),
+    },
+  };
+});
+
 // 2. IMPORTAÇÃO DA ROTA
 // Lembre de ajustar caso sua pasta se chame 'reports' em vez de 'reports/generate'
 import { GET } from "@/app/api/reports/generate/route";

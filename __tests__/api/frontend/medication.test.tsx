@@ -10,6 +10,10 @@ vi.mock("@/services/medications/medicationService", () => ({
   registerMedication: vi.fn(),
 }));
 
+vi.mock("@/services/user/userService", () => ({
+  getUserProfile: vi.fn().mockResolvedValue({ name: "Teste", role: "PATIENT" }),
+}));
+
 import { registerMedication } from "@/services/medications/medicationService";
 import CadastroRemedios from "@/components/features/medications/MedicationRecordForm";
 
