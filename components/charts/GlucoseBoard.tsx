@@ -206,7 +206,7 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
 
         {/* SVG Chart */}
         <div className="relative h-40 w-full mt-4">
-          <svg viewBox="0 0 700 300" className="w-full h-full overflow-visible">
+          <svg viewBox="0 0 700 300" className="w-full h-full overflow-visible" preserveAspectRatio="none">
             {/* Generate Path dynamically */}
             {["jejum", "pos", "sono"].map((type, i) => {
               const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
@@ -229,36 +229,39 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
                   strokeWidth="4"
                   strokeLinecap="round"
                   strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
                 />
               );
             })}
-
-            {/* Points for All Points (to show dots even without lines) */}
-            {["jejum", "pos", "sono"].map((type, i) => {
-              const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
-              const spacing = 700 / Math.max(chartData.length, 1);
-              
-              return chartData.map((d, idx) => {
-                const val = d[type as keyof typeof d] as number;
-                if (val === 0) return null;
-
-                // Destaca o último ponto (Hoje) com um círculo maior
-                const isLastPoint = idx === chartData.length - 1;
-
-                return (
-                  <circle 
-                    key={`${type}-${idx}`}
-                    cx={idx * spacing + (spacing / 2)} 
-                    cy={getY(val)} 
-                    r={isLastPoint ? "6" : "4"} 
-                    fill="white" 
-                    stroke={colors[i]} 
-                    strokeWidth={isLastPoint ? "3" : "2"} 
-                  />
-                );
-              });
-            })}
           </svg>
+
+          {/* HTML Overlay for Perfect Circles */}
+          {["jejum", "pos", "sono"].map((type, i) => {
+            const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
+            return chartData.map((d, idx) => {
+              const val = d[type as keyof typeof d] as number;
+              if (val === 0) return null;
+
+              const isLastPoint = idx === chartData.length - 1;
+              const leftPercent = ((idx + 0.5) / Math.max(chartData.length, 1)) * 100;
+              const topPercent = (getY(val) / 300) * 100;
+
+              return (
+                <div
+                  key={`dot-${type}-${idx}`}
+                  className="absolute rounded-full bg-white -translate-x-1/2 -translate-y-1/2"
+                  style={{
+                    left: `${leftPercent}%`,
+                    top: `${topPercent}%`,
+                    width: isLastPoint ? "12px" : "8px",
+                    height: isLastPoint ? "12px" : "8px",
+                    border: `${isLastPoint ? 3 : 2}px solid ${colors[i]}`,
+                    zIndex: 10
+                  }}
+                />
+              );
+            });
+          })}
         </div>
 
         {/* X Axis Labels */}

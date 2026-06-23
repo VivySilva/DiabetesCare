@@ -8,6 +8,6 @@ export const forumTopicSchema = z.object({
 });
 
 export const forumReplySchema = z.object({
-  content: z.string().min(5, "Resposta muito curta").max(5000, "Resposta muito longa"),
+  content: z.string().min(1, "A resposta não pode estar vazia").max(5000, "Resposta muito longa"),
   is_anonymous: z.boolean().optional(),
 });

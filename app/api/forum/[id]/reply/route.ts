@@ -30,8 +30,9 @@ export async function POST(
     const result = forumReplySchema.safeParse(jsonBody);
 
     if (!result.success) {
+      const errorMessage = result.error.issues[0]?.message || "Dados inválidos.";
       return NextResponse.json(
-        { erro: "Dados inválidos.", detalhes: result.error.issues },
+        { erro: errorMessage, detalhes: result.error.issues },
         { status: 400 }
       );
     }
@@ -80,17 +81,23 @@ export async function POST(
       }
       newReply.content = cleanContent;
 
-      const { data: authorData } = await supabase
-        .from(isProfessional ? 'professionals' : 'patients')
-        .select("name, avatar_url")
+      const { data: userData } = await supabase
+        .from('users')
+        .select("avatar_url")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
+
+      const { data: profileData } = await supabase
+        .from(isProfessional ? 'professionals' : 'patients')
+        .select("name")
+        .eq("id", user.id)
+        .maybeSingle();
         
       if (isProfessional) {
         (newReply as any).users = {
           role: user.role,
-          name: authorData?.name || "Profissional de Saúde",
-          avatar_url: authorData?.avatar_url || null,
+          name: profileData?.name || "Profissional de Saúde",
+          avatar_url: userData?.avatar_url || null,
           is_professional: true
         };
       } else {
@@ -103,8 +110,8 @@ export async function POST(
         } else {
           (newReply as any).users = {
             role: user.role,
-            name: authorData?.name || "Paciente",
-            avatar_url: authorData?.avatar_url || null
+            name: profileData?.name || "Paciente",
+            avatar_url: userData?.avatar_url || null
           };
         }
       }
@@ -132,7 +139,7 @@ export async function POST(
 /**
  * DELETE /api/forum/[id]/reply
  * 
- * Remove uma resposta específica do fórum. Requer que o usuário seja o autor da resposta.
+ * Remove uma resposta específica do fórum. Requer que o usuário seja o autor da resposta ou um profissional.
  * 
  * @param {NextRequest} req - Objeto de requisição.
  * @param {Object} context - Contexto da rota.

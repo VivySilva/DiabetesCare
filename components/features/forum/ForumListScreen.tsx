@@ -73,15 +73,24 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
     fetchTopics();
   }, []);
 
+  const refreshTopics = async () => {
+    try {
+      const data = await getForumTopics();
+      setTopics(data.topics || []);
+    } catch (err) {
+      console.error("Erro ao recarregar tópicos em tempo real", err);
+    }
+  };
+
   // Real-time listener for forum topics
   useForumTopicsRealtime(
-    (newTopic) => {
-      // Novo tópico inserido
-      setTopics(prev => [newTopic, ...prev]);
+    () => {
+      // Novo tópico inserido - recarrega para buscar as fotos/nomes de autor
+      refreshTopics();
     },
-    (updatedTopic) => {
-      // Tópico atualizado (likes, respostas, etc)
-      setTopics(prev => prev.map(t => t.id === updatedTopic.id ? updatedTopic : t));
+    () => {
+      // Tópico atualizado (likes, respostas, etc) - recarrega para dados precisos
+      refreshTopics();
     },
     (topicId) => {
       // Tópico deletado

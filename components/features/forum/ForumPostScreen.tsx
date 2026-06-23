@@ -95,19 +95,26 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
     }
   }, [replies]);
 
+  const refreshTopic = async () => {
+    try {
+      const data = await getForumTopicById(id);
+      setTopic(data.topic);
+      setReplies(data.replies || []);
+    } catch (err) {
+      console.error('Erro ao atualizar tópico em tempo real', err);
+    }
+  };
+
   // Real-time listener for forum replies
   useForumRepliesRealtime(
     id,
-    (newReply) => {
-      // Nova resposta inserida - evita duplicata se for enviada pelo usuário
-      setReplies(prev => {
-        const exists = prev.some(r => r.id === newReply.id);
-        return exists ? prev : [...prev, newReply];
-      });
+    () => {
+      // Nova resposta inserida - recarrega para pegar foto/nome
+      refreshTopic();
     },
-    (updatedReply) => {
+    () => {
       // Resposta atualizada
-      setReplies(prev => prev.map(r => r.id === updatedReply.id ? updatedReply : r));
+      refreshTopic();
     },
     (replyId) => {
       // Resposta deletada
@@ -122,6 +129,7 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
 
     try {
       setIsSending(true);
+      setError('');
       const data = await replyToForumTopic(id, replyText, token, isAnonymous);
       setReplies(prev => [...prev, data.reply]);
       setReplyText('');
@@ -187,6 +195,12 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
           <div className="flex flex-col items-center justify-center py-20 gap-4">
             <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
             <span className="text-gray-400 text-sm font-medium">Carregando conversa...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-100 text-red-500 px-4 py-3 rounded-2xl mb-4 text-sm font-bold text-center">
+            {error}
           </div>
         )}
 

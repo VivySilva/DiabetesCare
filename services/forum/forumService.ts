@@ -20,7 +20,8 @@ export async function getForumTopics() {
  * @returns {Promise<any>} A resposta da API contendo os detalhes do tópico.
  */
 export async function getForumTopicById(id: string) {
-  return httpClient.get(`/forum/${id}`);
+  // Adiciona timestamp para forçar o bypass de qualquer cache (Next.js, browser, etc)
+  return httpClient.get(`/forum/${id}?t=${Date.now()}`);
 }
 
 /**

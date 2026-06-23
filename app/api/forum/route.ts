@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/forum
  * 
