@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   MdHomeFilled,
   MdOutlineEditNote,
@@ -12,6 +11,7 @@ import {
 
 export default function Footer() {
   const pathname = usePathname();
+  const router = useRouter();
 
   // Verifica se a URL atual começa com /professional. Se não, assume que é /patient.
   const isProfessional = pathname.startsWith("/professional");
@@ -51,13 +51,13 @@ export default function Footer() {
       }}
     >
       {NAV_ITEMS.map(({ label, href, icon: Icon, size }) => {
-        const active = pathname === href;
+        const active = pathname === href || pathname.startsWith(href + "/");
 
         return (
-          <Link
+          <button
             key={href}
-            href={href}
-            className="flex flex-col items-center gap-0 no-underline"
+            onClick={() => router.push(href)}
+            className="flex flex-col items-center gap-0 no-underline bg-transparent border-none cursor-pointer p-0"
           >
             <div
               className={`flex items-center justify-center w-14 h-14 rounded-full transition-colors duration-200 ${
@@ -78,7 +78,7 @@ export default function Footer() {
             >
               {label}
             </span>
-          </Link>
+          </button>
         );
       })}
     </nav>

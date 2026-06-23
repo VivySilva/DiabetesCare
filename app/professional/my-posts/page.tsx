@@ -11,6 +11,7 @@ import { getUserProfile } from "@/services/user/userService";
 export default function MyPostsPage() {
   const router = useRouter();
   const [posts, setPosts] = useState<any[]>([]);
+  const [userAvatar, setUserAvatar] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -27,6 +28,7 @@ export default function MyPostsPage() {
           getCommunityPosts(),
         ]);
         const userId = profileRes.user.id;
+        setUserAvatar(profileRes.user.avatar_url || '');
         const myPosts = (postsRes.posts || []).filter(
           (p: any) => p.author_id === userId
         );
@@ -79,6 +81,7 @@ export default function MyPostsPage() {
                 id: post.id,
                 title: post.title,
                 author: 'Você',
+                avatarUrl: userAvatar,
                 date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
                 image: post.cover_image_url || '',
                 content: [post.content_html],

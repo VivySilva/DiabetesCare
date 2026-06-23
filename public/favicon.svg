@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <!-- Blue rounded square background -->
+  <rect width="512" height="512" rx="144" fill="#2563eb" />
+  <!-- White plus sign -->
+  <rect x="224" y="128" width="64" height="256" rx="20" fill="#ffffff" />
+  <rect x="128" y="224" width="256" height="64" rx="20" fill="#ffffff" />
+</svg>

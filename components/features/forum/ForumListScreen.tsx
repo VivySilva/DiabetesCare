@@ -1,8 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { MdSearch, MdChatBubbleOutline, MdThumbUp, MdCheckCircle, MdAdd } from 'react-icons/md';
-import { getForumTopics, likeForumTopic, unlikeForumTopic } from "@/services/forum/forumService";
+import { MdSearch, MdChatBubbleOutline, MdThumbUp, MdCheckCircle, MdAdd, MdDelete } from 'react-icons/md';
+import { getForumTopics, likeForumTopic, unlikeForumTopic, deleteForumTopic } from "@/services/forum/forumService";
+import { useForumTopicsRealtime } from "@/lib/hooks/useForumRealtime";
+import DeleteConfirmationModal from "@/components/ui/modals/delete-confirmation-modal";
 
 interface ForumTopic {
   id: string;
@@ -13,6 +15,7 @@ interface ForumTopic {
   likes_count: number;
   is_moderated: boolean;
   created_at: string;
+  author_id?: string;
   users?: { name: string; avatar_url?: string; role: string; is_professional?: boolean };
 }
 
@@ -38,6 +41,22 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
   const [search, setSearch] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [topicToDelete, setTopicToDelete] = useState<string | null>(null);
+  const [isDeletingTopic, setIsDeletingTopic] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setCurrentUserId(payload.id);
+      } catch (e) {
+        console.error("Erro ao decodificar token", e);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     async function fetchTopics() {
@@ -53,6 +72,22 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
     }
     fetchTopics();
   }, []);
+
+  // Real-time listener for forum topics
+  useForumTopicsRealtime(
+    (newTopic) => {
+      // Novo tópico inserido
+      setTopics(prev => [newTopic, ...prev]);
+    },
+    (updatedTopic) => {
+      // Tópico atualizado (likes, respostas, etc)
+      setTopics(prev => prev.map(t => t.id === updatedTopic.id ? updatedTopic : t));
+    },
+    (topicId) => {
+      // Tópico deletado
+      setTopics(prev => prev.filter(t => t.id !== topicId));
+    }
+  );
 
   useEffect(() => {
     if (!search.trim()) {
@@ -79,6 +114,30 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
       ));
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent, topicId: string) => {
+    e.stopPropagation();
+    setTopicToDelete(topicId);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!topicToDelete) return;
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    try {
+      setIsDeletingTopic(true);
+      await deleteForumTopic(topicToDelete, token);
+      setTopics(prev => prev.filter(t => t.id !== topicToDelete));
+      setIsDeleteModalOpen(false);
+      setTopicToDelete(null);
+    } catch (err: any) {
+      setError(err.message || 'Erro ao apagar tópico.');
+    } finally {
+      setIsDeletingTopic(false);
     }
   };
 
@@ -188,17 +247,40 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
                   </div>
                 </div>
 
-                {topic.is_moderated && (
-                  <div className="flex items-center gap-1.5 text-blue-500 text-[10px] font-bold bg-blue-50 px-2 py-1 rounded-lg">
-                    <MdCheckCircle size={12} /> VERIFICADO
-                  </div>
-                )}
+                <div className="flex items-center gap-2">
+                  {topic.is_moderated && (
+                    <div className="flex items-center gap-1.5 text-blue-500 text-[10px] font-bold bg-blue-50 px-2 py-1 rounded-lg">
+                      <MdCheckCircle size={12} /> VERIFICADO
+                    </div>
+                  )}
+                  {topic.author_id === currentUserId && (
+                    <button
+                      onClick={(e) => handleDeleteClick(e, topic.id)}
+                      className="flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors p-1.5 rounded-full cursor-pointer"
+                      title="Apagar tópico"
+                    >
+                      <MdDelete size={16} />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </main>
       )}
 
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setTopicToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Apagar Tópico?"
+        message="Tem certeza que deseja apagar este tópico e todas as suas respostas permanentemente?"
+        confirmText="Sim, Apagar Tópico"
+        isDeleting={isDeletingTopic}
+      />
     </div>
   );
 }

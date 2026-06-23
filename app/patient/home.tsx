@@ -176,6 +176,7 @@ export default function Home() {
                     id: post.id,
                     title: post.title,
                     author: post.users?.name || 'Autor',
+                    avatarUrl: post.users?.avatar_url || '',
                     date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' }),
                     image: post.cover_image_url || '',
                     content: [post.content_html],

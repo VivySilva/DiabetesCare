@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { MdClose } from 'react-icons/md';
+import { MdClose, MdExpandMore, MdChevronRight } from 'react-icons/md';
 import Header from "@/components/ui/Header";
 import { createForumTopic } from "@/services/forum/forumService";
 
@@ -15,8 +15,9 @@ export default function NewQuestionScreen({ onClose, onSubmit }: NewQuestionProp
   const [content, setContent] = React.useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(true);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [userRole, setUserRole] = useState("patient");
+  const [showAnonOption, setShowAnonOption] = useState(false);
 
   React.useEffect(() => {
     // Bloqueia a rolagem do corpo da página principal para evitar scroll duplo
@@ -109,22 +110,35 @@ export default function NewQuestionScreen({ onClose, onSubmit }: NewQuestionProp
 
           {/* Toggle para Anonimato (Apenas se for Paciente) */}
           {userRole !== "professional" && (
-            <div className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-3xl px-6 py-4 shadow-sm">
-              <div className="flex flex-col gap-1 pr-4">
-                <span className="font-bold text-sm text-texto">Publicar como anônimo</span>
-                <span className="text-[11px] text-cinza-claro-texto">
-                  Seu nome e foto de perfil ficarão ocultos para outros usuários no fórum.
-                </span>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
-                <input
-                  type="checkbox"
-                  checked={isAnonymous}
-                  onChange={(e) => setIsAnonymous(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-              </label>
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => setShowAnonOption(!showAnonOption)}
+                className="flex items-center gap-1 text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors uppercase tracking-wider px-1 cursor-pointer select-none"
+              >
+                {showAnonOption ? <MdExpandMore size={16} /> : <MdChevronRight size={16} />}
+                <span>Opções de Privacidade</span>
+              </button>
+              
+              {showAnonOption && (
+                <div className="flex items-center justify-between bg-gray-50 border border-gray-100 rounded-3xl px-6 py-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex flex-col gap-1 pr-4">
+                    <span className="font-bold text-sm text-texto">Publicar como anônimo</span>
+                    <span className="text-[11px] text-cinza-claro-texto">
+                      Seu nome e foto de perfil ficarão ocultos para outros usuários no fórum.
+                    </span>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={isAnonymous}
+                      onChange={(e) => setIsAnonymous(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="relative w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  </label>
+                </div>
+              )}
             </div>
           )}
 

@@ -3,6 +3,14 @@
 import React, { useState } from "react";
 import { MdOutlineNightlight } from "react-icons/md";
 
+// Helper: retorna data no fuso local (evita deslocamento UTC)
+const toLocalDate = (date: Date): string => {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+};
+
 interface GlucoseBoardProps {
   records: any[];
 }
@@ -52,10 +60,19 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
   // Dados para o gráfico baseados no período selecionado
   const chartData = React.useMemo(() => {
     const todayDate = new Date();
+
+    // 🔍 DEBUG TEMPORÁRIO — verifique o console do navegador
+    console.log("=== GLUCOSE DEBUG ===");
+    console.log("Hoje (local):", toLocalDate(todayDate));
+    records.slice(0, 5).forEach((r, i) => {
+      const raw = r.created_at;
+      const parsed = new Date(r.created_at);
+      console.log(`Record[${i}]: raw="${raw}" | localDate="${toLocalDate(parsed)}" | utcDate="${parsed.toISOString().split('T')[0]}"`);
+    });
     
     if (period === "Diário") {
-      const dateStr = todayDate.toISOString().split('T')[0];
-      const todayRecords = records.filter(r => new Date(r.created_at).toISOString().split('T')[0] === dateStr);
+      const dateStr = toLocalDate(todayDate);
+      const todayRecords = records.filter(r => toLocalDate(new Date(r.created_at)) === dateStr);
       
       return [
         {
@@ -83,8 +100,8 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
       for(let i = 29; i >= 0; i--) {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() - i);
-        const dateStr = targetDate.toISOString().split('T')[0];
-        const dayRecords = records.filter(r => new Date(r.created_at).toISOString().split('T')[0] === dateStr);
+        const dateStr = toLocalDate(targetDate);
+        const dayRecords = records.filter(r => toLocalDate(new Date(r.created_at)) === dateStr);
         
         // Label só aparece a cada 5 dias para não amontoar
         const label = i % 5 === 0 || i === 0 || i === 29 ? targetDate.getDate().toString().padStart(2, '0') : "";
@@ -106,9 +123,8 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
       return sortedDays.map((dayName, index) => {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() - (sortedDays.length - 1 - index));
-        const dateStr = targetDate.toISOString().split('T')[0];
-        
-        const dayRecords = records.filter(r => new Date(r.created_at).toISOString().split('T')[0] === dateStr);
+        const dateStr = toLocalDate(targetDate);
+        const dayRecords = records.filter(r => toLocalDate(new Date(r.created_at)) === dateStr);
         
         return {
           label: dayName,

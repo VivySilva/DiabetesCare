@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
+import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 
 /**
  * GET /api/forum/[id]
@@ -154,3 +155,64 @@ export async function GET(
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
   }
 }
+
+/**
+ * DELETE /api/forum/[id]
+ * 
+ * Remove um tópico específico do fórum, bem como todas as curtidas e respostas vinculadas a ele.
+ * Requer que o usuário seja o autor do tópico.
+ * 
+ * @param {NextRequest} req - Objeto de requisição.
+ * @param {Object} context - Contexto da rota.
+ * @param {Object} context.params - Parâmetros da URL.
+ * @param {string} context.params.id - ID do tópico a remover.
+ * @returns {Promise<Response>} Mensagem de sucesso ou erro (403, 404, 500).
+ */
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await verifyToken(req);
+  if (!user) return unauthorizedResponse();
+
+  try {
+    const { id } = await params;
+
+    const { data: existingTopic } = await supabase
+      .from("forum_topics")
+      .select("author_id")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (!existingTopic) {
+      return NextResponse.json({ erro: "Tópico não encontrado." }, { status: 404 });
+    }
+
+    if (existingTopic.author_id !== user.id) {
+      return NextResponse.json({ erro: "Sem permissão para remover este tópico." }, { status: 403 });
+    }
+
+    // 1. Remover curtidas associadas ao tópico
+    await supabase.from("forum_likes").delete().eq("topic_id", id);
+
+    // 2. Remover respostas associadas ao tópico
+    await supabase.from("forum_replies").delete().eq("topic_id", id);
+
+    // 3. Remover o tópico
+    const { error: deleteError } = await supabase
+      .from("forum_topics")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      console.error("Error deleting forum topic:", deleteError);
+      return NextResponse.json({ erro: "Erro ao remover tópico.", detalhe: deleteError.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ mensagem: "Tópico removido com sucesso!" }, { status: 200 });
+  } catch (error) {
+    console.error("General error removing topic:", error);
+    return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
+  }
+}
+

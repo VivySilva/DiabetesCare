@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   description:
     "Plataforma web para monitoramento glicêmico e educação em saúde voltada para pacientes com diabetes.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.svg",
   },
 };
 

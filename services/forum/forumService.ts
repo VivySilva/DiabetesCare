@@ -78,3 +78,32 @@ export async function likeForumTopic(topicId: string, token: string) {
 export async function unlikeForumTopic(topicId: string, token: string) {
   return httpClient.delete(`/forum/${topicId}/like`, token);
 }
+
+/**
+ * Delete a reply from a forum topic.
+ * 
+ * Remove uma resposta de um tópico do fórum.
+ * 
+ * @param {string} topicId - O ID do tópico.
+ * @param {string} replyId - O ID da resposta.
+ * @param {string} token - Token de autenticação JWT do autor da resposta.
+ * @returns {Promise<any>} A resposta da API confirmando a remoção.
+ */
+export async function deleteForumReply(topicId: string, replyId: string, token: string) {
+  return httpClient.delete(`/forum/${topicId}/reply?replyId=${replyId}`, token);
+}
+
+/**
+ * Delete a forum topic.
+ * 
+ * Remove um tópico inteiro do fórum.
+ * 
+ * @param {string} id - O ID do tópico.
+ * @param {string} token - Token de autenticação JWT do autor do tópico.
+ * @returns {Promise<any>} A resposta da API confirmando a remoção.
+ */
+export async function deleteForumTopic(id: string, token: string) {
+  return httpClient.delete(`/forum/${id}`, token);
+}
+
+

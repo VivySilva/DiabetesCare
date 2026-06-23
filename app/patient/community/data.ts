@@ -2,9 +2,10 @@ export interface Post {
   id: string;
   title: string;
   author: string;
+  avatarUrl?: string;
   date: string;
   image: string;
-  content: string[]; // Cada string no array representa um parágrafo ou tópico para facilitar a renderização no React
+  content: string[];
 }
 
 export const COMMUNITY_POSTS: Post[] = [

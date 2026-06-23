@@ -39,12 +39,36 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
         )}
 
         {/* Imagem do artigo */}
-        <div className="w-full overflow-hidden" style={{ height: "192px" }}>
-          <img
-            src={post.image.includes('|') ? post.image.split('|')[1] : post.image}
-            alt={post.title}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          />
+        <div className="w-full overflow-hidden relative" style={{ height: "192px" }}>
+          {post.image ? (
+            <img
+              src={post.image.includes('|') ? post.image.split('|')[1] : post.image}
+              alt={post.title}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                target.style.display = 'none';
+                const parent = target.parentElement;
+                if (parent) {
+                  parent.style.background = 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)';
+                  parent.innerHTML = '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;"><svg xmlns=\'http://www.w3.org/2000/svg\' width=\'48\' height=\'48\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'rgba(255,255,255,0.6)\' stroke-width=\'1.5\'><path d=\'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\'/><polyline points=\'14 2 14 8 20 8\'/><line x1=\'16\' y1=\'13\' x2=\'8\' y2=\'13\'/><line x1=\'16\' y1=\'17\' x2=\'8\' y2=\'17\'/><polyline points=\'10 9 9 9 8 9\'/></svg></div>';
+                }
+              }}
+            />
+          ) : (
+            <div
+              className="w-full h-full flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+            </div>
+          )}
         </div>
 
         {/* Container de conteúdo */}
@@ -54,10 +78,25 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
         >
           {/* Autor e Data */}
           <div className="flex items-center gap-2 w-full">
-            <div className="w-7 h-7 rounded-full bg-azul-claro flex items-center justify-center shrink-0">
-              <span className="text-azul text-[10px] font-bold" style={{ fontFamily: "var(--font-inter)" }}>
-                {(post.author || 'A').charAt(0)}
-              </span>
+            <div className="w-7 h-7 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden">
+              {post.avatarUrl ? (
+                <img
+                  src={post.avatarUrl}
+                  alt={post.author}
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    const t = e.currentTarget as HTMLImageElement;
+                    t.style.display = 'none';
+                    if (t.parentElement) {
+                      t.parentElement.innerHTML = `<span class="text-azul text-[10px] font-bold" style="font-family:var(--font-inter)">${(post.author || 'A').charAt(0)}</span>`;
+                    }
+                  }}
+                />
+              ) : (
+                <span className="text-azul text-[10px] font-bold" style={{ fontFamily: "var(--font-inter)" }}>
+                  {(post.author || 'A').charAt(0)}
+                </span>
+              )}
             </div>
             <div className="flex flex-col" style={{ gap: "2px" }}>
               <span className="text-[12px] font-semibold text-texto leading-none" style={{ fontFamily: "var(--font-inter)" }}>
