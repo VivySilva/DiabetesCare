@@ -62,64 +62,82 @@ export default function PostDetail({ id }: { id: string }) {
     <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <Header title="Visualização de postagem" variant="page" />
 
-      {post.cover_image_url && (
-        <div className="w-full overflow-hidden" style={{ height: "219.38px", flexShrink: 0 }}>
-          <img
-            src={post.cover_image_url}
-            alt={post.title}
-            className="w-full h-full object-cover"
+      {/* Container Centralizado para o Artigo (Sombra e bordas premium no desktop) */}
+      <article className="w-full max-w-[60rem] mx-auto bg-white md:mt-3 md:mb-8 md:rounded-[32px] overflow-hidden md:shadow-[0_8px_30px_rgb(0,0,0,0.03)] border border-transparent md:border-gray-100/70">
+        
+        {post.cover_image_url && (
+          <div className="w-full border-b border-gray-100/80 overflow-hidden relative">
+            <img
+              src={post.cover_image_url.includes('|') ? post.cover_image_url.split('|')[0] : post.cover_image_url}
+              alt={post.title}
+              className="w-full h-auto block"
+            />
+          </div>
+        )}
+
+        {/* Conteúdo do Artigo */}
+        <section className="flex flex-col items-start w-full px-6 py-8 md:p-10 gap-6">
+          
+          {/* Categoria e Título */}
+          <div className="flex flex-col gap-3 w-full">
+            {post.category && (
+              <span className="text-[10px] bg-azul-claro text-azul font-bold px-3 py-1.5 rounded-full uppercase tracking-wider w-fit">
+                {post.category}
+              </span>
+            )}
+            <h1 
+              className="text-texto m-0 leading-snug font-extrabold tracking-tight" 
+              style={{ fontFamily: "var(--font-manrope)", fontSize: "30px" }}
+            >
+              {post.title}
+            </h1>
+          </div>
+
+          {/* Linha do Autor (Design limpo com linha divisória) */}
+          <div className="flex flex-col w-full gap-4">
+            <div className="flex flex-row items-center w-full gap-3">
+              <div className="w-10 h-10 rounded-full bg-azul-claro flex items-center justify-center shrink-0">
+                <span
+                  className="text-azul font-extrabold text-sm"
+                  style={{ fontFamily: "var(--font-inter)" }}
+                >
+                  {authorInitial}
+                </span>
+              </div>
+              <div className="flex flex-col" style={{ gap: "2px" }}>
+                <span
+                  className="font-bold text-texto text-sm"
+                  style={{ fontFamily: "var(--font-inter)", lineHeight: 1.2 }}
+                >
+                  {authorName}
+                </span>
+                <span
+                  className="text-cinza-claro-texto text-[11px] font-medium"
+                  style={{ fontFamily: "var(--font-inter)" }}
+                >
+                  Publicado em {publishedDate}
+                </span>
+              </div>
+            </div>
+            
+            {/* Divisor Fino */}
+            <div className="h-[1px] bg-gray-100 w-full" />
+          </div>
+
+          {/* Conteúdo de Texto com legibilidade premium */}
+          <div
+            className="flex flex-col gap-4 w-full text-texto prose prose-slate max-w-none"
+            style={{ 
+              fontFamily: "var(--font-inter)", 
+              fontSize: "16px", 
+              lineHeight: "1.85", 
+              letterSpacing: "0.01em",
+              color: "#334155" // Cor slate-700 para leitura confortável
+            }}
+            dangerouslySetInnerHTML={{ __html: post.content_html }}
           />
-        </div>
-      )}
-
-      <section
-        className="flex flex-col items-start pb-8 w-full"
-        style={{ padding: "24px 24px 32px", gap: "24px" }}
-      >
-        <h1 className="text-texto m-0 leading-snug" style={{ fontSize: "22px" }}>
-          {post.title}
-        </h1>
-
-        <div
-          className="flex flex-row items-center w-full"
-          style={{
-            padding: "16px",
-            gap: "16px",
-            background: "#F2F4F6",
-            borderRadius: "32px",
-            minHeight: "80px",
-          }}
-        >
-          <div className="w-12 h-12 rounded-full bg-azul-claro flex items-center justify-center shrink-0">
-            <span
-              className="text-azul font-bold"
-              style={{ fontFamily: "var(--font-inter)", fontSize: "16px" }}
-            >
-              {authorInitial}
-            </span>
-          </div>
-          <div className="flex flex-col" style={{ gap: "4px" }}>
-            <span
-              className="font-semibold text-texto"
-              style={{ fontFamily: "var(--font-inter)", fontSize: "14px", lineHeight: 1.2 }}
-            >
-              {authorName}
-            </span>
-            <span
-              className="text-cinza-claro-texto"
-              style={{ fontFamily: "var(--font-inter)", fontSize: "12px" }}
-            >
-              Publicado em {publishedDate}
-            </span>
-          </div>
-        </div>
-
-        <div
-          className="flex flex-col gap-4 w-full text-cinza-escuro-texto prose prose-sm max-w-none"
-          style={{ fontFamily: "var(--font-inter)", fontSize: "14px", lineHeight: "1.7" }}
-          dangerouslySetInnerHTML={{ __html: post.content_html }}
-        />
-      </section>
+        </section>
+      </article>
 
       <Footer />
     </main>

@@ -34,7 +34,7 @@ export async function getForumTopicById(id: string) {
  * @param {string} token - Token de autenticação JWT do autor.
  * @returns {Promise<any>} A resposta da API confirmando a criação.
  */
-export async function createForumTopic(data: { title: string; content?: string }, token: string) {
+export async function createForumTopic(data: { title: string; content?: string; is_anonymous?: boolean }, token: string) {
   return httpClient.post("/forum", data, token);
 }
 
@@ -46,10 +46,11 @@ export async function createForumTopic(data: { title: string; content?: string }
  * @param {string} topicId - O ID do tópico que está sendo respondido.
  * @param {string} content - O conteúdo da resposta.
  * @param {string} token - Token de autenticação JWT do autor da resposta.
+ * @param {boolean} [is_anonymous] - Indica se o autor da resposta deseja ser anônimo.
  * @returns {Promise<any>} A resposta da API confirmando a publicação.
  */
-export async function replyToForumTopic(topicId: string, content: string, token: string) {
-  return httpClient.post(`/forum/${topicId}/reply`, { content }, token);
+export async function replyToForumTopic(topicId: string, content: string, token: string, is_anonymous?: boolean) {
+  return httpClient.post(`/forum/${topicId}/reply`, { content, is_anonymous }, token);
 }
 
 /**

@@ -151,8 +151,8 @@ export default function ProfissionalPage() {
               <h2 className="text-lg font-bold text-texto">
                 Suas publicações recentes
               </h2>
-              <Link href="/professional/my-posts" className="text-azul text-xs font-bold hover:underline">
-                Ver todas
+              <Link href="/professional/my-posts" className="no-underline text-azul font-semibold text-xs hover:underline">
+                Ver Todas
               </Link>
             </div>
 

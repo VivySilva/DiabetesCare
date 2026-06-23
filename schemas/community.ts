@@ -9,13 +9,18 @@ export const communityPostSchema = z.object({
     .refine(
       (val) => {
         if (!val) return true;
-        if (val.startsWith("data:image/")) return true;
-        try {
-          new URL(val);
-          return true;
-        } catch {
-          return false;
-        }
+        // Permite salvar multiplas URLs ou base64 separadas por | (ex: original|cropped)
+        const parts = val.split("|");
+        return parts.every(part => {
+          if (!part) return true;
+          if (part.startsWith("data:image/")) return true;
+          try {
+            new URL(part);
+            return true;
+          } catch {
+            return false;
+          }
+        });
       },
       "URL de imagem inválida ou formato base64 incorreto"
     )

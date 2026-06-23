@@ -13,7 +13,7 @@ interface ForumTopic {
   likes_count: number;
   is_moderated: boolean;
   created_at: string;
-  users?: { name: string; avatar_url?: string; role: string };
+  users?: { name: string; avatar_url?: string; role: string; is_professional?: boolean };
 }
 
 interface ForumListProps {
@@ -85,15 +85,17 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
   return (
     <div className="w-full flex flex-col font-sans">
       {/* Create Topic Button - Now above Search */}
-      <div className="px-6 pt-6 pb-2">
-        <button
-          onClick={onCreateClick}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-[20px] shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-        >
-          <MdAdd size={24} />
-          <span>Criar Novo Tópico</span>
-        </button>
-      </div>
+      {onCreateClick && (
+        <div className="px-6 pt-6 pb-2">
+          <button
+            onClick={onCreateClick}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-[20px] shadow-lg shadow-blue-200 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+          >
+            <MdAdd size={24} />
+            <span>Criar Novo Tópico</span>
+          </button>
+        </div>
+      )}
 
       {/* Search */}
       <div className="px-6 py-4">
@@ -138,16 +140,23 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
                       <img src={topic.users.avatar_url} alt={topic.users.name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-blue-600 text-xs font-bold">
-                        {topic.users?.name.substring(0, 2).toUpperCase()}
+                        {topic.users?.name ? topic.users.name.substring(0, 2).toUpperCase() : '??'}
                       </div>
                     )}
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[12px] text-gray-900 font-bold leading-tight">
-                      {topic.users?.name}
-                    </span>
-                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider">
-                      {topic.users?.role === 'PROFESSIONAL' ? '✨ Especialista' : 'Paciente'}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[12px] text-gray-900 font-bold leading-tight">
+                        {topic.users?.name}
+                      </span>
+                      {(topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional') && (
+                        <span className="bg-blue-100 text-blue-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-200">
+                          Especialista
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider mt-0.5">
+                      {(topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional') ? 'Profissional de Saúde' : 'Paciente'}
                     </span>
                   </div>
                 </div>

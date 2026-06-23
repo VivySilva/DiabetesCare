@@ -41,7 +41,7 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
         {/* Imagem do artigo */}
         <div className="w-full overflow-hidden" style={{ height: "192px" }}>
           <img
-            src={post.image}
+            src={post.image.includes('|') ? post.image.split('|')[1] : post.image}
             alt={post.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
@@ -82,7 +82,19 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
             className="m-0 text-cinza-claro-texto line-clamp-2"
             style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.6" }}
           >
-            {post.content?.[0] || 'Clique para ler o conteúdo completo...'}
+            {(() => {
+              const htmlContent = post.content?.[0];
+              if (!htmlContent) return 'Clique para ler o conteúdo completo...';
+              return htmlContent
+                .replace(/<[^>]*>/g, " ")
+                .replace(/&nbsp;/g, " ")
+                .replace(/&amp;/g, "&")
+                .replace(/&lt;/g, "<")
+                .replace(/&gt;/g, ">")
+                .replace(/&quot;/g, '"')
+                .replace(/\s+/g, " ")
+                .trim() || 'Clique para ler o conteúdo completo...';
+            })()}
           </p>
         </div>
       </article>

@@ -36,7 +36,10 @@ export async function POST(
       );
     }
 
-    const { content } = result.data;
+    const { content, is_anonymous } = result.data;
+    const isProfessional = user.role.toLowerCase() === 'professional';
+    const anonFlag = isProfessional ? false : (is_anonymous ?? true);
+    const contentToSave = `[anonymous:${anonFlag}]${content}`;
 
     const { data: topic } = await supabase
       .from("forum_topics")
@@ -53,7 +56,7 @@ export async function POST(
       .insert([
         {
           topic_id: topicId,
-          content,
+          content: contentToSave,
           author_id: user.id,
         },
       ])
@@ -65,13 +68,47 @@ export async function POST(
       return NextResponse.json({ erro: "Erro ao adicionar resposta." }, { status: 500 });
     }
 
-    const { data: authorData } = await supabase
-      .from(user.role.toLowerCase() === 'professional' ? 'professionals' : 'patients')
-      .select("name, avatar_url, role")
-      .eq("id", user.id)
-      .single();
-      
-    (newReply as any).users = authorData;
+    if (newReply) {
+      let isReplyAnonymous = true;
+      let cleanContent = newReply.content || "";
+      if (newReply.content && newReply.content.startsWith("[anonymous:")) {
+        const match = newReply.content.match(/^\[anonymous:(true|false)\]([\s\S]*)$/);
+        if (match) {
+          isReplyAnonymous = match[1] === "true";
+          cleanContent = match[2];
+        }
+      }
+      newReply.content = cleanContent;
+
+      const { data: authorData } = await supabase
+        .from(isProfessional ? 'professionals' : 'patients')
+        .select("name, avatar_url")
+        .eq("id", user.id)
+        .single();
+        
+      if (isProfessional) {
+        (newReply as any).users = {
+          role: user.role,
+          name: authorData?.name || "Profissional de Saúde",
+          avatar_url: authorData?.avatar_url || null,
+          is_professional: true
+        };
+      } else {
+        if (isReplyAnonymous) {
+          (newReply as any).users = {
+            role: user.role,
+            name: "Usuário Anônimo",
+            avatar_url: null
+          };
+        } else {
+          (newReply as any).users = {
+            role: user.role,
+            name: authorData?.name || "Paciente",
+            avatar_url: authorData?.avatar_url || null
+          };
+        }
+      }
+    }
 
     if (topic.author_id !== user.id) {
       await supabase.from("notifications").insert([

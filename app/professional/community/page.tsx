@@ -6,6 +6,7 @@ import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import ArticleCard from "@/components/ui/ArticleCard";
 import ForumListScreen from "@/components/features/forum/ForumListScreen";
+import NewQuestionScreen from "@/components/features/forum/NewQuestionScreen";
 import { getCommunityPosts } from "@/services/community/communityService";
 
 export default function ProfessionalCommunityPage() {
@@ -13,6 +14,7 @@ export default function ProfessionalCommunityPage() {
   const [activeTab, setActiveTab] = useState<'articles' | 'forum'>('articles');
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreatingQuestion, setIsCreatingQuestion] = useState(false);
 
   useEffect(() => {
     if (activeTab !== 'articles') return;
@@ -83,10 +85,21 @@ export default function ProfessionalCommunityPage() {
              <ForumListScreen 
                role="professional" 
                onTopicClick={(id) => router.push(`/professional/forum/${id}`)}
+               onCreateClick={() => setIsCreatingQuestion(true)}
              />
           </div>
         )}
       </div>
+
+      {isCreatingQuestion && (
+        <NewQuestionScreen
+          onClose={() => setIsCreatingQuestion(false)}
+          onSubmit={(topic) => {
+            setIsCreatingQuestion(false);
+            router.push(`/professional/forum/${topic.id}`);
+          }}
+        />
+      )}
 
       <Footer />
     </main>

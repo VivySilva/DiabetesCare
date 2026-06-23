@@ -127,7 +127,10 @@ export default function Sidebar() {
 
         {/* User Card & Logout */}
         <div className="flex flex-col gap-4 border-t border-gray-100 pt-6">
-          <div className="flex items-center gap-3 pl-2">
+          <Link
+            href={`${basePath}/profile`}
+            className="flex items-center gap-3 pl-2 cursor-pointer hover:opacity-80 active:scale-[0.98] transition-all no-underline"
+          >
             <Avatar src={userAvatar || undefined} size={40} mode="view" />
             <div className="flex flex-col overflow-hidden">
               <span className="font-bold text-sm text-texto truncate">{userName || "Carregando..."}</span>
@@ -135,7 +138,7 @@ export default function Sidebar() {
                 {userRole?.toLowerCase() === "professional" ? "Profissional" : "Paciente"}
               </span>
             </div>
-          </div>
+          </Link>
 
           <button
             onClick={() => setIsLogoutOpen(true)}

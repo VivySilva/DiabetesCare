@@ -93,50 +93,61 @@ export async function POST(req: NextRequest) {
 
     const { title, cover_image_url, category, content_html } = result.data;
 
+    const userId = user.id;
     let uploadedImageUrl = cover_image_url;
 
-    if (cover_image_url && cover_image_url.startsWith('data:image')) {
-      try {
-        const matches = cover_image_url.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
-        if (matches && matches.length === 3) {
-          const ext = matches[1];
-          const base64Data = matches[2];
-          const buffer = Buffer.from(base64Data, 'base64');
-          const fileName = `post-cover-${user.id}-${Date.now()}.${ext}`;
+    async function uploadBase64(base64Str: string): Promise<string> {
+      if (!base64Str.startsWith('data:image')) return base64Str;
+      const matches = base64Str.match(/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/);
+      if (!matches || matches.length !== 3) return base64Str;
 
-          let { data: uploadData, error: uploadError } = await supabase.storage
+      const ext = matches[1];
+      const base64Data = matches[2];
+      const buffer = Buffer.from(base64Data, 'base64');
+      const fileName = `post-cover-${userId}-${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${ext}`;
+
+      let { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, buffer, {
+          contentType: `image/${ext}`,
+          upsert: true
+        });
+
+      if (uploadError && (uploadError as any).message === 'Bucket not found') {
+        try {
+          await supabase.storage.createBucket('avatars', { public: true });
+          const retry = await supabase.storage
             .from('avatars')
             .upload(fileName, buffer, {
               contentType: `image/${ext}`,
               upsert: true
             });
+          uploadError = retry.error;
+        } catch (createErr) {
+          console.error("Erro ao tentar criar bucket 'avatars':", createErr);
+        }
+      }
 
-          if (uploadError && (uploadError as any).message === 'Bucket not found') {
-            try {
-              await supabase.storage.createBucket('avatars', { public: true });
-              const retry = await supabase.storage
-                .from('avatars')
-                .upload(fileName, buffer, {
-                  contentType: `image/${ext}`,
-                  upsert: true
-                });
-              uploadData = retry.data;
-              uploadError = retry.error;
-            } catch (createErr) {
-              console.error("Erro ao tentar criar bucket 'avatars':", createErr);
-            }
-          }
+      if (uploadError) {
+        console.error("Erro ao fazer upload da imagem de capa:", uploadError);
+        throw uploadError;
+      }
 
-          if (uploadError) {
-            console.error("Erro ao fazer upload da imagem de capa:", uploadError);
-            throw uploadError;
-          }
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
 
-          const { data: { publicUrl } } = supabase.storage
-            .from('avatars')
-            .getPublicUrl(fileName);
+      return publicUrl;
+    }
 
-          uploadedImageUrl = publicUrl;
+    if (cover_image_url) {
+      try {
+        if (cover_image_url.includes('|')) {
+          const parts = cover_image_url.split('|');
+          const uploadedParts = await Promise.all(parts.map((p: string) => uploadBase64(p)));
+          uploadedImageUrl = uploadedParts.join('|');
+        } else if (cover_image_url.startsWith('data:image')) {
+          uploadedImageUrl = await uploadBase64(cover_image_url);
         }
       } catch (e) {
         console.error("Falha ao processar cover_image base64:", e);

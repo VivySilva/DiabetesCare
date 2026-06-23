@@ -100,6 +100,7 @@ export async function POST(req: NextRequest) {
       }
     } else {
       specificData.license_number = licenseNumber;
+      specificData.gender = gender || null;
 
       const { error: insertProfessionalError } = await supabase
         .from("professionals")

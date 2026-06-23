@@ -44,3 +44,7 @@ next-env.d.ts
 
 # pasta segura
 /.secrets/
+
+# local tests and scratch files
+/scratch/
+/create_test_users.js

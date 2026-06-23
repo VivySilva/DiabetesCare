@@ -53,7 +53,7 @@ export default function MyPostsPage() {
         onBackClick={() => router.push('/professional')} 
       />
 
-      <main className="flex flex-col px-[33px] gap-6 mt-6">
+      <main className="w-full max-w-5xl mx-auto px-6 md:px-8 mt-6 flex flex-col gap-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-texto">Suas publicações</h1>
           <p className="text-cinza-claro-texto">

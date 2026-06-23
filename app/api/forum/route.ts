@@ -27,26 +27,29 @@ export async function GET() {
     if (authorIds.length > 0) {
       // 1. Busca todos da tabela users
       const { data: authUsers } = await supabase.from("users").select("id, avatar_url, role").in("id", authorIds);
-      
       // 2. Busca profissionais
       const { data: professionals } = await supabase.from("professionals").select("id, name, license_number").in("id", authorIds);
+      // 3. Busca pacientes
+      const { data: patients } = await supabase.from("patients").select("id, name").in("id", authorIds);
       
       authUsers?.forEach(u => {
-        if (u.role === 'professional') {
+        if (u.role?.toLowerCase() === 'professional') {
           const prof = professionals?.find(pr => pr.id === u.id);
           usersMap[u.id] = {
             id: u.id,
-            avatar_url: u.avatar_url, // Mantém a foto
+            avatar_url: u.avatar_url,
             role: u.role,
             name: prof?.name || "Profissional de Saúde",
-            license_number: prof?.license_number || null
+            license_number: prof?.license_number || null,
+            is_professional: true
           };
         } else {
+          const patient = patients?.find(p => p.id === u.id);
           usersMap[u.id] = {
             id: u.id,
-            avatar_url: null, // Sem foto real
             role: u.role,
-            name: "Usuário Anônimo"
+            real_avatar_url: u.avatar_url || null,
+            real_name: patient?.name || "Paciente"
           };
         }
       });
@@ -63,11 +66,41 @@ export async function GET() {
       countMap[r.topic_id] = (countMap[r.topic_id] || 0) + 1;
     });
 
-    const topicsWithCounts = (data || []).map((topic: any) => ({
-      ...topic,
-      users: usersMap[topic.author_id] || { name: "Usuário Anônimo", role: "PATIENT" },
-      replies_count: countMap[topic.id] || 0,
-    }));
+    const topicsWithCounts = (data || []).map((topic: any) => {
+      let isAnonymous = true;
+      let cleanPreview = topic.preview || "";
+
+      if (topic.preview && topic.preview.startsWith("[anonymous:")) {
+        const match = topic.preview.match(/^\[anonymous:(true|false)\]([\s\S]*)$/);
+        if (match) {
+          isAnonymous = match[1] === "true";
+          cleanPreview = match[2];
+        }
+      }
+
+      const mappedUser = usersMap[topic.author_id]
+        ? { ...usersMap[topic.author_id] }
+        : { name: "Usuário Anônimo", role: "patient" };
+
+      if (mappedUser.role?.toLowerCase() !== 'professional') {
+        if (isAnonymous) {
+          mappedUser.name = "Usuário Anônimo";
+          mappedUser.avatar_url = null;
+        } else {
+          mappedUser.name = mappedUser.real_name || "Paciente";
+          mappedUser.avatar_url = mappedUser.real_avatar_url || null;
+        }
+        delete mappedUser.real_name;
+        delete mappedUser.real_avatar_url;
+      }
+
+      return {
+        ...topic,
+        preview: cleanPreview,
+        users: mappedUser,
+        replies_count: countMap[topic.id] || 0,
+      };
+    });
 
     return NextResponse.json({ topics: topicsWithCounts }, { status: 200 });
   } catch (error) {
@@ -106,8 +139,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { title, content } = result.data;
-    const preview = content; // Usamos o content validado como preview/content
+    const { title, content, is_anonymous } = result.data;
+    const isProfessional = user.role.toLowerCase() === 'professional';
+    const anonFlag = isProfessional ? false : (is_anonymous ?? true);
+    const preview = `[anonymous:${anonFlag}]${content || ""}`;
 
     const { data, error } = await supabase
       .from("forum_topics")
@@ -115,7 +150,7 @@ export async function POST(req: NextRequest) {
         {
           author_id: user.id,
           title,
-          preview: preview || title.substring(0, 120),
+          preview: preview,
           is_moderated: false,
           likes_count: 0,
         },

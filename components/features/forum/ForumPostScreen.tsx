@@ -10,7 +10,7 @@ interface Reply {
   content: string;
   created_at: string;
   author_id: string;
-  users?: { name: string; avatar_url?: string; role: string };
+  users?: { name: string; avatar_url?: string; role: string; is_professional?: boolean };
 }
 
 interface Topic {
@@ -20,7 +20,7 @@ interface Topic {
   is_moderated: boolean;
   likes_count: number;
   created_at: string;
-  users?: { name: string; avatar_url?: string; role: string };
+  users?: { name: string; avatar_url?: string; role: string; is_professional?: boolean };
 }
 
 interface ForumPostProps {
@@ -47,6 +47,7 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(role !== 'professional');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,7 +89,7 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
 
     try {
       setIsSending(true);
-      const data = await replyToForumTopic(id, replyText, token);
+      const data = await replyToForumTopic(id, replyText, token, isAnonymous);
       setReplies(prev => [...prev, data.reply]);
       setReplyText('');
     } catch (err: any) {
@@ -122,7 +123,7 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
             <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-600"></div>
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-9 h-9 rounded-full overflow-hidden bg-white border border-gray-100 shadow-sm">
+                <div className="w-9 h-9 rounded-full overflow-hidden bg-white border border-gray-100 shadow-sm flex items-center justify-center">
                   {topic.users?.avatar_url ? (
                     <img src={topic.users.avatar_url} className="w-full h-full object-cover" />
                   ) : (
@@ -132,8 +133,15 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
                   )}
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-[12px] font-bold text-gray-900">{topic.users?.name}</span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{timeAgo(topic.created_at)}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[12px] font-bold text-gray-900">{topic.users?.name}</span>
+                    {(topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional') && (
+                      <span className="bg-blue-100 text-blue-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-200">
+                        Especialista
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{timeAgo(topic.created_at)}</span>
                 </div>
               </div>
               <p className="text-gray-700 leading-relaxed text-[16px] font-medium mb-4">
@@ -169,35 +177,38 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
           </div>
 
           {replies.map((reply) => {
-            const isExpert = reply.users?.role === 'PROFESSIONAL';
+            const isExpert = reply.users?.is_professional || reply.users?.role?.toLowerCase() === 'professional';
             const isMe = reply.author_id === currentUserId;
             
             return (
-              <div key={reply.id} className={`flex flex-col gap-2 ${isMe ? 'items-end' : 'items-start'}`}>
-                {!isMe && (
-                  <div className={`flex items-center gap-2 mb-1`}>
-                    <div className={`w-15 h-15 rounded-full overflow-hidden border shadow-sm border-gray-50`}>
-                      {reply.users?.avatar_url ? (
-                        <img src={reply.users.avatar_url} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-[10px] font-bold bg-gray-100 text-gray-400">
-                          {reply.users?.name?.substring(0, 2).toUpperCase() || '??'}
-                        </div>
+              <div key={reply.id} className="flex flex-col gap-2 items-start w-full">
+                <div className="flex items-center gap-2.5 mb-1">
+                  <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
+                    {reply.users?.avatar_url ? (
+                      <img src={reply.users.avatar_url} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-[10px] font-bold bg-blue-50 text-blue-600">
+                        {reply.users?.name ? reply.users.name.substring(0, 2).toUpperCase() : '??'}
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-gray-900">
+                        {reply.users?.name} {isMe && <span className="text-gray-400 font-normal">(Você)</span>}
+                      </span>
+                      {isExpert && (
+                        <span className="bg-blue-100 text-blue-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-200">
+                          Especialista
+                        </span>
                       )}
                     </div>
-                    <div className={`flex flex-col items-start`}>
-                      <span className="text-[11px] font-bold text-gray-900">{isExpert ? (<><strong>Especialista </strong>{reply.users?.name}</>) : reply.users?.name}</span>
-                      <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{timeAgo(reply.created_at)}</span>
-                    </div>
+                    <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{timeAgo(reply.created_at)}</span>
                   </div>
-                )}
+                </div>
 
-                {isMe && (
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-2">{timeAgo(reply.created_at)}</span>
-                )}
-
-                <div className={`relative max-w-[90%] p-6 rounded-[24px] bg-white text-gray-600 border border-gray-100 shadow-sm rounded-tl-none`}>
-                  <p className="text-[16px] leading-relaxed">
+                <div className="relative max-w-[95%] p-5 rounded-[24px] bg-white text-gray-600 border border-gray-100 shadow-sm rounded-tl-none ml-1">
+                  <p className="text-[15px] leading-relaxed">
                     {reply.content}
                   </p>
                 </div>
@@ -207,32 +218,54 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
         </div>
       </main>
 
-      <footer className="sticky bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-100 p-4 pb-8 flex items-center gap-3 z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
-        <div className="flex-1 bg-gray-50 border border-gray-100 rounded-[28px] h-12 flex items-center px-6 focus-within:bg-white focus-within:border-blue-200 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
-          <input
-            type="text"
-            placeholder={isProfessional ? "Responder como especialista..." : "Escreva sua resposta..."}
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendReply()}
-            className="h-12 w-full bg-transparent focus:outline-none text-[16px] text-gray-700 placeholder-gray-400 font-medium flex items-center"
-          />
+      <footer className="sticky bottom-0 w-full bg-white/95 backdrop-blur-xl border-t border-gray-100 p-4 pb-8 flex flex-col gap-3 z-50 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+        {!isProfessional && (
+          <div className="flex items-center justify-between px-4 py-2 bg-gray-50 border border-gray-100 rounded-2xl">
+            <div className="flex flex-col gap-0.5">
+              <span className="font-bold text-xs text-gray-700">Responder de forma anônima</span>
+              <span className="text-[10px] text-gray-400 leading-tight">
+                Seu nome e foto de perfil não serão exibidos.
+              </span>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer select-none shrink-0">
+              <input
+                type="checkbox"
+                checked={isAnonymous}
+                onChange={(e) => setIsAnonymous(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+            </label>
+          </div>
+        )}
+
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-1 bg-gray-50 border border-gray-100 rounded-[28px] h-12 flex items-center px-6 focus-within:bg-white focus-within:border-blue-200 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
+            <input
+              type="text"
+              placeholder={isProfessional ? "Responder como especialista..." : "Escreva sua resposta..."}
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSendReply()}
+              className="h-12 w-full bg-transparent focus:outline-none text-[16px] text-gray-700 placeholder-gray-400 font-medium flex items-center"
+            />
+          </div>
+          <button
+            onClick={handleSendReply}
+            disabled={isSending || !replyText.trim()}
+            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
+              isSending || !replyText.trim() 
+                ? 'bg-gray-200 text-gray-400 shadow-none' 
+                : 'bg-blue-600 text-white shadow-blue-200 hover:bg-blue-700'
+            }`}
+          >
+            {isSending ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <MdSend size={22} />
+            )}
+          </button>
         </div>
-        <button
-          onClick={handleSendReply}
-          disabled={isSending || !replyText.trim()}
-          className={`w-12 h-12 rounded-full flex items-center justify-center transition-all active:scale-90 shadow-lg ${
-            isSending || !replyText.trim() 
-              ? 'bg-gray-200 text-gray-400 shadow-none' 
-              : 'bg-blue-600 text-white shadow-blue-200 hover:bg-blue-700'
-          }`}
-        >
-          {isSending ? (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <MdSend size={22} />
-          )}
-        </button>
       </footer>
     </div>
   );
