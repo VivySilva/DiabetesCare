@@ -18,6 +18,11 @@ export function parseRecordDate(value: string | Date): Date {
     return new Date(y, m - 1, d);
   }
 
+  // If timestamp comes from Supabase without timezone (e.g. "2026-06-23T22:00:00"), force UTC
+  if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(trimmed)) {
+    return new Date(trimmed.replace(' ', 'T') + 'Z');
+  }
+
   return new Date(trimmed);
 }
 
@@ -31,7 +36,7 @@ export function startOfLocalDay(date: Date): Date {
   return normalized;
 }
 
-export function recordsForLocalDate(records: Array<{ created_at: string }>, date: Date) {
+export function recordsForLocalDate<T extends { created_at: string }>(records: T[], date: Date): T[] {
   const dateKey = toLocalDateKey(date);
   return records.filter(
     (record) => toLocalDateKey(parseRecordDate(record.created_at)) === dateKey,

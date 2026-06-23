@@ -79,7 +79,7 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
           label: "Noite",
           jejum: todayRecords.find(r => r.period === "Pré-Jantar")?.glucose_value || 0,
           pos: todayRecords.find(r => r.period === "Pós-Jantar")?.glucose_value || 0,
-          sono: todayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,
+          sono: todayRecords.find(r => r.period?.includes("dormir"))?.glucose_value || 0,
         }
       ];
     } 
@@ -96,8 +96,8 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
         data.push({
           label: label,
           jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
-          pos: dayRecords.find(r => r.period.includes("Pós"))?.glucose_value || 0,
-          sono: dayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,
+          pos: dayRecords.find(r => r.period?.includes("Pós"))?.glucose_value || 0,
+          sono: dayRecords.find(r => r.period?.includes("dormir"))?.glucose_value || 0,
         });
       }
       return data;
@@ -109,8 +109,8 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
         return {
           label,
           jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
-          pos: dayRecords.find(r => r.period.includes("Pós"))?.glucose_value || 0,
-          sono: dayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,
+          pos: dayRecords.find(r => r.period?.includes("Pós"))?.glucose_value || 0,
+          sono: dayRecords.find(r => r.period?.includes("dormir"))?.glucose_value || 0,
         };
       });
     }
@@ -262,15 +262,21 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
         </div>
 
         {/* X Axis Labels */}
-        <div className="flex justify-between px-2 mt-2">
-          {chartData.map((d, idx) => (
-            <span
-              key={`${d.label}-${idx}`}
-              className={`text-[9px] font-bold tracking-widest ${idx === chartData.length - 1 ? "text-azul" : "text-gray-300"}`}
-            >
-              {d.label}
-            </span>
-          ))}
+        <div className="relative w-full h-4 mt-2">
+          {chartData.map((d, idx) => {
+            const percent = ((idx + 0.5) / Math.max(chartData.length, 1)) * 100;
+            return (
+              <div 
+                key={`${d.label}-${idx}`}
+                className="absolute flex justify-center -translate-x-1/2"
+                style={{ left: `${percent}%` }}
+              >
+                <span className={`text-[9px] font-bold tracking-widest ${idx === chartData.length - 1 ? "text-azul" : "text-gray-300"}`}>
+                  {d.label}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
