@@ -52,6 +52,7 @@ export default function PostDetail({ id }: { id: string }) {
 
   const authorName = post.users?.name || "Autor";
   const authorInitial = authorName.charAt(0);
+  const authorAvatar = post.users?.avatar_url || "";
   const publishedDate = new Date(post.created_at).toLocaleDateString("pt-BR", {
     day: "numeric",
     month: "long",
@@ -96,13 +97,28 @@ export default function PostDetail({ id }: { id: string }) {
           {/* Linha do Autor (Design limpo com linha divisória) */}
           <div className="flex flex-col w-full gap-4">
             <div className="flex flex-row items-center w-full gap-3">
-              <div className="w-10 h-10 rounded-full bg-azul-claro flex items-center justify-center shrink-0">
-                <span
-                  className="text-azul font-extrabold text-sm"
-                  style={{ fontFamily: "var(--font-inter)" }}
-                >
-                  {authorInitial}
-                </span>
+              <div className="w-10 h-10 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden">
+                {authorAvatar ? (
+                  <img
+                    src={authorAvatar}
+                    alt={authorName}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.style.display = "none";
+                      if (target.parentElement) {
+                        target.parentElement.innerHTML = `<span class="text-azul font-extrabold text-sm" style="font-family:var(--font-inter)">${authorInitial}</span>`;
+                      }
+                    }}
+                  />
+                ) : (
+                  <span
+                    className="text-azul font-extrabold text-sm"
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    {authorInitial}
+                  </span>
+                )}
               </div>
               <div className="flex flex-col" style={{ gap: "2px" }}>
                 <span

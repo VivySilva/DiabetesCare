@@ -75,7 +75,8 @@ describe("API da IA Diabética (/api/chat)", () => {
   });
 
   test("Deve retornar erro 503 se o servidor Python estiver desligado", async () => {
-    // Simulamos a clássica recusa de conexão quando o Flask não está rodando
+    vi.stubEnv("GROQ_API_KEY", "");
+
     const connError = new Error("fetch failed");
     (connError as any).code = "ECONNREFUSED";
     fetchMock.mockRejectedValue(connError);
@@ -89,6 +90,59 @@ describe("API da IA Diabética (/api/chat)", () => {
     expect(res.status).toBe(503);
 
     const data = await res.json();
-    expect(data.error).toContain("A API Diabetica não está em execução");
+    expect(data.error).toContain("GROQ_API_KEY");
+
+    vi.unstubAllEnvs();
+  });
+
+  test("Deve usar Groq em produção quando GROQ_API_KEY estiver configurada", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("DIABETICA_API_URL", "");
+    vi.stubEnv("GROQ_API_KEY", "gsk-test-key");
+
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        choices: [{ message: { content: "Resposta via Groq sobre diabetes." } }],
+      }),
+    });
+
+    const req = new NextRequest("http://localhost:3000/api/diabetica/chat", {
+      method: "POST",
+      body: JSON.stringify({ message: "Oi" }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(200);
+
+    const data = await res.json();
+    expect(data.response).toBe("Resposta via Groq sobre diabetes.");
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.groq.com/openai/v1/chat/completions",
+      expect.objectContaining({
+        method: "POST",
+      }),
+    );
+
+    vi.unstubAllEnvs();
+  });
+
+  test("Deve retornar erro 503 se nenhum backend estiver configurado em produção", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("DIABETICA_API_URL", "");
+    vi.stubEnv("GROQ_API_KEY", "");
+
+    const req = new NextRequest("http://localhost:3000/api/diabetica/chat", {
+      method: "POST",
+      body: JSON.stringify({ message: "Oi" }),
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(503);
+
+    const data = await res.json();
+    expect(data.error).toContain("GROQ_API_KEY");
+
+    vi.unstubAllEnvs();
   });
 });

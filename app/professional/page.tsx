@@ -17,6 +17,7 @@ export default function ProfissionalPage() {
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("");
+  const [userAvatar, setUserAvatar] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export default function ProfissionalPage() {
         const profileRes = await getUserProfile(token);
         const user = profileRes.user;
         setUserName(user.name?.split(' ')[0] || "");
+        setUserAvatar(user.avatar_url || "");
 
         // Busca posts da comunidade
         const data = await getCommunityPosts();
@@ -172,6 +174,7 @@ export default function ProfissionalPage() {
                     id: post.id,
                     title: post.title,
                     author: 'Você',
+                    avatarUrl: userAvatar,
                     date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' }),
                     image: post.cover_image_url || '',
                     content: [post.content_html],

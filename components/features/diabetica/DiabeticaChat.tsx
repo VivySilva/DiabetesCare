@@ -45,6 +45,10 @@ const DiabeticaChat: React.FC = () => {
 
       const data = await response.json();
 
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao receber resposta');
+      }
+
       if (data.response) {
         setMessages((prev) => [...prev, { role: 'assistant', content: data.response }]);
       } else {
@@ -52,9 +56,13 @@ const DiabeticaChat: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro no chat:', error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Desculpe, ocorreu um erro ao processar sua solicitação.';
       setMessages((prev) => [
         ...prev,
-        { role: 'assistant', content: 'Desculpe, ocorreu um erro ao processar sua solicitação.' },
+        { role: 'assistant', content: errorMessage },
       ]);
     } finally {
       setIsLoading(false);

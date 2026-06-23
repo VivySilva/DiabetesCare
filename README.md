@@ -96,3 +96,39 @@ Frontend → Backend → Banco de Dados
 ## 📚 Licença
 
 Projeto acadêmico desenvolvido para a disciplina de Projeto e Desenvolvimento de Sistemas de Informação II.
+
+---
+
+## 🤖 Diabetica (IA) — jeito fácil para produção
+
+### Opção recomendada: Groq (sem servidor Python)
+
+1. Crie uma conta grátis em [console.groq.com](https://console.groq.com)
+2. Gere uma API Key
+3. Na Vercel → **Settings → Environment Variables** → adicione:
+   - `GROQ_API_KEY` = sua chave
+4. Faça **Redeploy**
+
+Pronto. O chat funciona em produção sem subir o `app.py`.
+
+### Desenvolvimento local
+
+```bash
+# Terminal 1 — API Python (opcional, usa o modelo Diabetica real)
+cd Diabetica && ./start.sh
+
+# Terminal 2 — Next.js
+npm run dev
+```
+
+Localmente, se o Python estiver rodando, ele tem prioridade. Se não estiver, usa `GROQ_API_KEY` se configurada.
+
+### Opção avançada: servidor Python na nuvem
+
+Se quiser usar o modelo **WaltonFuture/Diabetica-1.5B** real em produção, publique a pasta `Diabetica/` (Docker/Railway/Render) e configure:
+
+| Variável | Valor |
+|----------|-------|
+| `DIABETICA_API_URL` | `https://SUA-URL/predict` |
+
+Requisito: ~4 GB de RAM.

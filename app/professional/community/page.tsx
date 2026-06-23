@@ -25,21 +25,22 @@ export default function ProfessionalCommunityPage() {
   }, [activeTab]);
 
   return (
-    <main className="min-h-screen bg-[#F8F9FA] pb-[91px]">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
       <Header title="DiabetesCare" titleColor="var(--dc-azul)" variant="home" />
 
       {/* Centralized Container with Max Width */}
-      <div className="w-full max-w-5xl mx-auto px-6 md:px-8 mt-6 flex flex-col w-full">
+      <div className="w-full max-w-5xl mx-auto flex flex-col gap-6">
+
         {/* Tabs Toggle */}
-        <div className="w-full">
+        <div className="px-6 pt-6">
           <div className="flex bg-gray-100/50 p-1 rounded-[20px] backdrop-blur-sm border border-white">
-            <button 
+            <button
               onClick={() => setActiveTab('articles')}
               className={`flex-1 py-3 text-sm font-bold rounded-[16px] transition-all ${activeTab === 'articles' ? 'bg-white shadow-sm text-azul' : 'text-gray-400 hover:text-gray-600'}`}
             >
               Artigos
             </button>
-            <button 
+            <button
               onClick={() => setActiveTab('forum')}
               className={`flex-1 py-3 text-sm font-bold rounded-[16px] transition-all ${activeTab === 'forum' ? 'bg-white shadow-sm text-azul' : 'text-gray-400 hover:text-gray-600'}`}
             >
@@ -49,11 +50,11 @@ export default function ProfessionalCommunityPage() {
         </div>
 
         {activeTab === 'articles' ? (
-          <section className="flex flex-col items-start pt-8 gap-6 w-full">
+          <section className="flex flex-col items-start px-6 pt-2 gap-6 w-full">
             <div className="flex flex-col gap-2 w-full">
-              <h1 className="text-texto text-2xl font-bold">Comunidade</h1>
+              <h1 className="text-texto text-2xl md:text-3xl font-bold">Comunidade</h1>
               <p className="m-0 text-cinza-claro-texto leading-relaxed">
-                Veja o que outros profissionais e a comunidade estão compartilhando.
+                Conecte-se com especialistas e compartilhe conhecimentos sobre bem-estar.
               </p>
             </div>
 
@@ -67,26 +68,28 @@ export default function ProfessionalCommunityPage() {
               </div>
             )}
 
-            <div className="flex flex-col gap-5 w-full pb-4">
+            {/* Dynamic Responsive Grid Layout for Articles */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full pb-12">
               {posts.map((post) => (
                 <ArticleCard key={post.id} post={{
                   id: post.id,
                   title: post.title,
                   author: post.users?.name || 'Autor',
+                  avatarUrl: post.users?.avatar_url || '',
                   date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
                   image: post.cover_image_url || '',
                   content: [post.content_html],
-                }} isProfessional={true} />
+                }} />
               ))}
             </div>
           </section>
         ) : (
-          <div className="pt-2 w-full">
-             <ForumListScreen 
-               role="professional" 
-               onTopicClick={(id) => router.push(`/professional/forum/${id}`)}
-               onCreateClick={() => setIsCreatingQuestion(true)}
-             />
+          <div className="pt-2 px-6">
+            <ForumListScreen
+              role="professional"
+              onTopicClick={(id) => router.push(`/professional/forum/${id}`)}
+              onCreateClick={() => setIsCreatingQuestion(true)}
+            />
           </div>
         )}
       </div>

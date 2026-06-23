@@ -1,4 +1,5 @@
 import { ReportSummary } from "./report-service";
+import { generateDiabeticaResponse } from "@/lib/diabetica-client";
 
 /**
  * DiabeticaService - AI Integration Layer.
@@ -35,21 +36,8 @@ export class DiabeticaService {
     `;
 
     try {
-      const DIABETICA_API_URL = process.env.DIABETICA_API_URL || 'http://localhost:5000/predict';
-      
-      const response = await fetch(DIABETICA_API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: prompt, history: [] }),
-        signal: AbortSignal.timeout(60000)
-      });
-
-      if (!response.ok) {
-        throw new Error(`Falha na API da Diabetica: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      return data.response || "A Diabetica não retornou dicas no momento.";
+      const response = await generateDiabeticaResponse(prompt, [], 60000);
+      return response || "A Diabetica não retornou dicas no momento.";
     } catch (error) {
       console.error("Erro ao chamar Diabetica LLM, usando fallback:", error);
       

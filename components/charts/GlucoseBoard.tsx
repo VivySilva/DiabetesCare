@@ -2,14 +2,12 @@
 
 import React, { useState } from "react";
 import { MdOutlineNightlight } from "react-icons/md";
-
-// Helper: retorna data no fuso local (evita deslocamento UTC)
-const toLocalDate = (date: Date): string => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-};
+import {
+  buildWeeklyChartDays,
+  parseRecordDate,
+  recordsForLocalDate,
+  startOfLocalDay,
+} from "@/lib/date-utils";
 
 interface GlucoseBoardProps {
   records: any[];
@@ -22,17 +20,17 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
   // Cálculos dinâmicos baseados no período selecionado
   const getFilteredRecords = () => {
     const now = new Date();
-    const startDate = new Date();
+    const startDate = startOfLocalDay(now);
 
     if (period === "Diário") {
-      startDate.setHours(0, 0, 0, 0);
+      // startDate já é meia-noite de hoje
     } else if (period === "Semanal") {
-      startDate.setDate(now.getDate() - 7);
+      startDate.setDate(startDate.getDate() - 7);
     } else if (period === "Mensal") {
-      startDate.setDate(now.getDate() - 30);
+      startDate.setDate(startDate.getDate() - 30);
     }
 
-    return records.filter(r => new Date(r.created_at) >= startDate);
+    return records.filter(r => parseRecordDate(r.created_at) >= startDate);
   };
 
   // Averages for the summary cards - Always use at least the last 7 days for better context
@@ -45,7 +43,7 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
       const isCorrectPeriod = Array.isArray(periodName) 
         ? periodName.some(p => r.period?.includes(p)) 
         : r.period?.includes(periodName);
-      return isCorrectPeriod && new Date(r.created_at) >= sevenDaysAgo;
+      return isCorrectPeriod && parseRecordDate(r.created_at) >= sevenDaysAgo;
     });
 
     if (filtered.length === 0) return null;
@@ -61,18 +59,8 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
   const chartData = React.useMemo(() => {
     const todayDate = new Date();
 
-    // 🔍 DEBUG TEMPORÁRIO — verifique o console do navegador
-    console.log("=== GLUCOSE DEBUG ===");
-    console.log("Hoje (local):", toLocalDate(todayDate));
-    records.slice(0, 5).forEach((r, i) => {
-      const raw = r.created_at;
-      const parsed = new Date(r.created_at);
-      console.log(`Record[${i}]: raw="${raw}" | localDate="${toLocalDate(parsed)}" | utcDate="${parsed.toISOString().split('T')[0]}"`);
-    });
-    
     if (period === "Diário") {
-      const dateStr = toLocalDate(todayDate);
-      const todayRecords = records.filter(r => toLocalDate(new Date(r.created_at)) === dateStr);
+      const todayRecords = recordsForLocalDate(records, todayDate);
       
       return [
         {
@@ -100,8 +88,7 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
       for(let i = 29; i >= 0; i--) {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() - i);
-        const dateStr = toLocalDate(targetDate);
-        const dayRecords = records.filter(r => toLocalDate(new Date(r.created_at)) === dateStr);
+        const dayRecords = recordsForLocalDate(records, targetDate);
         
         // Label só aparece a cada 5 dias para não amontoar
         const label = i % 5 === 0 || i === 0 || i === 29 ? targetDate.getDate().toString().padStart(2, '0') : "";
@@ -116,18 +103,11 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
       return data;
     } 
     else { // Semanal
-      const days = ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"];
-      const currentDay = todayDate.getDay();
-      const sortedDays = [...days.slice(currentDay + 1), ...days.slice(0, currentDay + 1)];
-      
-      return sortedDays.map((dayName, index) => {
-        const targetDate = new Date();
-        targetDate.setDate(targetDate.getDate() - (sortedDays.length - 1 - index));
-        const dateStr = toLocalDate(targetDate);
-        const dayRecords = records.filter(r => toLocalDate(new Date(r.created_at)) === dateStr);
-        
+      return buildWeeklyChartDays(todayDate).map(({ label, date }) => {
+        const dayRecords = recordsForLocalDate(records, date);
+
         return {
-          label: dayName,
+          label,
           jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
           pos: dayRecords.find(r => r.period.includes("Pós"))?.glucose_value || 0,
           sono: dayRecords.find(r => r.period.includes("dormir"))?.glucose_value || 0,

@@ -1,36 +1,29 @@
 import torch
 from flask import Flask, request, jsonify
-from transformers import AutoTokenizer, AutoModelForCausalLM, TextIteratorStreamer
-from threading import Thread
-import random
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import logging
 import traceback
+import os
 
-# Configurando o logger
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-
-#device = "cuda" # the device to load the model onto
-
-
-# Configurações do Modelo
-MODEL_PATH = 'WaltonFuture/Diabetica-1.5B'
-device = "cuda"      
+MODEL_PATH = os.environ.get('DIABETICA_MODEL_PATH', 'WaltonFuture/Diabetica-1.5B')
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 logger.info(f"Carregando modelo {MODEL_PATH} no dispositivo: {device}...")
 
-# Carregar Tokenizer e Modelo (Isso pode levar tempo e exigir muita memória)
-# Em um ambiente de produção real, isso seria feito com otimizações
 try:
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_PATH,
-        torch_dtype="auto",
-        device_map="auto" if torch.cuda.is_available() else None
+        torch_dtype=torch.float16 if device == 'cuda' else torch.float32,
+        device_map='auto' if device == 'cuda' else None,
     ).eval()
+    if device == 'cpu':
+        model = model.to(device)
     logger.info("Modelo carregado com sucesso!")
 except Exception as e:
     logger.error(f"Erro ao carregar o modelo: {e}")
@@ -105,4 +98,5 @@ def health():
     return jsonify({"status": "ok", "model_loaded": model is not None})
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
