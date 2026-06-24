@@ -14,6 +14,7 @@ interface GlucoseRecord {
   id?: string | number;
   created_at: string;
   glucose_value: number;
+  period?: string; // Informação de cadastro (ex: Jejum, Pós-Almoço, etc.)
 }
 
 interface GlucoseBoardProps {
@@ -26,7 +27,7 @@ interface ChartDataPoint {
   label: string; // Ex: "14:30" ou "12/05"
   dateObj: Date;
   statusDetails: ReturnType<typeof getGlucoseStatusDetails>;
-  originalRecord?: GlucoseRecord; // Apenas para visão diária
+  originalRecord?: GlucoseRecord; // Registro original com a info de cadastro
   min?: number; // Para visões agregadas (Semanal/Mensal)
   max?: number;
 }
@@ -166,10 +167,32 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
     return path;
   };
 
+  // Memoiza uma lista plana cronológica de todos os registros do período selecionado para preencher a tabela
+  const tableRecords = useMemo(() => {
+    const now = new Date();
+    const startDate = startOfLocalDay(now);
+
+    if (period === "Semanal") {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === "Mensal") {
+      startDate.setDate(startDate.getDate() - 30);
+    }
+
+    return records
+      .filter(r => {
+        if (period === "Diário") {
+          const d = parseRecordDate(r.created_at);
+          return d.getDate() === now.getDate() && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }
+        return parseRecordDate(r.created_at) >= startDate;
+      })
+      .sort((a, b) => parseRecordDate(b.created_at).getTime() - parseRecordDate(a.created_at).getTime()); // Mais recentes primeiro
+  }, [period, records]);
+
   return (
     <div className="flex flex-col gap-6 md:gap-8 w-full p-4 md:p-8 bg-[#F8F9FA] md:rounded-[32px]">
 
-      {/* CARTÕES DE RESUMO - Mais focados em extremos e picos */}
+      {/* CARTÕES DE RESUMO - Inalterados */}
       <div className="flex flex-col gap-4">
         <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider pl-2 md:pl-0">
           Últimos 7 dias
@@ -217,7 +240,7 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
         </div>
       </div>
 
-      {/* CONTROLE DE PERÍODO */}
+      {/* CONTROLE DE PERÍODO - Inalterado */}
       <div className="bg-gray-200/50 p-1 rounded-full flex self-center w-full md:w-auto overflow-hidden">
         {["Diário", "Semanal", "Mensal"].map((p) => (
           <button
@@ -231,10 +254,9 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
         ))}
       </div>
 
-      {/* GRÁFICO PRINCIPAL */}
+      {/* GRÁFICO PRINCIPAL - Inalterado */}
       <div className="bg-white rounded-[24px] md:rounded-[32px] p-4 md:p-8 shadow-sm border border-gray-50 flex flex-col gap-6 w-full overflow-hidden">
         
-        {/* Info do Gráfico */}
         <div className="flex items-center justify-between">
           <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider">
             Curva de Glicemia
@@ -245,10 +267,8 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
           </div>
         </div>
 
-        {/* Container do SVG Responsivo */}
         <div className="relative w-full h-[250px] md:h-[350px] mt-2 pr-2 md:pr-0 pl-8">
           
-          {/* Eixo Y Fixo à Esquerda */}
           <div className="absolute left-0 top-0 bottom-6 w-8 flex flex-col justify-between text-[10px] text-gray-400 font-bold items-end pr-2 z-0">
             <span>400</span>
             <span>300</span>
@@ -259,8 +279,6 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
 
           <div className="w-full h-full relative z-10">
             <svg viewBox="0 0 700 300" className="w-full h-full overflow-visible" preserveAspectRatio="none">
-              
-              {/* Fundo indicando a meta (70 a 180) */}
               <rect 
                 x="0" 
                 y={getY(180)} 
@@ -270,13 +288,10 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
                 fillOpacity="0.08" 
                 rx="4"
               />
-
-              {/* Linhas guias horizontais */}
               {[70, 180, 250].map((val) => (
                 <line key={val} x1="0" y1={getY(val)} x2="700" y2={getY(val)} stroke="#E5E7EB" strokeWidth="1" strokeDasharray="4,4" />
               ))}
 
-              {/* Linha Contínua */}
               {chartData.length > 0 && (
                 <path
                   d={getCurvePath(chartData)}
@@ -290,7 +305,6 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
               )}
             </svg>
 
-            {/* Pontos Interativos (Hover / Tooltip) */}
             {chartData.map((d, idx) => (
               <div
                 key={`dot-${idx}`}
@@ -304,7 +318,6 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
                   zIndex: 20
                 }}
               >
-                {/* Tooltip */}
                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[11px] px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl flex flex-col items-center">
                   <span className="font-medium text-gray-300">{d.label}</span>
                   <span className="font-extrabold text-base">{d.yValue} mg/dL</span>
@@ -316,10 +329,8 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
             ))}
           </div>
 
-          {/* Rótulos do Eixo X */}
           <div className="absolute bottom-0 left-0 w-full h-6 transform translate-y-full">
             {period === "Diário" ? (
-              // Mostra horários chaves para visão diária (00h, 06h, 12h, 18h, 24h)
               [0, 6, 12, 18, 23.99].map((hour) => (
                 <div
                   key={`hour-${hour}`}
@@ -330,7 +341,6 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
                 </div>
               ))
             ) : (
-              // Mostra os rótulos passados pelo ChartData (dias/datas)
               chartData.map((d, idx) => (
                 <div
                   key={`label-${idx}`}
@@ -345,41 +355,57 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
         </div>
       </div>
 
-      {/* RELATÓRIO / TABELA DE DADOS DIÁRIA */}
-      {chartData.length > 0 && (
+      {/* RELATÓRIO / TABELA DE DADOS - AJUSTADO CONFORME SOLICITADO */}
+      {tableRecords.length > 0 && (
         <div className="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm border border-gray-50 mt-4">
           <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider mb-4">
             Relatório Detalhado ({period})
           </p>
           
           <div className="overflow-x-auto w-full">
-            <table className="w-full text-sm min-w-[400px]">
+            <table className="w-full text-sm min-w-[500px]">
               <thead>
                 <tr className="border-b border-gray-100">
-                  <th className="text-left py-3 px-2 text-[10px] font-bold text-cinza-claro-texto uppercase">Horário / Data</th>
-                  <th className="text-left py-3 px-2 text-[10px] font-bold text-cinza-claro-texto uppercase">Glicemia (mg/dL)</th>
-                  <th className="text-left py-3 px-2 text-[10px] font-bold text-cinza-claro-texto uppercase">Status</th>
+                  <th className="text-left py-3 px-3 text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">Horário</th>
+                  <th className="text-left py-3 px-3 text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">Coleta</th>
+                  <th className="text-left py-3 px-3 text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">Glicemia</th>
+                  <th className="text-left py-3 px-3 text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
               <tbody>
-                {/* Reverte o array para mostrar os mais recentes primeiro na tabela */}
-                {[...chartData].reverse().map((d, idx) => (
-                  <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
-                    <td className="py-3 px-2 text-xs text-gray-600 font-medium">
-                      {d.label}
-                    </td>
-                    <td className="py-3 px-2 text-sm font-extrabold text-texto">
-                      {d.yValue}
-                    </td>
-                    <td className="py-3 px-2">
-                      <span
-                        className={`px-3 py-1 rounded-full text-[10px] font-bold ${d.statusDetails.bg} ${d.statusDetails.text}`}
-                      >
-                        {d.statusDetails.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {tableRecords.map((record, idx) => {
+                  const date = parseRecordDate(record.created_at);
+                  const statusDetails = getGlucoseStatusDetails(record.glucose_value);
+                  
+                  // Formatação de data/hora limpa e legível
+                  const timeString = `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+                  const dateString = `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}`;
+                  const formattedDateTime = period === "Diário" ? timeString : `${dateString} às ${timeString}`;
+
+                  return (
+                    <tr key={record.id || idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                      <td className="py-3.5 px-3 text-xs text-gray-600 font-semibold">
+                        {formattedDateTime}
+                      </td>
+                      <td className="py-3.5 px-3 text-xs text-gray-500 font-medium">
+                        {/* Exibe o período salvo no cadastro (ex: Pré-Prandial, Jejum, etc.) ou '--' se vazio */}
+                        <span className="bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md border border-gray-200/60 text-[10px] font-bold uppercase tracking-wide">
+                          {record.period || "Geral"}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-3 text-sm font-extrabold text-texto">
+                        {record.glucose_value} <span className="text-[10px] font-normal text-gray-400">mg/dL</span>
+                      </td>
+                      <td className="py-3.5 px-3">
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] font-bold ${statusDetails.bg} ${statusDetails.text}`}
+                        >
+                          {statusDetails.status}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
