@@ -1,14 +1,16 @@
 import { httpClient } from "@/lib/httpClient";
 
 /**
- * Get all community posts.
+ * Get community posts with pagination.
  * 
- * Recupera a lista de todos os posts da comunidade.
+ * Recupera a lista paginada de posts da comunidade.
  * 
- * @returns {Promise<any>} Lista de publicações.
+ * @param {number} [page=1] - Número da página.
+ * @param {number} [limit=12] - Itens por página.
+ * @returns {Promise<any>} Lista paginada de publicações com metadados.
  */
-export async function getCommunityPosts() {
-  return httpClient.get("/community");
+export async function getCommunityPosts(page: number = 1, limit: number = 12) {
+  return httpClient.get(`/community?page=${page}&limit=${limit}`);
 }
 
 /**

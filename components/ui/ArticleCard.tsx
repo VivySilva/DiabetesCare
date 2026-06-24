@@ -9,11 +9,17 @@ interface ArticleCardProps {
   post: Post;
   isProfessional?: boolean;
   onEdit?: (id: string) => void;
+  /**
+   * Se fornecido, usa este href em vez do padrão (basePath/community/id).
+   * Útil para páginas públicas (ex: /articles/id).
+   */
+  href?: string;
 }
 
-export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCardProps) {
+export default function ArticleCard({ post, isProfessional, onEdit, href }: ArticleCardProps) {
   const pathname = usePathname();
   const basePath = pathname.startsWith("/professional") ? "/professional" : "/patient";
+  const linkHref = href || `${basePath}/community/${post.id}`;
 
   const handleEditClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -22,16 +28,23 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
   };
 
   return (
-    <Link href={`${basePath}/community/${post.id}`} className="no-underline w-full relative">
+    <Link href={linkHref} className="no-underline w-full relative block group">
       <article
-        className="flex flex-col items-start w-full rounded-[32px] overflow-hidden bg-white transition-transform active:scale-[0.98] cursor-pointer group"
-        style={{ boxShadow: "0px 4px 4px rgba(0, 0, 0, 0.05)" }}
+        className="flex flex-col items-start w-full rounded-[32px] overflow-hidden bg-white cursor-pointer
+                   shadow-[0_4px_4px_rgba(0,0,0,0.05)]
+                   transition-all duration-500 ease-out
+                   group-hover:-translate-y-1 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)]
+                   active:scale-[0.98] active:transition-transform active:duration-150"
       >
         {/* Botão de Editar (Apenas para Profissional se onEdit for fornecido) */}
         {isProfessional && onEdit && (
           <button
             onClick={handleEditClick}
-            className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-azul shadow-lg hover:bg-azul hover:text-white transition-all transform active:scale-90"
+            className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-azul shadow-lg
+                       hover:bg-azul hover:text-white hover:scale-110
+                       transition-all duration-300 ease-out
+                       active:scale-90
+                       opacity-0 group-hover:opacity-100"
             aria-label="Editar publicação"
           >
             <MdEdit size={20} />
@@ -40,11 +53,21 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
 
         {/* Imagem do artigo */}
         <div className="w-full overflow-hidden relative" style={{ height: "192px" }}>
+          {/* Overlay gradiente que aparece no hover */}
+          <div
+            className="absolute inset-0 z-[1] opacity-0 group-hover:opacity-100 transition-opacity duration-500 ease-out pointer-events-none"
+            style={{
+              background: "linear-gradient(to top, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 60%, transparent 100%)",
+            }}
+          />
+
           {post.image ? (
             <img
               src={post.image.includes('|') ? post.image.split('|')[1] : post.image}
               alt={post.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover
+                         group-hover:scale-110 group-hover:rotate-[1.5deg]
+                         transition-all duration-700 ease-out"
               onError={(e) => {
                 const target = e.currentTarget as HTMLImageElement;
                 target.style.display = 'none';
@@ -57,7 +80,7 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
             />
           ) : (
             <div
-              className="w-full h-full flex items-center justify-center"
+              className="w-full h-full flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-110"
               style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)' }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5">
@@ -73,12 +96,13 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
 
         {/* Container de conteúdo */}
         <div
-          className="flex flex-col items-start w-full"
+          className="flex flex-col items-start w-full transition-colors duration-500 ease-out group-hover:bg-blue-50/30"
           style={{ padding: "24px", gap: "10.8px", display: "flex" }}
         >
           {/* Autor e Data */}
           <div className="flex items-center gap-2 w-full">
-            <div className="w-7 h-7 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden">
+            <div className="w-7 h-7 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden
+                            transition-transform duration-300 ease-out group-hover:scale-110">
               {post.avatarUrl ? (
                 <img
                   src={post.avatarUrl}
@@ -99,7 +123,7 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
               )}
             </div>
             <div className="flex flex-col" style={{ gap: "2px" }}>
-              <span className="text-[12px] font-semibold text-texto leading-none" style={{ fontFamily: "var(--font-inter)" }}>
+              <span className="text-[12px] font-semibold text-texto leading-none transition-colors duration-300 group-hover:text-azul" style={{ fontFamily: "var(--font-inter)" }}>
                 {post.author || 'Autor'}
               </span>
               <span className="text-[10px] text-cinza-claro-texto uppercase tracking-widest font-medium" style={{ fontFamily: "var(--font-inter)" }}>
@@ -108,17 +132,22 @@ export default function ArticleCard({ post, isProfessional, onEdit }: ArticleCar
             </div>
           </div>
 
-          {/* Título */}
+          {/* Título com underline animado */}
           <h3
-            className="m-0 text-texto leading-snug"
+            className="m-0 text-texto leading-snug relative inline-block transition-colors duration-300 group-hover:text-azul-escuro"
             style={{ fontFamily: "var(--font-manrope)", fontWeight: 700, fontSize: "16px" }}
           >
             {post.title}
+            <span
+              className="absolute bottom-0 left-0 w-0 h-[2px] bg-gradient-to-r from-blue-500 to-blue-400
+                         transition-all duration-500 ease-out group-hover:w-full"
+              style={{ borderRadius: "1px" }}
+            />
           </h3>
 
           {/* Trecho */}
           <p
-            className="m-0 text-cinza-claro-texto line-clamp-2"
+            className="m-0 text-cinza-claro-texto line-clamp-2 transition-colors duration-300"
             style={{ fontFamily: "var(--font-inter)", fontSize: "13px", lineHeight: "1.6" }}
           >
             {(() => {

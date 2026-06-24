@@ -5,16 +5,38 @@ import { verifyToken, unauthorizedResponse } from "@/lib/auth";
 /**
  * GET /api/community
  * 
- * Recupera a lista de todas as publicações da comunidade, ordenadas por data.
+ * Recupera a lista paginada de publicações da comunidade, ordenadas por data.
+ * Suporta paginação via query params: ?page=1&limit=12
  * 
- * @returns {Promise<Response>} Lista de posts com dados do autor.
+ * @param {NextRequest} req - Objeto de requisição.
+ * @query {number} [page=1] - Número da página.
+ * @query {number} [limit=12] - Itens por página (máx 50).
+ * @returns {Promise<Response>} Lista paginada de posts com total de registros.
  */
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10) || 1);
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "12", 10) || 12));
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    // Primeiro obtém o total de registros
+    const { count: totalCount, error: countError } = await supabase
+      .from("community_posts")
+      .select("*", { count: "exact", head: true });
+
+    if (countError) {
+      console.error("Error counting community posts:", countError);
+      return NextResponse.json({ erro: "Erro ao contar publicações." }, { status: 500 });
+    }
+
+    // Busca os posts da página atual
     const { data, error } = await supabase
       .from("community_posts")
       .select("id, title, cover_image_url, category, content_html, is_moderated, created_at, author_id")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .range(from, to);
 
     if (error) {
       console.error("Error fetching community posts:", error);
@@ -54,7 +76,19 @@ export async function GET() {
       users: usersMap[post.author_id] || null
     })) || [];
 
-    return NextResponse.json({ posts: formattedData }, { status: 200 });
+    const totalPages = Math.ceil((totalCount || 0) / limit);
+
+    return NextResponse.json({
+      posts: formattedData,
+      pagination: {
+        page,
+        limit,
+        total: totalCount || 0,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      },
+    }, { status: 200 });
   } catch (error) {
     console.error("General error listing posts:", error);
     return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });

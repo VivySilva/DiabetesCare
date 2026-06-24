@@ -13,10 +13,18 @@ const mocks = vi.hoisted(() => {
     state,
     chain: {
       from: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      // .order() é o final da linha para buscar os posts
-      order: vi.fn(() => Promise.resolve({ data: state.posts, error: null })),
-      // .in() é o final da linha para buscar os autores
+      select: vi.fn(function (this: any, _query: string, opts?: any) {
+        // Se for chamada com { count: "exact", head: true }, retorna contagem
+        if (opts?.count === "exact" && opts?.head === true) {
+          return Promise.resolve({ count: state.posts.length, error: null });
+        }
+        // Caso contrário, continua a chain
+        return this;
+      }),
+      order: vi.fn().mockReturnThis(),
+      // .range() é o novo terminal para buscar os posts paginados
+      range: vi.fn(() => Promise.resolve({ data: state.posts, error: null })),
+      // .in() é o terminal para buscar os autores
       in: vi.fn(() => Promise.resolve({ data: state.patients, error: null })),
       insert: vi.fn().mockReturnThis(),
       single: vi.fn(() =>
@@ -82,8 +90,8 @@ describe("API da Comunidade (/api/community)", () => {
         { id: "autor-123", name: "Maria da Silva", role: "PATIENT" },
       ];
 
-      const req = new NextRequest("http://localhost:3000/api/community");
-      const res = await GET(); // Sua rota GET da comunidade não recebe 'req'
+      const req = new NextRequest("http://localhost:3000/api/community?page=1&limit=12");
+      const res = await GET(req);
 
       expect(res.status).toBe(200);
 
@@ -93,6 +101,11 @@ describe("API da Comunidade (/api/community)", () => {
       expect(json.posts[0].title).toBe("Dica de Saúde");
       expect(json.posts[0].users).toBeDefined();
       expect(json.posts[0].users.name).toBe("Maria da Silva");
+
+      // Valida metadados de paginação
+      expect(json.pagination).toBeDefined();
+      expect(json.pagination.page).toBe(1);
+      expect(json.pagination.limit).toBe(12);
     });
   });
 
