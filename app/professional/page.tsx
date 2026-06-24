@@ -11,9 +11,11 @@ import { useRouter } from "next/navigation";
 import { getCommunityPosts, deleteCommunityPost } from "@/services/community/communityService";
 import { getUserProfile } from "@/services/user/userService";
 import NotificationsScreen from "@/components/features/notifications/NotificationsScreen";
+import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 
 export default function ProfissionalPage() {
   const router = useRouter();
+  const logoHref = useSmartHomeHref();
   const [posts, setPosts] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userName, setUserName] = useState("");
@@ -79,7 +81,7 @@ export default function ProfissionalPage() {
       {/* Desktop top bar */}
       <div className="hidden md:flex items-center justify-between sticky top-0 z-50 w-full backdrop-blur-[6px]" style={{ background: 'rgba(247, 249, 251, 0.85)' }}>
         <div className="w-full max-w-5xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
-          <span className="font-display font-extrabold text-xl text-azul-escuro tracking-tight">DiabetesCare</span>
+          <Link href={logoHref} className="font-display font-extrabold text-xl text-azul-escuro tracking-tight no-underline">DiabetesCare</Link>
           <button
             onClick={() => setShowNotifications(true)}
             className="relative flex items-center justify-center text-cinza-fundo hover:opacity-70 transition-opacity"

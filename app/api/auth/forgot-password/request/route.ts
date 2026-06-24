@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import supabase from "@/config/supabase";
-import transporter from "@/config/email";
+import transporter, { EMAIL_FROM } from "@/config/email";
+import { env } from "@/config/env";
 
 /**
  * POST /api/auth/forgot-password/request
@@ -54,11 +55,11 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+      const frontendUrl = env.FRONTEND_URL || "http://localhost:3000";
       const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
       await transporter.sendMail({
-        from: `"DiabetesCare" <${process.env.EMAIL_USER}>`,
+        from: EMAIL_FROM,
         to: email,
         subject: "Recuperação de Senha - DiabetesCare",
         text: `Olá, ${user.name}\n\nVocê solicitou a recuperação da sua senha.\n\nUse o link abaixo para redefinir sua senha:\n${resetLink}\n\nEsse link expira em 1 hora.`,

@@ -7,9 +7,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(10, "JWT_SECRET deve ter pelo menos 10 caracteres"),
   SMTP_HOST: z.string().optional(),
   SMTP_PORT: z.string().optional(),
-  EMAIL_USER: z.string().optional(),
-  EMAIL_PASS: z.string().optional(),
+  EMAIL_USER: z.string().min(1, "EMAIL_USER é obrigatório para enviar e-mails de recuperação de senha"),
+  EMAIL_PASS: z.string().min(1, "EMAIL_PASS é obrigatório para enviar e-mails de recuperação de senha"),
   SMTP_FROM: z.string().optional(),
+  FRONTEND_URL: z.string().url().optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

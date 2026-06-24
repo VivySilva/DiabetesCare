@@ -3,6 +3,10 @@ import { NextRequest } from "next/server";
 
 // 1. DUBLÊS (MOCKS) COM VI.HOISTED
 const mocks = vi.hoisted(() => {
+  // Define variáveis de ambiente ANTES dos imports para o env.ts validar
+  process.env.EMAIL_USER = "teste@diabetescare.com";
+  process.env.EMAIL_PASS = "senha-teste";
+
   const state = {
     user: null as any,
     insertError: null as any,
@@ -21,7 +25,6 @@ const mocks = vi.hoisted(() => {
       insert: vi.fn(() => Promise.resolve({ error: state.insertError })),
     },
     transporter: {
-      // Simula o envio de e-mail (falha ou sucesso dependendo do nosso state)
       sendMail: vi.fn(() => {
         if (state.emailError) return Promise.reject(state.emailError);
         return Promise.resolve(true);
@@ -33,7 +36,8 @@ const mocks = vi.hoisted(() => {
 vi.mock("@/config/supabase", () => ({ default: mocks.supabaseChain }));
 
 // Criamos um dublê para o seu arquivo de e-mail
-vi.mock("@/config/email", () => ({ default: mocks.transporter }));
+type EmailModule = { default: typeof mocks.transporter; EMAIL_FROM?: string };
+vi.mock("@/config/email", (): EmailModule => ({ default: mocks.transporter, EMAIL_FROM: '"DiabetesCare" <teste@diabetescare.com>' }));
 
 // 2. IMPORTAÇÃO DA ROTA
 // ATENÇÃO: Ajuste este caminho se a sua rota estiver em outra pasta

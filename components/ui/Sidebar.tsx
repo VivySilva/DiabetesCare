@@ -79,7 +79,7 @@ export default function Sidebar() {
     setIsLogoutOpen(false);
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    router.push("/login");
+    router.push("/");
   };
 
   return (

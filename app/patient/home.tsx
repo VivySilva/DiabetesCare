@@ -16,9 +16,11 @@ import { getGlucoseRecords } from "@/services/glucose/glucoseService"
 import { getCommunityPosts } from "@/services/community/communityService";
 import { httpClient } from "@/lib/httpClient";
 import DiabeticaChat from '@/components/features/diabetica/DiabeticaChat';
+import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 
 export default function Home() {
   const router = useRouter();
+  const logoHref = useSmartHomeHref();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMedications, setShowMedications] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -114,7 +116,7 @@ export default function Home() {
       {/* Desktop top bar (replaces hidden Header on home variant) */}
       <div className="hidden md:flex items-center justify-between sticky top-0 z-50 w-full backdrop-blur-[6px]" style={{ background: 'rgba(247, 249, 251, 0.85)' }}>
         <div className="w-full max-w-5xl mx-auto px-6 md:px-8 py-5 flex items-center justify-between">
-          <span className="font-display font-extrabold text-xl text-azul-escuro tracking-tight">DiabetesCare</span>
+          <Link href={logoHref} className="font-display font-extrabold text-xl text-azul-escuro tracking-tight no-underline">DiabetesCare</Link>
           <button
             onClick={() => setShowNotifications(true)}
             className="relative flex items-center justify-center text-cinza-fundo hover:opacity-70 transition-opacity"
