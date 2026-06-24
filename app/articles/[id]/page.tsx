@@ -5,7 +5,6 @@ import Link from "next/link";
 
 import { IoMdArrowBack } from "react-icons/io";
 import { getCommunityPostById } from "@/services/community/communityService";
-import Footer from "@/components/ui/Footer";
 
 export default function PublicArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params);
@@ -78,8 +77,6 @@ export default function PublicArticlePage({ params }: { params: Promise<{ id: st
             </p>
           </div>
         </main>
-
-        <Footer />
       </div>
     );
   }
@@ -110,8 +107,6 @@ export default function PublicArticlePage({ params }: { params: Promise<{ id: st
             </Link>
           </div>
         </main>
-
-        <Footer />
       </div>
     );
   }
@@ -264,7 +259,6 @@ export default function PublicArticlePage({ params }: { params: Promise<{ id: st
         </article>
       </main>
 
-      <Footer />
     </div>
   );
 }

@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { IoMdArrowBack } from "react-icons/io";
-import Footer from "@/components/ui/Footer";
 import ArticleCard from "@/components/ui/ArticleCard";
 import { getCommunityPosts } from "@/services/community/communityService";
 
@@ -229,7 +228,6 @@ export default function ArticlesPage() {
 
       </main>
 
-      <Footer />
     </div>
   );
 }
