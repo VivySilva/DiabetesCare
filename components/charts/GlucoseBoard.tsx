@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { MdOutlineNightlight } from "react-icons/md";
+import React, { useState, useMemo } from "react";
+import { MdTrendingUp, MdTrendingDown, MdOutlineTimeline } from "react-icons/md";
 import {
   buildWeeklyChartDays,
   parseRecordDate,
@@ -9,171 +9,221 @@ import {
   startOfLocalDay,
 } from "@/lib/date-utils";
 
-interface GlucoseBoardProps {
-  records: any[];
+// 1. Tipagem estruturada
+interface GlucoseRecord {
+  id?: string | number;
+  created_at: string;
+  glucose_value: number;
 }
 
+interface GlucoseBoardProps {
+  records: GlucoseRecord[];
+}
+
+interface ChartDataPoint {
+  xPercent: number; // Posição horizontal no gráfico (0 a 100)
+  yValue: number; // Valor real da glicemia
+  label: string; // Ex: "14:30" ou "12/05"
+  dateObj: Date;
+  statusDetails: ReturnType<typeof getGlucoseStatusDetails>;
+  originalRecord?: GlucoseRecord; // Apenas para visão diária
+  min?: number; // Para visões agregadas (Semanal/Mensal)
+  max?: number;
+}
+
+// Faixa de referência geral (70 a 180 mg/dL é o padrão geral para tempo no alvo)
+const HEALTHY_RANGE = { min: 70, max: 180 };
+
+// Função para determinar o status e cor
+const getGlucoseStatusDetails = (value: number) => {
+  if (value === 0) return { status: "Sem Dados", color: "#E0E0E0", bg: "bg-gray-100", text: "text-gray-500" };
+  if (value < 70) return { status: "Hipoglicemia", color: "#FF6B6B", bg: "bg-red-100", text: "text-red-700" };
+  if (value <= 180) return { status: "Na Meta", color: "#4ECDC4", bg: "bg-green-100", text: "text-green-700" };
+  if (value <= 250) return { status: "Atenção", color: "#FFE66D", bg: "bg-yellow-100", text: "text-yellow-700" };
+  return { status: "Hiperglicemia", color: "#FF4757", bg: "bg-red-100", text: "text-red-700" };
+};
+
 export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
-  const [period, setPeriod] = useState<"Diário" | "Semanal" | "Mensal">("Semanal");
+  const [period, setPeriod] = useState<"Diário" | "Semanal" | "Mensal">("Diário");
 
-  // Cálculos dinâmicos
-  // Cálculos dinâmicos baseados no período selecionado
-  const getFilteredRecords = () => {
-    const now = new Date();
-    const startDate = startOfLocalDay(now);
-
-    if (period === "Diário") {
-      // startDate já é meia-noite de hoje
-    } else if (period === "Semanal") {
-      startDate.setDate(startDate.getDate() - 7);
-    } else if (period === "Mensal") {
-      startDate.setDate(startDate.getDate() - 30);
-    }
-
-    return records.filter(r => parseRecordDate(r.created_at) >= startDate);
-  };
-
-  // Averages for the summary cards - Always use at least the last 7 days for better context
-  const getSummaryAverage = (periodName: string | string[]) => {
-    const now = new Date();
+  // Cálculos para os cartões de resumo (Últimos 7 dias)
+  const summaryStats = useMemo(() => {
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(now.getDate() - 7);
+    sevenDaysAgo.setDate(new Date().getDate() - 7);
     
-    const filtered = records.filter(r => {
-      const isCorrectPeriod = Array.isArray(periodName) 
-        ? periodName.some(p => r.period?.includes(p)) 
-        : r.period?.includes(periodName);
-      return isCorrectPeriod && parseRecordDate(r.created_at) >= sevenDaysAgo;
-    });
+    const recentRecords = records.filter(r => parseRecordDate(r.created_at) >= sevenDaysAgo);
+    
+    if (recentRecords.length === 0) return { avg: 0, min: 0, max: 0 };
+    
+    const values = recentRecords.map(r => r.glucose_value);
+    const avg = values.reduce((acc, val) => acc + val, 0) / values.length;
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    
+    return { avg: Math.round(avg), min, max };
+  }, [records]);
 
-    if (filtered.length === 0) return null;
-    const sum = filtered.reduce((acc, r) => acc + r.glucose_value, 0);
-    return (sum / filtered.length).toFixed(0);
-  };
-
-  const avgJejum = getSummaryAverage("Jejum");
-  const avgPos = getSummaryAverage(["Pós-Desjejum", "Pós-Prandial", "Pós-Jantar"]);
-  const avgSono = getSummaryAverage("dormir");
-
-  // Dados para o gráfico baseados no período selecionado
-  const chartData = React.useMemo(() => {
+  // Construção dos dados do gráfico baseado no período
+  const chartData = useMemo<ChartDataPoint[]>(() => {
     const todayDate = new Date();
 
     if (period === "Diário") {
-      const todayRecords = recordsForLocalDate(records, todayDate);
-      
-      return [
-        {
-          label: "Manhã",
-          jejum: todayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
-          pos: todayRecords.find(r => r.period === "Pós-Desjejum")?.glucose_value || 0,
-          sono: 0,
-        },
-        {
-          label: "Tarde",
-          jejum: todayRecords.find(r => r.period === "Pré-Prandial")?.glucose_value || 0,
-          pos: todayRecords.find(r => r.period === "Pós-Prandial")?.glucose_value || 0,
-          sono: 0,
-        },
-        {
-          label: "Noite",
-          jejum: todayRecords.find(r => r.period === "Pré-Jantar")?.glucose_value || 0,
-          pos: todayRecords.find(r => r.period === "Pós-Jantar")?.glucose_value || 0,
-          sono: todayRecords.find(r => r.period?.includes("dormir"))?.glucose_value || 0,
-        }
-      ];
+      const todayRecords = recordsForLocalDate(records, todayDate)
+        .sort((a, b) => parseRecordDate(a.created_at).getTime() - parseRecordDate(b.created_at).getTime());
+
+      return todayRecords.map(record => {
+        const date = parseRecordDate(record.created_at);
+        const hours = date.getHours();
+        const minutes = date.getMinutes();
+        
+        // Calcula a posição X baseada na hora do dia (0h às 24h = 0% a 100%)
+        const timeInMinutes = hours * 60 + minutes;
+        const xPercent = (timeInMinutes / (24 * 60)) * 100;
+
+        return {
+          xPercent,
+          yValue: record.glucose_value,
+          label: `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}`,
+          dateObj: date,
+          statusDetails: getGlucoseStatusDetails(record.glucose_value),
+          originalRecord: record,
+        };
+      });
     } 
     else if (period === "Mensal") {
-      const data = [];
-      for(let i = 29; i >= 0; i--) {
+      const data: ChartDataPoint[] = [];
+      for (let i = 29; i >= 0; i--) {
         const targetDate = new Date();
         targetDate.setDate(targetDate.getDate() - i);
         const dayRecords = recordsForLocalDate(records, targetDate);
         
-        // Label só aparece a cada 5 dias para não amontoar
-        const label = i % 5 === 0 || i === 0 || i === 29 ? targetDate.getDate().toString().padStart(2, '0') : "";
-        
-        data.push({
-          label: label,
-          jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
-          pos: dayRecords.find(r => r.period?.includes("Pós"))?.glucose_value || 0,
-          sono: dayRecords.find(r => r.period?.includes("dormir"))?.glucose_value || 0,
-        });
+        if (dayRecords.length > 0) {
+          const values = dayRecords.map(r => r.glucose_value);
+          const avgValue = values.reduce((acc, val) => acc + val, 0) / values.length;
+          
+          data.push({
+            xPercent: ((29 - i) / 29) * 100, // Distribui uniformemente os 30 dias
+            yValue: Math.round(avgValue),
+            label: `${targetDate.getDate().toString().padStart(2, '0')}/${(targetDate.getMonth() + 1).toString().padStart(2, '0')}`,
+            dateObj: targetDate,
+            statusDetails: getGlucoseStatusDetails(avgValue),
+            min: Math.min(...values),
+            max: Math.max(...values),
+          });
+        }
       }
       return data;
     } 
     else { // Semanal
-      return buildWeeklyChartDays(todayDate).map(({ label, date }) => {
+      const days = buildWeeklyChartDays(todayDate);
+      return days.map(({ label, date }, index) => {
         const dayRecords = recordsForLocalDate(records, date);
+        const values = dayRecords.map(r => r.glucose_value);
+        
+        const avgValue = values.length > 0 ? values.reduce((acc, val) => acc + val, 0) / values.length : 0;
 
         return {
+          xPercent: (index / (days.length - 1)) * 100,
+          yValue: Math.round(avgValue),
           label,
-          jejum: dayRecords.find(r => r.period === "Jejum")?.glucose_value || 0,
-          pos: dayRecords.find(r => r.period?.includes("Pós"))?.glucose_value || 0,
-          sono: dayRecords.find(r => r.period?.includes("dormir"))?.glucose_value || 0,
+          dateObj: date,
+          statusDetails: getGlucoseStatusDetails(avgValue),
+          min: values.length > 0 ? Math.min(...values) : undefined,
+          max: values.length > 0 ? Math.max(...values) : undefined,
         };
-      });
+      }).filter(d => d.yValue > 0); // Filtra dias sem dados para não quebrar a linha
     }
   }, [period, records]);
 
-  // Função para converter valor de glicose em Y no SVG (0-400 mg/dL -> 300-0 Y)
+  // Função para converter valor de glicose em Y (altura) no SVG (0 a 400mg/dL)
   const getY = (val: number) => 300 - (val / 400) * 300;
 
-  return (
-    <div className="flex flex-col gap-8 w-full">
+  // Gerador de curva suave (Bézier)
+  const getCurvePath = (data: ChartDataPoint[]) => {
+    if (data.length === 0) return "";
+    if (data.length === 1) return `M ${(data[0].xPercent / 100) * 700},${getY(data[0].yValue)}`;
 
-      {/* RELATÓRIO DE MÉDIAS — 3 colunas no desktop */}
+    let path = `M ${(data[0].xPercent / 100) * 700},${getY(data[0].yValue)}`;
+    const tension = 0.3;
+
+    for (let i = 1; i < data.length; i++) {
+      const p0 = data[i - 1];
+      const p1 = data[i];
+      
+      const x0 = (p0.xPercent / 100) * 700;
+      const y0 = getY(p0.yValue);
+      const x1 = (p1.xPercent / 100) * 700;
+      const y1 = getY(p1.yValue);
+
+      const cp1x = x0 + (x1 - x0) * tension;
+      const cp1y = y0;
+      const cp2x = x1 - (x1 - x0) * tension;
+      const cp2y = y1;
+
+      path += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${x1},${y1}`;
+    }
+
+    return path;
+  };
+
+  return (
+    <div className="flex flex-col gap-6 md:gap-8 w-full p-4 md:p-8 bg-[#F8F9FA] md:rounded-[32px]">
+
+      {/* CARTÕES DE RESUMO - Mais focados em extremos e picos */}
       <div className="flex flex-col gap-4">
-        <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider">
-          Relatório de Médias
+        <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider pl-2 md:pl-0">
+          Últimos 7 dias
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-50">
-            <span className="text-azul font-bold text-[10px] uppercase block mb-2">Jejum</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-texto font-extrabold text-2xl">{avgJejum || "--"}</span>
-              <span className="text-cinza-claro-texto text-[10px]">mg/dL</span>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          <div className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+            <div className="w-12 h-12 bg-azul-claro text-azul rounded-full flex items-center justify-center">
+              <MdOutlineTimeline size={24} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-cinza-claro-texto font-bold text-[10px] uppercase">Glicemia Média</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-texto font-extrabold text-2xl">{summaryStats.avg || "--"}</span>
+                <span className="text-cinza-claro-texto text-[10px]">mg/dL</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-[32px] p-6 shadow-sm border border-gray-50">
-            <span className="text-azul font-bold text-[10px] uppercase block mb-2">Pós-Prandial</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-texto font-extrabold text-2xl">{avgPos || "--"}</span>
-              <span className="text-cinza-claro-texto text-[10px]">mg/dL</span>
+          <div className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+            <div className="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center">
+              <MdTrendingUp size={24} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-cinza-claro-texto font-bold text-[10px] uppercase">Maior Pico</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-texto font-extrabold text-2xl">{summaryStats.max || "--"}</span>
+                <span className="text-cinza-claro-texto text-[10px]">mg/dL</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-[32px] p-5 flex items-center justify-between shadow-sm border border-gray-50">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-azul-claro rounded-full flex items-center justify-center text-azul">
-                <MdOutlineNightlight size={24} />
-              </div>
-              <div>
-                <span className="text-cinza-claro-texto font-bold text-[10px] uppercase block">Antes de Dormir</span>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-texto font-extrabold text-2xl">{avgSono || "--"}</span>
-                  <span className="text-cinza-claro-texto text-[10px]">mg/dL</span>
-                </div>
+          <div className="bg-white rounded-[24px] p-6 shadow-sm border border-gray-50 flex items-center gap-4">
+            <div className="w-12 h-12 bg-green-50 text-green-500 rounded-full flex items-center justify-center">
+              <MdTrendingDown size={24} />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-cinza-claro-texto font-bold text-[10px] uppercase">Menor Valor</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-texto font-extrabold text-2xl">{summaryStats.min || "--"}</span>
+                <span className="text-cinza-claro-texto text-[10px]">mg/dL</span>
               </div>
             </div>
-            <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider ${
-              Number(avgSono) > 150 ? "bg-red-100 text-red-500" : "bg-[#F2F4F6] text-[#828282]"
-            }`}>
-              {Number(avgSono) > 150 ? "Atenção" : "Estável"}
-            </span>
           </div>
         </div>
       </div>
 
-      {/* TOGGLE PERÍODO */}
-      <div className="bg-gray-100 p-1 rounded-full flex">
+      {/* CONTROLE DE PERÍODO */}
+      <div className="bg-gray-200/50 p-1 rounded-full flex self-center w-full md:w-auto overflow-hidden">
         {["Diário", "Semanal", "Mensal"].map((p) => (
           <button
             key={p}
             onClick={() => setPeriod(p as any)}
-            className={`flex-1 py-2.5 text-xs font-bold rounded-full transition-all ${period === p ? "bg-azul text-white shadow-md" : "text-gray-400 hover:text-gray-500"
+            className={`flex-1 md:px-8 py-2.5 text-xs font-bold rounded-full transition-all ${period === p ? "bg-white text-azul shadow-sm" : "text-gray-500 hover:text-gray-700"
               }`}
           >
             {p}
@@ -181,107 +231,161 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
         ))}
       </div>
 
-      {/* GRÁFICO DE EVOLUÇÃO */}
-      <div className="bg-white rounded-[32px] p-8 shadow-sm border border-gray-50 flex flex-col gap-6">
-        <div className="flex flex-col gap-4">
+      {/* GRÁFICO PRINCIPAL */}
+      <div className="bg-white rounded-[24px] md:rounded-[32px] p-4 md:p-8 shadow-sm border border-gray-50 flex flex-col gap-6 w-full overflow-hidden">
+        
+        {/* Info do Gráfico */}
+        <div className="flex items-center justify-between">
           <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider">
-            Gráfico de Evolução
+            Curva de Glicemia
           </p>
-
-          <div className="flex gap-4">
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-azul" />
-              <span className="text-[10px] text-cinza-claro-texto font-medium">Jejum</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-verde" />
-              <span className="text-[10px] text-cinza-claro-texto font-medium">Pós-prandial</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-roxo" />
-              <span className="text-[10px] text-cinza-claro-texto font-medium">Antes de Dormir</span>
-            </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-green-400 opacity-50" />
+            <span className="text-[10px] text-cinza-claro-texto font-medium">Meta (70-180)</span>
           </div>
         </div>
 
-        {/* SVG Chart */}
-        <div className="relative h-40 w-full mt-4">
-          <svg viewBox="0 0 700 300" className="w-full h-full overflow-visible" preserveAspectRatio="none">
-            {/* Generate Path dynamically */}
-            {["jejum", "pos", "sono"].map((type, i) => {
-              const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
-              const spacing = 700 / Math.max(chartData.length, 1);
+        {/* Container do SVG Responsivo */}
+        <div className="relative w-full h-[250px] md:h-[350px] mt-2 pr-2 md:pr-0 pl-8">
+          
+          {/* Eixo Y Fixo à Esquerda */}
+          <div className="absolute left-0 top-0 bottom-6 w-8 flex flex-col justify-between text-[10px] text-gray-400 font-bold items-end pr-2 z-0">
+            <span>400</span>
+            <span>300</span>
+            <span>200</span>
+            <span>100</span>
+            <span>0</span>
+          </div>
+
+          <div className="w-full h-full relative z-10">
+            <svg viewBox="0 0 700 300" className="w-full h-full overflow-visible" preserveAspectRatio="none">
               
-              // Filtramos apenas pontos que possuem valor maior que 0 para não quebrar o gráfico
-              const points = chartData
-                .map((d, idx) => ({ x: idx * spacing + (spacing / 2), y: d[type as keyof typeof d] as number }))
-                .filter(p => p.y > 0)
-                .map(p => `${p.x},${getY(p.y)}`);
+              {/* Fundo indicando a meta (70 a 180) */}
+              <rect 
+                x="0" 
+                y={getY(180)} 
+                width="700" 
+                height={getY(70) - getY(180)} 
+                fill="#4ECDC4" 
+                fillOpacity="0.08" 
+                rx="4"
+              />
 
-              if (points.length < 1) return null;
+              {/* Linhas guias horizontais */}
+              {[70, 180, 250].map((val) => (
+                <line key={val} x1="0" y1={getY(val)} x2="700" y2={getY(val)} stroke="#E5E7EB" strokeWidth="1" strokeDasharray="4,4" />
+              ))}
 
-              return (
+              {/* Linha Contínua */}
+              {chartData.length > 0 && (
                 <path
-                  key={type}
-                  d={`M ${points.join(" L ")}`}
+                  d={getCurvePath(chartData)}
                   fill="none"
-                  stroke={colors[i]}
-                  strokeWidth="4"
+                  stroke="var(--dc-azul, #0070f3)"
+                  strokeWidth="3"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   vectorEffect="non-scaling-stroke"
                 />
-              );
-            })}
-          </svg>
+              )}
+            </svg>
 
-          {/* HTML Overlay for Perfect Circles */}
-          {["jejum", "pos", "sono"].map((type, i) => {
-            const colors = ["var(--dc-azul)", "var(--dc-verde)", "var(--dc-roxo)"];
-            return chartData.map((d, idx) => {
-              const val = d[type as keyof typeof d] as number;
-              if (val === 0) return null;
-
-              const isLastPoint = idx === chartData.length - 1;
-              const leftPercent = ((idx + 0.5) / Math.max(chartData.length, 1)) * 100;
-              const topPercent = (getY(val) / 300) * 100;
-
-              return (
-                <div
-                  key={`dot-${type}-${idx}`}
-                  className="absolute rounded-full bg-white -translate-x-1/2 -translate-y-1/2"
-                  style={{
-                    left: `${leftPercent}%`,
-                    top: `${topPercent}%`,
-                    width: isLastPoint ? "12px" : "8px",
-                    height: isLastPoint ? "12px" : "8px",
-                    border: `${isLastPoint ? 3 : 2}px solid ${colors[i]}`,
-                    zIndex: 10
-                  }}
-                />
-              );
-            });
-          })}
-        </div>
-
-        {/* X Axis Labels */}
-        <div className="relative w-full h-4 mt-2">
-          {chartData.map((d, idx) => {
-            const percent = ((idx + 0.5) / Math.max(chartData.length, 1)) * 100;
-            return (
-              <div 
-                key={`${d.label}-${idx}`}
-                className="absolute flex justify-center -translate-x-1/2"
-                style={{ left: `${percent}%` }}
+            {/* Pontos Interativos (Hover / Tooltip) */}
+            {chartData.map((d, idx) => (
+              <div
+                key={`dot-${idx}`}
+                className="absolute rounded-full bg-white -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform group hover:scale-125 hover:z-30"
+                style={{
+                  left: `${d.xPercent}%`,
+                  top: `${(getY(d.yValue) / 300) * 100}%`,
+                  width: "12px",
+                  height: "12px",
+                  border: `3px solid ${d.statusDetails.color}`,
+                  zIndex: 20
+                }}
               >
-                <span className={`text-[9px] font-bold tracking-widest ${idx === chartData.length - 1 ? "text-azul" : "text-gray-300"}`}>
-                  {d.label}
-                </span>
+                {/* Tooltip */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-gray-800 text-white text-[11px] px-3 py-2 rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none shadow-xl flex flex-col items-center">
+                  <span className="font-medium text-gray-300">{d.label}</span>
+                  <span className="font-extrabold text-base">{d.yValue} mg/dL</span>
+                  {period !== "Diário" && d.max !== undefined && d.min !== undefined && (
+                    <span className="text-[9px] text-gray-400 mt-0.5">Min: {d.min} | Max: {d.max}</span>
+                  )}
+                </div>
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Rótulos do Eixo X */}
+          <div className="absolute bottom-0 left-0 w-full h-6 transform translate-y-full">
+            {period === "Diário" ? (
+              // Mostra horários chaves para visão diária (00h, 06h, 12h, 18h, 24h)
+              [0, 6, 12, 18, 23.99].map((hour) => (
+                <div
+                  key={`hour-${hour}`}
+                  className="absolute flex justify-center -translate-x-1/2 text-[9px] font-bold text-gray-400"
+                  style={{ left: `${(hour / 24) * 100}%` }}
+                >
+                  {Math.floor(hour).toString().padStart(2, "0")}h
+                </div>
+              ))
+            ) : (
+              // Mostra os rótulos passados pelo ChartData (dias/datas)
+              chartData.map((d, idx) => (
+                <div
+                  key={`label-${idx}`}
+                  className="absolute flex justify-center -translate-x-1/2 text-[9px] font-bold text-gray-400"
+                  style={{ left: `${d.xPercent}%` }}
+                >
+                  {d.label}
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
+
+      {/* RELATÓRIO / TABELA DE DADOS DIÁRIA */}
+      {chartData.length > 0 && (
+        <div className="bg-white rounded-[24px] md:rounded-[32px] p-6 md:p-8 shadow-sm border border-gray-50 mt-4">
+          <p className="m-0 text-cinza-claro-texto font-bold text-[11px] uppercase tracking-wider mb-4">
+            Relatório Detalhado ({period})
+          </p>
+          
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-sm min-w-[400px]">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left py-3 px-2 text-[10px] font-bold text-cinza-claro-texto uppercase">Horário / Data</th>
+                  <th className="text-left py-3 px-2 text-[10px] font-bold text-cinza-claro-texto uppercase">Glicemia (mg/dL)</th>
+                  <th className="text-left py-3 px-2 text-[10px] font-bold text-cinza-claro-texto uppercase">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {/* Reverte o array para mostrar os mais recentes primeiro na tabela */}
+                {[...chartData].reverse().map((d, idx) => (
+                  <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3 px-2 text-xs text-gray-600 font-medium">
+                      {d.label}
+                    </td>
+                    <td className="py-3 px-2 text-sm font-extrabold text-texto">
+                      {d.yValue}
+                    </td>
+                    <td className="py-3 px-2">
+                      <span
+                        className={`px-3 py-1 rounded-full text-[10px] font-bold ${d.statusDetails.bg} ${d.statusDetails.text}`}
+                      >
+                        {d.statusDetails.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
