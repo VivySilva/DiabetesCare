@@ -36,7 +36,18 @@ export default function ArticleCard({ post, isProfessional, onEdit, onDelete, hr
   };
 
   return (
-    <Link href={linkHref} className="no-underline w-full relative block group">
+    <div
+      onClick={() => router.push(linkHref)}
+      className="w-full relative block group cursor-pointer"
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          router.push(linkHref);
+        }
+      }}
+    >
       <article
         className="flex flex-col items-start w-full rounded-[32px] overflow-hidden bg-white cursor-pointer
                    shadow-[0_4px_4px_rgba(0,0,0,0.05)]
@@ -101,11 +112,11 @@ export default function ArticleCard({ post, isProfessional, onEdit, onDelete, hr
               style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)' }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="16" y1="13" x2="8" y2="13"/>
-                <line x1="16" y1="17" x2="8" y2="17"/>
-                <polyline points="10 9 9 9 8 9"/>
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
               </svg>
             </div>
           )}
@@ -127,9 +138,8 @@ export default function ArticleCard({ post, isProfessional, onEdit, onDelete, hr
                 }
               }}
               className={`w-7 h-7 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden
-                          transition-transform duration-300 ease-out group-hover:scale-110 ${
-                            post.authorId && post.authorRole === 'PROFESSIONAL' ? 'cursor-pointer hover:ring-2 hover:ring-blue-300' : ''
-                          }`}
+                          transition-transform duration-300 ease-out group-hover:scale-110 ${post.authorId && post.authorRole === 'PROFESSIONAL' ? 'cursor-pointer hover:ring-2 hover:ring-blue-300' : ''
+                }`}
             >
               {post.avatarUrl ? (
                 <img
@@ -205,6 +215,6 @@ export default function ArticleCard({ post, isProfessional, onEdit, onDelete, hr
           </p>
         </div>
       </article>
-    </Link>
+    </div>
   );
 }
