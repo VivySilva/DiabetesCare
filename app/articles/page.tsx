@@ -158,6 +158,8 @@ export default function ArticlesPage() {
                   date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' }),
                   image: post.cover_image_url || '',
                   content: [post.content_html],
+                  authorId: post.users?.id,
+                  authorRole: post.users?.role,
                 }} />
               ))
             ) : (

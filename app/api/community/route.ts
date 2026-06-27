@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       const { data: patients } = await supabase.from("patients").select("id, name").in("id", authorIds);
       
       // 3. Busca nomes na tabela professionals
-      const { data: professionals } = await supabase.from("professionals").select("id, name, license_number").in("id", authorIds);
+      const { data: professionals } = await supabase.from("professionals").select("id, name, license_number, specialty").in("id", authorIds);
       
       // 4. Combina os dados
       authUsers?.forEach(u => {
@@ -66,7 +66,8 @@ export async function GET(req: NextRequest) {
           avatar_url: u.avatar_url,
           role: u.role,
           name: p?.name || prof?.name || "Usuário Anônimo",
-          license_number: prof?.license_number || null
+          license_number: prof?.license_number || null,
+          specialty: prof?.specialty || null
         };
       });
     }

@@ -13,6 +13,7 @@ import {
 import LogoutModal from "@/components/ui/modals/logout-modal";
 import { getUserProfile } from "@/services/user/userService";
 import Avatar from "@/components/ui/profile/avatar";
+import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -21,6 +22,7 @@ export default function Sidebar() {
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
   const [userRole, setUserRole] = useState<string>("patient");
+  const logoHref = useSmartHomeHref();
 
   // Skip rendering sidebar on login, register, and password recovery pages
   const isAuthPage =
@@ -87,7 +89,7 @@ export default function Sidebar() {
       <aside className="hidden md:flex flex-col w-[260px] bg-white border-r border-gray-100 h-screen fixed top-0 left-0 z-40 p-6 justify-between select-none shadow-[4px_0_24px_rgba(25,28,30,0.03)]">
         <div className="flex flex-col gap-10">
           {/* Logo / Brand */}
-          <Link href={basePath} className="flex items-center gap-3 no-underline pl-2">
+          <Link href={logoHref} className="flex items-center gap-3 no-underline pl-2">
             <div className="w-10 h-10 bg-azul rounded-xl flex items-center justify-center shadow-md">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M19 11H13V5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5V11H5C4.44772 11 4 11.4477 4 12C4 12.5523 4.44772 13 5 13H11V19C11 19.5523 11.4477 20 12 20C12.5523 20 13 19.5523 13 19V13H19C19.5523 13 20 12.5523 20 12C20 11.4477 19.5523 11 19 11Z" fill="white" stroke="white" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
@@ -106,19 +108,25 @@ export default function Sidebar() {
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-4 px-4 py-3.5 rounded-[16px] no-underline transition-all duration-200 group ${
+                  className={`flex items-center gap-4 px-4 py-3.5 rounded-[16px] no-underline transition-all duration-200 group relative ${
                     active
                       ? "bg-azul text-white shadow-lg shadow-azul/10 font-bold"
                       : "text-cinza-claro-texto hover:bg-azul-fundo hover:text-texto font-semibold"
                   }`}
                 >
+                  {/* Indicador de active — barra lateral esquerda */}
+                  {active && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white rounded-full shadow-sm" />
+                  )}
                   <Icon
                     size={size}
-                    className={`transition-colors duration-200 ${
-                      active ? "text-white" : "text-cinza-claro-fundo group-hover:text-azul"
+                    className={`transition-all duration-200 ${
+                      active ? "text-white scale-110" : "text-cinza-claro-fundo group-hover:text-azul"
                     }`}
                   />
-                  <span className="text-sm">{label}</span>
+                  <span className={`text-sm transition-all duration-200 ${active ? "tracking-wide" : ""}`}>
+                    {label}
+                  </span>
                 </Link>
               );
             })}

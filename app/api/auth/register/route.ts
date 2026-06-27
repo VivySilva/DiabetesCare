@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return errorResponse(result.error.issues[0].message, 400);
     }
 
-    const { name, email, password, role, licenseNumber, phone, dateOfBirth, diabetesType, gender } = result.data;
+    const { name, email, password, role, licenseNumber, phone, dateOfBirth, diabetesType, gender, specialty, professional_email, professional_phone, clinic_address, bio } = result.data;
 
     const userRole = role === 'professional' ? 'PROFESSIONAL' : 'PATIENT';
 
@@ -101,6 +101,11 @@ export async function POST(req: NextRequest) {
     } else {
       specificData.license_number = licenseNumber;
       specificData.gender = gender || null;
+      specificData.specialty = specialty || null;
+      specificData.professional_email = professional_email || null;
+      specificData.professional_phone = professional_phone || null;
+      specificData.clinic_address = clinic_address || null;
+      specificData.bio = bio || null;
 
       const { error: insertProfessionalError } = await supabase
         .from("professionals")

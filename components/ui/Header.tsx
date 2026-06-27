@@ -5,6 +5,7 @@ import { IoMdArrowBack, IoMdNotificationsOutline } from "react-icons/io";
 import { MdLogout } from "react-icons/md";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 import LogoutModal from "@/components/ui/modals/logout-modal";
 import { getNotifications } from "@/services/notifications/notificationService"
 import { getUserProfile } from "@/services/user/userService";
@@ -40,6 +41,7 @@ export default function Header({
   const [unreadCount, setUnreadCount] = useState(0);
   const [userAvatar, setUserAvatar] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>("patient");
+  const logoHref = useSmartHomeHref();
 
   useEffect(() => {
     const fetchUnread = async () => {
@@ -89,6 +91,17 @@ export default function Header({
   const isProfessional = pathname.startsWith("/professional");
   const homeHref = isProfessional ? "/professional" : "/patient";
 
+  // Detecta qual seção está ativa para o indicador visual
+  const currentSection = pathname.startsWith(homeHref + "/records") || pathname.startsWith(homeHref + "/publish")
+    ? (isProfessional ? "publish" : "records")
+    : pathname.startsWith(homeHref + "/community")
+    ? "community"
+    : pathname.startsWith(homeHref + "/profile")
+    ? "profile"
+    : pathname === homeHref || pathname.startsWith(homeHref + "/notifications") || pathname.startsWith(homeHref + "/home")
+    ? "home"
+    : null;
+
   const handleBack = () => {
     if (onBackClick) {
       onBackClick();
@@ -125,10 +138,41 @@ export default function Header({
               <IoMdArrowBack size={24} />
             </button>
           )}
-          <div className="overflow-hidden">
-            <h1 style={{ color: titleColor, fontSize: isHome ? "24px" : "20px" }} className="font-bold truncate">
-              {title}
-            </h1>
+          <div className="overflow-hidden flex items-center gap-2">
+            {/* Logo clicável no Header */}
+            {isHome ? (
+              <Link href={logoHref} className="flex items-center gap-2.5 no-underline group">
+                <div className="w-9 h-9 bg-azul-escuro rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all group-active:scale-95">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 11H13V5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5V11H5C4.44772 11 4 11.4477 4 12C4 12.5523 4.44772 13 5 13H11V19C11 19.5523 11.4477 20 12 20C12.5523 20 13 19.5523 13 19V13H19C19.5523 13 20 12.5523 20 12C20 11.4477 19.5523 11 19 11Z" fill="white" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M7 12H17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <span className="font-display font-extrabold text-lg text-azul-escuro tracking-tight group-hover:opacity-80 transition-opacity">
+                  DiabetesCare
+                </span>
+              </Link>
+            ) : (
+              <>
+                {/* Mini logo como home button ao lado do back */}
+                <Link
+                  href={logoHref}
+                  className="w-8 h-8 bg-azul-escuro rounded-lg flex items-center justify-center shrink-0 hover:shadow-md transition-all active:scale-90"
+                  aria-label="Ir para o início"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 11H13V5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5V11H5C4.44772 11 4 11.4477 4 12C4 12.5523 4.44772 13 5 13H11V19C11 19.5523 11.4477 20 12 20C12.5523 20 13 19.5523 13 19V13H19C19.5523 13 20 12.5523 20 12C20 11.4477 19.5523 11 19 11Z" fill="white" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M7 12H17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </Link>
+                {currentSection && (
+                  <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0 animate-pulse" style={{ animationDuration: "2s" }} />
+                )}
+                <h1 style={{ color: titleColor, fontSize: isHome ? "24px" : "20px" }} className="font-bold truncate">
+                  {title}
+                </h1>
+              </>
+            )}
           </div>
         </div>
 
@@ -156,6 +200,12 @@ export default function Header({
 
         </div>
         </div>
+        {/* Barra indicadora de seção */}
+        {currentSection && !isHome && (
+          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-blue-400/60 via-blue-500 to-blue-400/60">
+            <div className="h-full w-1/3 bg-white/30 rounded-full mx-auto" />
+          </div>
+        )}
       </header>
 
       <LogoutModal

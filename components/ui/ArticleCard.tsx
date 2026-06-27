@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { MdEdit } from "react-icons/md";
 import { Post } from "@/app/patient/community/data";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 interface ArticleCardProps {
   post: Post;
@@ -18,6 +18,7 @@ interface ArticleCardProps {
 
 export default function ArticleCard({ post, isProfessional, onEdit, href }: ArticleCardProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const basePath = pathname.startsWith("/professional") ? "/professional" : "/patient";
   const linkHref = href || `${basePath}/community/${post.id}`;
 
@@ -101,8 +102,19 @@ export default function ArticleCard({ post, isProfessional, onEdit, href }: Arti
         >
           {/* Autor e Data */}
           <div className="flex items-center gap-2 w-full">
-            <div className="w-7 h-7 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden
-                            transition-transform duration-300 ease-out group-hover:scale-110">
+            <div
+              onClick={(e) => {
+                if (post.authorId && post.authorRole === 'PROFESSIONAL') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  router.push(`/profissionais/${post.authorId}`);
+                }
+              }}
+              className={`w-7 h-7 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden
+                          transition-transform duration-300 ease-out group-hover:scale-110 ${
+                            post.authorId && post.authorRole === 'PROFESSIONAL' ? 'cursor-pointer hover:ring-2 hover:ring-blue-300' : ''
+                          }`}
+            >
               {post.avatarUrl ? (
                 <img
                   src={post.avatarUrl}
@@ -123,9 +135,20 @@ export default function ArticleCard({ post, isProfessional, onEdit, href }: Arti
               )}
             </div>
             <div className="flex flex-col" style={{ gap: "2px" }}>
-              <span className="text-[12px] font-semibold text-texto leading-none transition-colors duration-300 group-hover:text-azul" style={{ fontFamily: "var(--font-inter)" }}>
-                {post.author || 'Autor'}
-              </span>
+              {post.authorId && post.authorRole === 'PROFESSIONAL' ? (
+                <Link
+                  href={`/profissionais/${post.authorId}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-[12px] font-semibold text-texto leading-none transition-colors duration-300 hover:text-azul hover:underline w-fit"
+                  style={{ fontFamily: "var(--font-inter)" }}
+                >
+                  {post.author || 'Autor'}
+                </Link>
+              ) : (
+                <span className="text-[12px] font-semibold text-texto leading-none transition-colors duration-300 group-hover:text-azul" style={{ fontFamily: "var(--font-inter)" }}>
+                  {post.author || 'Autor'}
+                </span>
+              )}
               <span className="text-[10px] text-cinza-claro-texto uppercase tracking-widest font-medium" style={{ fontFamily: "var(--font-inter)" }}>
                 {post.date}
               </span>

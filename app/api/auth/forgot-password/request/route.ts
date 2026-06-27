@@ -58,7 +58,8 @@ export async function POST(req: NextRequest) {
       const frontendUrl = env.FRONTEND_URL || "http://localhost:3000";
       const resetLink = `${frontendUrl}/reset-password?token=${token}`;
 
-      await transporter.sendMail({
+      // Promise com timeout para evitar que a serverless function do Vercel exceda o limite
+      const sendMailPromise = transporter.sendMail({
         from: EMAIL_FROM,
         to: email,
         subject: "Recuperação de Senha - DiabetesCare",
@@ -80,10 +81,21 @@ export async function POST(req: NextRequest) {
         `,
       });
 
+      // Timeout de 12s para o envio do e-mail (Vercel Hobby tem limite de 10s)
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Timeout ao enviar e-mail")), 12000)
+      );
+
+      await Promise.race([sendMailPromise, timeoutPromise]);
+
       console.log("EMAIL ENVIADO COM SUCESSO PARA:", email);
     } catch (err) {
       console.error("ERRO AO ENVIAR EMAIL:", err);
-      return NextResponse.json({ erro: "Falha ao enviar email de recuperação." }, { status: 500 });
+      // Em produção, não retornamos erro interno para não expor informações
+      // O token já foi salvo, então o usuário pode tentar novamente
+      return NextResponse.json({
+        mensagem: "Se o e-mail existir, um link de recuperação será enviado.",
+      });
     }
 
     return NextResponse.json({

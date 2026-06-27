@@ -167,6 +167,23 @@ export default function ProfessionalProfile() {
                     </span>
                   </div>
                 </div>
+
+                {/* Bio / Descrição Profissional */}
+                {user?.bio && (
+                  <div className="bg-gray-50 rounded-[20px] p-4 border border-gray-100 flex items-start gap-4 sm:col-span-2">
+                    <div className="text-blue-600 mt-0.5">
+                      <MdSchool size={22} />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">
+                        Bio / Descrição Profissional
+                      </span>
+                      <span className="text-gray-900 text-sm leading-relaxed whitespace-pre-line">
+                        {user.bio}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -204,6 +221,36 @@ export default function ProfessionalProfile() {
                         {user?.phone || "Não informado"}
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                {/* E-mail Profissional (público) */}
+                <div className="bg-gray-50 rounded-[20px] p-4 border border-gray-100 flex items-center gap-4">
+                  <div className="text-blue-600">
+                    <MdOutlineEmail size={22} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+                      E-mail Profissional
+                    </span>
+                    <span className="text-gray-900 font-semibold text-sm break-all">
+                      {user?.professional_email || "Não informado"}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Telefone Profissional (público) */}
+                <div className="bg-gray-50 rounded-[20px] p-4 border border-gray-100 flex items-center gap-4">
+                  <div className="text-blue-600">
+                    <MdOutlinePhone size={22} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">
+                      Telefone Profissional
+                    </span>
+                    <span className="text-gray-900 font-semibold text-sm">
+                      {user?.professional_phone || "Não informado"}
+                    </span>
                   </div>
                 </div>
 

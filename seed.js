@@ -30,14 +30,83 @@ const sendPost = async (endpoint, token, payload) => {
   }
 };
 
+const registerUser = async (payload) => {
+  const res = await fetch(`${API_URL}/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    console.warn(`⚠️ Registro de ${payload.email} pode já existir:`, json.erro || json.message);
+  } else {
+    console.log(`✅ Usuário ${payload.email} cadastrado com sucesso`);
+  }
+};
+
 const runSeed = async () => {
   console.log("🌱 Iniciando o Seeding...");
   try {
+    // ==========================================
+    // 0. CRIAR USUÁRIOS DE TESTE (se não existirem)
+    // ==========================================
+    console.log("👤 Criando usuários de teste...");
+    await registerUser({
+      name: "Maria Silva",
+      email: "maria@teste.com",
+      password: "Password123!",
+      confirmPassword: "Password123!",
+      role: "patient",
+      phone: "11999999999",
+      dateOfBirth: "1990-05-15",
+      gender: "Feminino",
+      diabetesType: "Tipo 2",
+    });
+
+    await registerUser({
+      name: "Dr. Carlos Mendes",
+      email: "carlos@teste.com",
+      password: "Password123!",
+      confirmPassword: "Password123!",
+      role: "professional",
+      phone: "11988888888",
+      dateOfBirth: "1985-03-20",
+      gender: "Masculino",
+      licenseNumber: "CRM 123456",
+      specialty: "Endocrinologia",
+      professional_phone: "11977777777",
+      clinic_address: "Av. Paulista, 1000 - Sala 305\nSão Paulo, SP",
+      bio: "Endocrinologista pela USP com 15 anos de experiência no tratamento de diabetes tipo 1 e tipo 2. Especialista em insulinoterapia e tecnologias de monitoramento contínuo de glicose.",
+    });
+
     const patientToken = await login("maria@teste.com", "Password123!");
     console.log("🔐 Login do Paciente OK");
 
     const profToken = await login("carlos@teste.com", "Password123!");
     console.log("🔐 Login do Profissional OK");
+
+    // ==========================================
+    // 0.5 ATUALIZAR PERFIL DO PROFISSIONAL (campos extras)
+    // ==========================================
+    console.log("✏️  Atualizando perfil do profissional com dados de contato...");
+    const updateRes = await fetch(`${API_URL}/user/me`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${profToken}`,
+      },
+      body: JSON.stringify({
+        professional_email: "carlos.mendes@endocrino.com",
+        professional_phone: "11977777777",
+        clinic_name: "Clínica EndoCare",
+      }),
+    });
+    const updateJson = await updateRes.json();
+    if (updateRes.ok) {
+      console.log("✅ Perfil profissional atualizado com contato público");
+    } else {
+      console.warn("⚠️ Erro ao atualizar perfil:", updateJson.erro);
+    }
 
     // ==========================================
     // 1. POPULAR GLICEMIA (Paciente)

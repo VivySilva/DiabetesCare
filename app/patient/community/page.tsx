@@ -79,6 +79,8 @@ export default function CommunityPage() {
                   date: new Date(post.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' }),
                   image: post.cover_image_url || '',
                   content: [post.content_html],
+                  authorId: post.users?.id,
+                  authorRole: post.users?.role,
                 }} />
               ))}
             </div>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { getCommunityPostById } from "@/services/community/communityService";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
@@ -97,43 +98,56 @@ export default function PostDetail({ id }: { id: string }) {
           {/* Linha do Autor (Design limpo com linha divisória) */}
           <div className="flex flex-col w-full gap-4">
             <div className="flex flex-row items-center w-full gap-3">
-              <div className="w-10 h-10 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden">
-                {authorAvatar ? (
-                  <img
-                    src={authorAvatar}
-                    alt={authorName}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      const target = e.currentTarget as HTMLImageElement;
-                      target.style.display = "none";
-                      if (target.parentElement) {
-                        target.parentElement.innerHTML = `<span class="text-azul font-extrabold text-sm" style="font-family:var(--font-inter)">${authorInitial}</span>`;
-                      }
-                    }}
-                  />
-                ) : (
+              <Link
+                href={post.users?.role === 'PROFESSIONAL' ? `/profissionais/${post.users?.id}` : '#'}
+                onClick={(e) => { if (post.users?.role !== 'PROFESSIONAL') e.preventDefault(); }}
+                className={`flex items-center gap-3 ${post.users?.role === 'PROFESSIONAL' ? 'hover:opacity-80 transition-opacity' : ''}`}
+              >
+                <div className="w-10 h-10 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden">
+                  {authorAvatar ? (
+                    <img
+                      src={authorAvatar}
+                      alt={authorName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.currentTarget as HTMLImageElement;
+                        target.style.display = "none";
+                        if (target.parentElement) {
+                          target.parentElement.innerHTML = `<span class="text-azul font-extrabold text-sm" style="font-family:var(--font-inter)">${authorInitial}</span>`;
+                        }
+                      }}
+                    />
+                  ) : (
+                    <span
+                      className="text-azul font-extrabold text-sm"
+                      style={{ fontFamily: "var(--font-inter)" }}
+                    >
+                      {authorInitial}
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-col" style={{ gap: "2px" }}>
                   <span
-                    className="text-azul font-extrabold text-sm"
+                    className="font-bold text-texto text-sm"
+                    style={{ fontFamily: "var(--font-inter)", lineHeight: 1.2 }}
+                  >
+                    {authorName}
+                    {post.users?.role === 'PROFESSIONAL' && (
+                      <span className="ml-2 text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full align-middle">
+                        {post.users?.specialty || 'Especialista'}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className="text-cinza-claro-texto text-[11px] font-medium"
                     style={{ fontFamily: "var(--font-inter)" }}
                   >
-                    {authorInitial}
+                    {post.users?.role === 'PROFESSIONAL' && post.users?.license_number
+                      ? `${post.users.license_number} · Publicado em ${publishedDate}`
+                      : `Publicado em ${publishedDate}`}
                   </span>
-                )}
-              </div>
-              <div className="flex flex-col" style={{ gap: "2px" }}>
-                <span
-                  className="font-bold text-texto text-sm"
-                  style={{ fontFamily: "var(--font-inter)", lineHeight: 1.2 }}
-                >
-                  {authorName}
-                </span>
-                <span
-                  className="text-cinza-claro-texto text-[11px] font-medium"
-                  style={{ fontFamily: "var(--font-inter)" }}
-                >
-                  Publicado em {publishedDate}
-                </span>
-              </div>
+                </div>
+              </Link>
             </div>
             
             {/* Divisor Fino */}

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Input } from "@/components/forms/Input";
 import { useRouter } from 'next/navigation';
 import { MdEmail, MdArrowBack } from 'react-icons/md';
+import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 import { requestPasswordRecovery } from "@/services/auth/authService";
 
 export default function ForgotPasswordPage() {
@@ -30,6 +31,8 @@ export default function ForgotPasswordPage() {
     }
   };
 
+  const logoHref = useSmartHomeHref();
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center px-6 py-12">
       {/* Back Button */}
@@ -42,13 +45,24 @@ export default function ForgotPasswordPage() {
         </button>
       </div>
 
-      {/* Logo Section */}
-      <div className="flex flex-col items-center mb-10">
-        <div className="w-16 h-16 bg-azul-escuro rounded-2xl flex items-center justify-center shadow-lg mb-4">
-           <MdEmail size={32} color="white" />
+      {/* DiabetesCare Logo (clicável) */}
+      <Link href={logoHref} className="flex flex-col items-center mb-6 no-underline">
+        <div className="w-14 h-14 bg-azul-escuro rounded-2xl flex items-center justify-center shadow-lg mb-3 transition-transform hover:scale-105 active:scale-95">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 11H13V5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5V11H5C4.44772 11 4 11.4477 4 12C4 12.5523 4.44772 13 5 13H11V19C11 19.5523 11.4477 20 12 20C12.5523 20 13 19.5523 13 19V13H19C19.5523 13 20 12.5523 20 12C20 11.4477 19.5523 11 19 11Z" fill="white" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M7 12H17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
         </div>
-        <h1 className="text-azul-escuro text-2xl font-bold">Recuperar Senha</h1>
-        <p className="text-cinza-claro-texto mt-1 text-center max-w-[280px]">
+        <span className="text-sm font-extrabold text-azul-escuro tracking-tight hover:opacity-80 transition-opacity">DiabetesCare</span>
+      </Link>
+
+      {/* Page Icon & Title */}
+      <div className="flex flex-col items-center mb-8">
+        <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center mb-3">
+           <MdEmail size={28} className="text-blue-600" />
+        </div>
+        <h1 className="text-azul-escuro text-xl font-bold">Recuperar Senha</h1>
+        <p className="text-cinza-claro-texto mt-1 text-center max-w-[280px] text-sm">
           {isSent 
             ? "Instruções enviadas para o seu e-mail cadastrado." 
             : "Insira seu e-mail para receber as instruções de recuperação."}

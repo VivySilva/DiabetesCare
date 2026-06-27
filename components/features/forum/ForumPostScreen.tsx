@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { MdCheckCircle, MdSend, MdThumbUp, MdDelete, MdPersonOff, MdPerson } from 'react-icons/md';
 import Header from "@/components/ui/Header";
 import { useRouter } from 'next/navigation';
@@ -13,7 +14,7 @@ interface Reply {
   content: string;
   created_at: string;
   author_id: string;
-  users?: { name: string; avatar_url?: string; role: string; is_professional?: boolean };
+  users?: { id?: string | null; name: string; avatar_url?: string | null; role: string; specialty?: string | null; is_professional?: boolean };
 }
 
 interface Topic {
@@ -24,7 +25,7 @@ interface Topic {
   likes_count: number;
   created_at: string;
   author_id?: string;
-  users?: { name: string; avatar_url?: string; role: string; is_professional?: boolean };
+  users?: { id?: string | null; name: string; avatar_url?: string | null; role: string; specialty?: string | null; is_professional?: boolean };
 }
 
 interface ForumPostProps {
@@ -209,16 +210,19 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
             {/* Título e Conteúdo do Tópico */}
             <div className="space-y-5">
               {/* Linha: autor + ações */}
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => {
-                    if (topic.author_id && topic.author_id === currentUserId) {
-                      const profileBase = role === 'professional' ? '/professional' : '/patient';
-                      router.push(`${profileBase}/profile`);
-                    }
-                  }}
-                  className={`flex items-center gap-3 bg-transparent border-none p-0 ${topic.author_id === currentUserId ? 'cursor-pointer group' : 'cursor-default'}`}
-                >
+              <div className="flex items-center justify-between">                  <Link
+                    href={topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional' ? `/profissionais/${topic.author_id}` : '#'}
+                    onClick={(e) => {
+                      if (!(topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional')) {
+                        e.preventDefault();
+                      }
+                      if (topic.author_id && topic.author_id === currentUserId) {
+                        const profileBase = role === 'professional' ? '/professional' : '/patient';
+                        router.push(`${profileBase}/profile`);
+                      }
+                    }}
+                    className={`flex items-center gap-3 ${topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional' ? 'group hover:opacity-80 transition-opacity' : ''}`}
+                  >
                   <div className="w-9 h-9 rounded-full overflow-hidden bg-white border border-gray-100 shadow-sm flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
                     {topic.users?.avatar_url ? (
                       <img src={topic.users.avatar_url} className="w-full h-full object-cover" />
@@ -238,10 +242,9 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
                       )}
                     </div>
                     <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">{timeAgo(topic.created_at)}</span>
-                  </div>
-                </button>
+                  </div>                  </Link>
 
-                {/* Botão apagar tópico — ícone com tooltip */}
+                  {/* Botão apagar tópico — ícone com tooltip */}
                 {topic.author_id === currentUserId && (
                   <div className="relative group">
                     <button
@@ -318,28 +321,34 @@ export default function ForumPostScreen({ id, role }: ForumPostProps) {
                     return (
                       <div key={reply.id} className="flex flex-col gap-2 items-start w-full">
                         <div className="flex items-center gap-2.5 mb-1">
-                          <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
-                            {reply.users?.avatar_url ? (
-                              <img src={reply.users.avatar_url} className="w-full h-full object-cover" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-[10px] font-bold bg-blue-50 text-blue-600">
-                                {reply.users?.name ? reply.users.name.substring(0, 2).toUpperCase() : '??'}
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex flex-col items-start">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-[11px] font-bold text-gray-900">
-                                {reply.users?.name} {isMe && <span className="text-gray-400 font-normal">(Você)</span>}
-                              </span>
-                              {isExpert && (
-                                <span className="bg-blue-100 text-blue-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-200">
-                                  Especialista
-                                </span>
+                          <Link
+                            href={isExpert ? `/profissionais/${reply.users?.id}` : '#'}
+                            onClick={(e) => { if (!isExpert) e.preventDefault(); }}
+                            className="flex items-center gap-2.5"
+                          >
+                            <div className="w-9 h-9 rounded-full overflow-hidden border border-gray-100 shadow-sm bg-white flex items-center justify-center">
+                              {reply.users?.avatar_url ? (
+                                <img src={reply.users.avatar_url} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-[10px] font-bold bg-blue-50 text-blue-600">
+                                  {reply.users?.name ? reply.users.name.substring(0, 2).toUpperCase() : '??'}
+                                </div>
                               )}
                             </div>
-                            <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{timeAgo(reply.created_at)}</span>
-                          </div>
+                            <div className="flex flex-col items-start">
+                              <div className="flex items-center gap-1.5">
+                                <span className="text-[11px] font-bold text-gray-900">
+                                  {reply.users?.name} {isMe && <span className="text-gray-400 font-normal">(Você)</span>}
+                                </span>
+                                {isExpert && (
+                                  <span className="bg-blue-100 text-blue-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-200">
+                                    Especialista
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{timeAgo(reply.created_at)}</span>
+                            </div>
+                          </Link>
                         </div>
 
                         <div className="relative max-w-[95%] p-5 rounded-[24px] bg-[#F8F9FA] text-gray-600 border border-gray-100/60 shadow-sm rounded-tl-none ml-1 flex justify-between items-start gap-4 w-full">

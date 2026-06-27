@@ -5,13 +5,16 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ArticleCard from "@/components/ui/ArticleCard";
 import { getCommunityPosts } from "@/services/community/communityService";
+import { listProfessionals } from "@/services/user/profileService";
 import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 
 export default function Home() {
   const router = useRouter();
   const logoHref = useSmartHomeHref();
   const [publicPosts, setPublicPosts] = useState<any[]>([]);
+  const [professionals, setProfessionals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingProfessionals, setIsLoadingProfessionals] = useState(true);
 
   // Redirecionamento inteligente baseado no Role caso já exista sessão ativa
   useEffect(() => {
@@ -34,16 +37,21 @@ export default function Home() {
     }
   }, [router]);
 
-  // Busca os artigos públicos
+  // Busca os artigos públicos e profissionais
   useEffect(() => {
     const fetchPublicData = async () => {
       try {
-        const postsRes = await getCommunityPosts();
+        const [postsRes, profRes] = await Promise.all([
+          getCommunityPosts(),
+          listProfessionals(1, 8),
+        ]);
         setPublicPosts(postsRes.posts?.slice(0, 3) || []);
+        setProfessionals(profRes.professionals || []);
       } catch (e) {
-        console.error("Erro ao buscar artigos públicos:", e);
+        console.error("Erro ao buscar dados públicos:", e);
       } finally {
         setIsLoading(false);
+        setIsLoadingProfessionals(false);
       }
     };
 
@@ -213,6 +221,72 @@ export default function Home() {
               <p className="text-gray-400 col-span-full text-center py-6">
                 Nenhum artigo disponível no momento.
               </p>
+            )}
+          </div>
+        )}
+      </section>
+
+      {/* ── SEÇÃO DE PROFISSIONAIS ── */}
+      <section className="w-full max-w-5xl mx-auto px-5 md:px-8 pb-14 md:pb-24">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-8 md:mb-10">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-2xl md:text-4xl font-extrabold text-azul-escuro">Nossos Especialistas</h2>
+            <p className="text-cinza-claro-texto text-base md:text-lg">Conheça os profissionais de saúde que fazem parte da comunidade DiabetesCare.</p>
+          </div>
+        </div>
+
+        {isLoadingProfessionals ? (
+          <div className="flex justify-center py-12">
+            <div className="w-10 h-10 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {professionals.length > 0 ? (
+              professionals.map((prof: any) => (
+                <Link
+                  key={prof.id}
+                  href={`/profissionais/${prof.id}`}
+                  className="group bg-white rounded-[24px] p-5 border border-gray-100 shadow-[0_2px_12px_rgba(0,0,0,0.02)] hover:shadow-lg hover:border-blue-100 transition-all duration-300 flex flex-col items-center text-center gap-3 no-underline"
+                >
+                  {/* Avatar */}
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center overflow-hidden ring-2 ring-white shadow-sm group-hover:ring-blue-200 transition-all">
+                    {prof.avatar_url ? (
+                      <img
+                        src={prof.avatar_url}
+                        alt={prof.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-blue-600 font-extrabold text-xl">
+                        {(prof.name || "P").charAt(0)}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Nome */}
+                  <h3 className="font-bold text-gray-900 text-sm leading-tight group-hover:text-blue-600 transition-colors">
+                    {prof.name}
+                  </h3>
+
+                  {/* Especialidade */}
+                  {prof.specialty && (
+                    <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                      {prof.specialty}
+                    </span>
+                  )}
+
+                  {/* Registro */}
+                  {prof.license_number && (
+                    <p className="text-[10px] text-gray-400 font-semibold mt-auto">
+                      {prof.license_number}
+                    </p>
+                  )}
+                </Link>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-8">
+                <p className="text-gray-400">Em breve, novos especialistas farão parte da comunidade.</p>
+              </div>
             )}
           </div>
         )}

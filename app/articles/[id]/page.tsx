@@ -171,7 +171,11 @@ export default function PublicArticlePage({ params }: { params: Promise<{ id: st
 
             {/* Meta: Autor e Data */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-cinza-claro-texto">
-              <div className="flex items-center gap-3">
+              <Link
+                href={post.users?.role === 'PROFESSIONAL' ? `/profissionais/${post.users?.id}` : '#'}
+                onClick={(e) => { if (post.users?.role !== 'PROFESSIONAL') e.preventDefault(); }}
+                className={`flex items-center gap-3 ${post.users?.role === 'PROFESSIONAL' ? 'hover:opacity-80 transition-opacity' : ''}`}
+              >
                 <div className="w-10 h-10 rounded-full bg-azul-claro flex items-center justify-center shrink-0 overflow-hidden ring-2 ring-white shadow-sm">
                   {authorAvatar ? (
                     <img
@@ -191,13 +195,23 @@ export default function PublicArticlePage({ params }: { params: Promise<{ id: st
                   )}
                 </div>
                 <div className="flex flex-col">
-                  <span className="font-bold text-texto text-sm leading-tight">{authorName}</span>
+                  <span className="font-bold text-texto text-sm leading-tight">
+                    {authorName}
+                    {post.users?.role === 'PROFESSIONAL' && (
+                      <span className="ml-2 text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full align-middle">
+                        {post.users?.specialty || 'Especialista'}
+                      </span>
+                    )}
+                  </span>
                   <span className="text-xs text-cinza-claro-texto">
+                    {post.users?.role === 'PROFESSIONAL' && post.users?.license_number
+                      ? `${post.users.license_number} · `
+                      : ''}
                     {publishedDate}
                     {readingTime && <span> · {readingTime} min de leitura</span>}
                   </span>
                 </div>
-              </div>
+              </Link>
             </div>
 
             <div className="h-px bg-gradient-to-r from-gray-100 via-blue-100/50 to-gray-100 w-full" />

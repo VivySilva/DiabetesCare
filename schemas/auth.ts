@@ -18,6 +18,11 @@ export const registerSchema = z.object({
   dateOfBirth: z.string().optional(),
   diabetesType: z.string().optional(),
   gender: z.string().optional(),
+  specialty: z.string().max(255).optional(),
+  professional_email: z.string().email("Email profissional inválido").max(255).optional().or(z.literal("")),
+  professional_phone: z.string().max(20).optional(),
+  clinic_address: z.string().max(500).optional(),
+  bio: z.string().max(2000).optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
   path: ["confirmPassword"],

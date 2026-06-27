@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Input } from "@/components/forms/Input";
 import { useRouter } from 'next/navigation';
+import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 import { registerUser } from "@/services/auth/authService";
 import SuccessModal from "@/components/ui/modals/success-modal";
 
@@ -18,10 +19,17 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [licenseNumber, setLicenseNumber] = useState('');
+  // Professional extra fields
+  const [specialty, setSpecialty] = useState('Endocrinologia');
+  const [professionalEmail, setProfessionalEmail] = useState('');
+  const [professionalPhone, setProfessionalPhone] = useState('');
+  const [clinicAddress, setClinicAddress] = useState('');
+  const [bio, setBio] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const router = useRouter();
+  const logoHref = useSmartHomeHref();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +72,11 @@ export default function RegisterPage() {
         diabetesType: !isProfessional ? diabetesType : undefined,
         licenseNumber: isProfessional ? licenseNumber : undefined,
         gender,
+        specialty: isProfessional ? specialty : undefined,
+        professional_email: isProfessional ? professionalEmail : undefined,
+        professional_phone: isProfessional ? professionalPhone : undefined,
+        clinic_address: isProfessional ? clinicAddress : undefined,
+        bio: isProfessional ? bio : undefined,
       });
       
       setShowSuccess(true);
@@ -77,16 +90,16 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center px-6 py-12">
       {/* Logo Section */}
-      <div className="flex flex-col items-center mb-8">
-        <div className="w-20 h-20 bg-azul-escuro rounded-2xl flex items-center justify-center shadow-lg mb-4">
+      <Link href={logoHref} className="flex flex-col items-center mb-8 no-underline">
+        <div className="w-20 h-20 bg-azul-escuro rounded-2xl flex items-center justify-center shadow-lg mb-4 transition-transform hover:scale-105 active:scale-95">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M19 11H13V5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5V11H5C4.44772 11 4 11.4477 4 12C4 12.5523 4.44772 13 5 13H11V19C11 19.5523 11.4477 20 12 20C12.5523 20 13 19.5523 13 19V13H19C19.5523 13 20 12.5523 20 12C20 11.4477 19.5523 11 19 11Z" fill="white" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M7 12H17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         </div>
-        <h1 className="text-azul-escuro">DiabetesCare</h1>
+        <h1 className="text-azul-escuro hover:opacity-80 transition-opacity">DiabetesCare</h1>
         <p className="text-cinza-claro-texto mt-1">Sua saúde em equilíbrio</p>
-      </div>
+      </Link>
 
       {/* Form Section */}
       <div className="w-full max-w-md space-y-6">
@@ -245,21 +258,104 @@ export default function RegisterPage() {
           )}
 
           {isProfessional && (
-            <Input 
-              label="Registro no Conselho" 
-              placeholder="CRM / CRN"
-              value={licenseNumber}
-              onChange={(e) => setLicenseNumber(e.target.value)}
-              icon={
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              }
-            />
+            <>
+              <Input 
+                label="Registro no Conselho" 
+                placeholder="CRM / CRN"
+                value={licenseNumber}
+                onChange={(e) => setLicenseNumber(e.target.value)}
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                }
+              />
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                  Especialidade
+                </label>
+                <div className="relative">
+                  <select
+                    value={specialty}
+                    onChange={(e) => setSpecialty(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium appearance-none focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all cursor-pointer"
+                  >
+                    <option value="Endocrinologia">Endocrinologia</option>
+                    <option value="Nutrição Clínica">Nutrição Clínica</option>
+                    <option value="Educação em Diabetes">Educação em Diabetes</option>
+                    <option value="Clínica Geral">Clínica Geral</option>
+                    <option value="Cardiologia">Cardiologia</option>
+                    <option value="Nefrologia">Nefrologia</option>
+                    <option value="Oftalmologia">Oftalmologia</option>
+                  </select>
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+                    <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M1 1L6 6L11 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <Input 
+                label="E-mail Profissional (público)" 
+                type="email"
+                placeholder="contato@meuconsultorio.com"
+                value={professionalEmail}
+                onChange={(e) => setProfessionalEmail(e.target.value)}
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                }
+              />
+
+              <Input 
+                label="Telefone Comercial / WhatsApp" 
+                type="tel"
+                placeholder="(00) 00000-0000"
+                value={professionalPhone}
+                onChange={(e) => setProfessionalPhone(e.target.value.replace(/\D/g, ''))}
+                icon={
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l2.27-2.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                }
+              />
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                  Endereço do Consultório / Clínica
+                </label>
+                <textarea
+                  value={clinicAddress}
+                  onChange={(e) => setClinicAddress(e.target.value)}
+                  placeholder={`Av. Paulista, 1000 - Sala 42\nSão Paulo, SP`}
+                  rows={3}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all resize-none placeholder:text-gray-300"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-gray-400 uppercase tracking-widest px-1">
+                  Bio / Descrição <span className="text-gray-300 font-normal normal-case">(opcional)</span>
+                </label>
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder={`Conte um pouco sobre sua trajetória, área de atuação e como pode ajudar os pacientes…`}
+                  rows={4}
+                  maxLength={2000}
+                  className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all resize-none placeholder:text-gray-300"
+                />
+                <p className="text-xs text-gray-400 text-right">{bio.length}/2000</p>
+              </div>
+            </>
           )}
 
           <button

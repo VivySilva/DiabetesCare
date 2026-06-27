@@ -7,6 +7,11 @@ import { env } from "./env";
  * Suporta dois modos:
  * 1. SMTP genérico: defina SMTP_HOST, SMTP_PORT, EMAIL_USER, EMAIL_PASS
  * 2. Gmail (legado): se SMTP_HOST não for definido, usa service: "gmail"
+ *
+ * Para Vercel:
+ * - Recomendado usar SMTP_HOST (ex: smtp.gmail.com, smtp.sendgrid.net, smtp.mailgun.org)
+ * - Porta 587 (STARTTLS) funciona melhor que 465 em serverless functions
+ * - Para Gmail, gere uma "Senha de App" em https://myaccount.google.com/apppasswords
  */
 function createTransporter() {
   if (env.SMTP_HOST) {
@@ -18,6 +23,10 @@ function createTransporter() {
         user: env.EMAIL_USER,
         pass: env.EMAIL_PASS,
       },
+      // Timeout reduzido para serverless functions (Vercel tem limite de 10s no free)
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 10000,
     });
   }
 
@@ -28,6 +37,9 @@ function createTransporter() {
       user: env.EMAIL_USER,
       pass: env.EMAIL_PASS,
     },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 10000,
   });
 }
 

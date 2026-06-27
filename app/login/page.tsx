@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 import { loginUser } from "@/services/auth/authService";
 
 export default function LoginPage() {
@@ -83,19 +84,21 @@ export default function LoginPage() {
     }
   };
 
+  const logoHref = useSmartHomeHref();
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col items-center justify-center px-6 py-12">
       {/* Logo Section */}
-      <div className="flex flex-col items-center mb-12">
-        <div className="w-20 h-20 bg-azul-escuro rounded-2xl flex items-center justify-center shadow-lg mb-4">
+      <Link href={logoHref} className="flex flex-col items-center mb-12 no-underline">
+        <div className="w-20 h-20 bg-azul-escuro rounded-2xl flex items-center justify-center shadow-lg mb-4 transition-transform hover:scale-105 active:scale-95">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M19 11H13V5C13 4.44772 12.5523 4 12 4C11.4477 4 11 4.44772 11 5V11H5C4.44772 11 4 11.4477 4 12C4 12.5523 4.44772 13 5 13H11V19C11 19.5523 11.4477 20 12 20C12.5523 20 13 19.5523 13 19V13H19C19.5523 13 20 12.5523 20 12C20 11.4477 19.5523 11 19 11Z" fill="white" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M7 12H17" stroke="white" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         </div>
-        <h1 className="text-azul-escuro">DiabetesCare</h1>
+        <h1 className="text-azul-escuro hover:opacity-80 transition-opacity">DiabetesCare</h1>
         <p className="text-cinza-claro-texto mt-1">Sua saúde em equilíbrio</p>
-      </div>
+      </Link>
 
       {/* Form Section */}
       <div className="w-full max-w-md space-y-8">

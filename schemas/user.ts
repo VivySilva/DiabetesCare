@@ -19,4 +19,8 @@ export const updateUserSchema = z.object({
   education: z.string().max(255).optional(),
   clinic_address: z.string().max(500).optional(),
   license_number: z.string().max(50).optional(),
+  bio: z.string().max(2000).optional(),
+  professional_email: z.string().email("Email profissional inválido").max(255).optional().or(z.literal("")),
+  professional_phone: z.string().max(20).optional(),
+  clinic_name: z.string().max(255).optional(),
 });

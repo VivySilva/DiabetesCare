@@ -40,6 +40,11 @@ export async function registerUser(data: {
   phone?: string;
   diabetesType?: string;
   gender?: string;
+  specialty?: string;
+  professional_email?: string;
+  professional_phone?: string;
+  clinic_address?: string;
+  bio?: string;
 }) {
   return httpClient.post("/auth/register", data);
 }

@@ -48,3 +48,7 @@ next-env.d.ts
 # local tests and scratch files
 /scratch/
 /create_test_users.js
+
+# gerador de txt
+/create_consolidated_code_file.py
+/DiabetesCare.txt

@@ -30,7 +30,7 @@ export async function GET() {
       // 1. Busca todos da tabela users
       const { data: authUsers } = await supabase.from("users").select("id, avatar_url, role").in("id", authorIds);
       // 2. Busca profissionais
-      const { data: professionals } = await supabase.from("professionals").select("id, name, license_number").in("id", authorIds);
+      const { data: professionals } = await supabase.from("professionals").select("id, name, license_number, specialty").in("id", authorIds);
       // 3. Busca pacientes
       const { data: patients } = await supabase.from("patients").select("id, name").in("id", authorIds);
       
@@ -43,6 +43,7 @@ export async function GET() {
             role: u.role,
             name: prof?.name || "Profissional de Saúde",
             license_number: prof?.license_number || null,
+            specialty: prof?.specialty || null,
             is_professional: true
           };
         } else {
@@ -50,8 +51,8 @@ export async function GET() {
           usersMap[u.id] = {
             id: u.id,
             role: u.role,
-            real_avatar_url: u.avatar_url || null,
-            real_name: patient?.name || "Paciente"
+            avatar_url: u.avatar_url || null,
+            name: patient?.name || "Paciente"
           };
         }
       });
@@ -82,18 +83,13 @@ export async function GET() {
 
       const mappedUser = usersMap[topic.author_id]
         ? { ...usersMap[topic.author_id] }
-        : { name: "Usuário Anônimo", role: "patient" };
+        : { id: null, name: "Usuário Anônimo", role: "patient" };
 
       if (mappedUser.role?.toLowerCase() !== 'professional') {
         if (isAnonymous) {
           mappedUser.name = "Usuário Anônimo";
           mappedUser.avatar_url = null;
-        } else {
-          mappedUser.name = mappedUser.real_name || "Paciente";
-          mappedUser.avatar_url = mappedUser.real_avatar_url || null;
         }
-        delete mappedUser.real_name;
-        delete mappedUser.real_avatar_url;
       }
 
       return {

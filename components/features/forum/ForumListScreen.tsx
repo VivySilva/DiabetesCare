@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { MdSearch, MdChatBubbleOutline, MdThumbUp, MdCheckCircle, MdAdd, MdDelete } from 'react-icons/md';
 import { getForumTopics, likeForumTopic, unlikeForumTopic, deleteForumTopic } from "@/services/forum/forumService";
 import { useForumTopicsRealtime } from "@/lib/hooks/useForumRealtime";
@@ -16,7 +17,7 @@ interface ForumTopic {
   is_moderated: boolean;
   created_at: string;
   author_id?: string;
-  users?: { name: string; avatar_url?: string; role: string; is_professional?: boolean };
+  users?: { id?: string | null; name: string; avatar_url?: string | null; role: string; specialty?: string | null; is_professional?: boolean };
 }
 
 interface ForumListProps {
@@ -201,22 +202,47 @@ export default function ForumListScreen({ onTopicClick, onCreateClick, role }: F
               onClick={() => onTopicClick(topic.id)}
               className="group bg-white border border-gray-100 rounded-[28px] p-5 shadow-sm hover:shadow-xl hover:shadow-blue-500/5 hover:border-blue-100 active:scale-[0.98] transition-all duration-300 cursor-pointer"
             >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl overflow-hidden bg-blue-50 border border-blue-50 transition-transform group-hover:scale-105">
-                    {topic.users?.avatar_url ? (
-                      <img src={topic.users.avatar_url} alt={topic.users.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-blue-600 text-xs font-bold">
-                        {topic.users?.name ? topic.users.name.substring(0, 2).toUpperCase() : '??'}
-                      </div>
-                    )}
-                  </div>
+              <div className="flex justify-between items-start mb-4">                  <div className="flex items-center gap-3">
+                  {(topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional') ? (
+                    <Link
+                      href={`/profissionais/${topic.users?.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className={`w-10 h-10 rounded-2xl overflow-hidden bg-blue-50 border border-blue-50 transition-transform group-hover:scale-105 hover:ring-2 hover:ring-blue-300 block shrink-0`}
+                    >
+                      {topic.users?.avatar_url ? (
+                        <img src={topic.users.avatar_url} alt={topic.users.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-blue-600 text-xs font-bold">
+                          {topic.users?.name ? topic.users.name.substring(0, 2).toUpperCase() : '??'}
+                        </div>
+                      )}
+                    </Link>
+                  ) : (
+                    <div className="w-10 h-10 rounded-2xl overflow-hidden bg-blue-50 border border-blue-50 transition-transform group-hover:scale-105 shrink-0">
+                      {topic.users?.avatar_url ? (
+                        <img src={topic.users.avatar_url} alt={topic.users.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-blue-600 text-xs font-bold">
+                          {topic.users?.name ? topic.users.name.substring(0, 2).toUpperCase() : '??'}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[12px] text-gray-900 font-bold leading-tight">
-                        {topic.users?.name}
-                      </span>
+                      {(topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional') ? (
+                        <Link
+                          href={`/profissionais/${topic.users?.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-[12px] text-gray-900 font-bold leading-tight hover:text-azul hover:underline"
+                        >
+                          {topic.users?.name}
+                        </Link>
+                      ) : (
+                        <span className="text-[12px] text-gray-900 font-bold leading-tight">
+                          {topic.users?.name}
+                        </span>
+                      )}
                       {(topic.users?.is_professional || topic.users?.role?.toLowerCase() === 'professional') && (
                         <span className="bg-blue-100 text-blue-800 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-200">
                           Especialista

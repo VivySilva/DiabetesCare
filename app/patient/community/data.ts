@@ -6,6 +6,8 @@ export interface Post {
   date: string;
   image: string;
   content: string[];
+  authorId?: string;
+  authorRole?: string;
 }
 
 export const COMMUNITY_POSTS: Post[] = [

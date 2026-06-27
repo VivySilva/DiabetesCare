@@ -55,7 +55,7 @@ export async function GET(
         } else {
           const { data: prof } = await supabase
             .from("professionals")
-            .select("name, license_number")
+            .select("name, license_number, specialty")
             .eq("id", data.author_id)
             .maybeSingle();
           authorInfo = {
@@ -63,7 +63,8 @@ export async function GET(
             avatar_url: authUser.avatar_url,
             role: authUser.role,
             name: prof?.name || "Profissional Anônimo",
-            license_number: prof?.license_number || null
+            license_number: prof?.license_number || null,
+            specialty: prof?.specialty || null
           };
         }
       }

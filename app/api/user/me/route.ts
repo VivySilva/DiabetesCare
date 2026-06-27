@@ -110,6 +110,7 @@ export async function PUT(req: NextRequest) {
     const {
       name, email, age, gender, diabetes_type, phone, avatar_url, password,
       cpf, birth_date, specialty, crm, crm_uf, education, clinic_address, license_number,
+      bio, professional_email, professional_phone, clinic_name,
     } = body;
 
     const table = user.role === 'PROFESSIONAL' ? 'professionals' : 'patients';
@@ -219,6 +220,10 @@ export async function PUT(req: NextRequest) {
     if (education !== undefined)       specificUpdates.education       = education;
     if (clinic_address !== undefined)  specificUpdates.clinic_address  = clinic_address;
     if (license_number !== undefined)  specificUpdates.license_number  = license_number;
+    if (bio !== undefined)             specificUpdates.bio             = bio;
+    if (professional_email !== undefined) specificUpdates.professional_email = professional_email;
+    if (professional_phone !== undefined) specificUpdates.professional_phone = professional_phone;
+    if (clinic_name !== undefined)     specificUpdates.clinic_name     = clinic_name;
 
     if (Object.keys(userUpdates).length === 0 && Object.keys(specificUpdates).length === 0) {
       return NextResponse.json({ mensagem: "Nenhum dado para atualizar." }, { status: 200 });

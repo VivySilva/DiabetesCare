@@ -29,6 +29,7 @@ import {
   MdBusiness,
   MdEdit,
   MdWarning,
+  MdDescription,
 } from "react-icons/md";
 
 const SPECIALTIES = [
@@ -119,6 +120,9 @@ export default function ProfessionalProfileEdit() {
   const [crmUf, setCrmUf] = useState("SP");
   const [education, setEducation] = useState("");
   const [clinicAddress, setClinicAddress] = useState("");
+  const [bio, setBio] = useState("");
+  const [professionalEmail, setProfessionalEmail] = useState("");
+  const [professionalPhone, setProfessionalPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -151,6 +155,9 @@ export default function ProfessionalProfileEdit() {
         setCrmUf(res.user.crm_uf || "SP");
         setEducation(res.user.education || "");
         setClinicAddress(res.user.clinic_address || "");
+        setBio(res.user.bio || "");
+        setProfessionalEmail(res.user.professional_email || "");
+        setProfessionalPhone(res.user.professional_phone || "");
         setSavedAvatarUrl(res.user.avatar_url || "");
         setAvatarPreview(res.user.avatar_url || "");
       } catch (error) {
@@ -204,6 +211,9 @@ export default function ProfessionalProfileEdit() {
         crm_uf: crmUf,
         education,
         clinic_address: clinicAddress,
+        bio: bio || null,
+        professional_email: professionalEmail || null,
+        professional_phone: professionalPhone || null,
         avatar_url: avatarPreview || null,
       };
 
@@ -535,6 +545,22 @@ export default function ProfessionalProfileEdit() {
                             <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={18} />
                           </div>
                         </InputField>
+
+                        {/* Bio */}
+                        <InputField label="Bio / Descrição Profissional">
+                          <div className="relative">
+                            <MdDescription className="absolute left-3.5 top-5 text-gray-300" size={18} />
+                            <textarea
+                              value={bio}
+                              onChange={(e) => setBio(e.target.value)}
+                              placeholder={`Conte um pouco sobre sua trajetória, área de atuação e como pode ajudar os pacientes…`}
+                              rows={4}
+                              maxLength={2000}
+                              className="w-full bg-gray-50 border border-gray-100 rounded-2xl px-4 py-3.5 pl-11 pr-4 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-400 focus:bg-white transition-all resize-none placeholder:text-gray-300"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-400 text-right mt-1">{bio.length}/2000</p>
+                        </InputField>
                       </div>
                     </div>
 
@@ -575,6 +601,36 @@ export default function ProfessionalProfileEdit() {
                             </div>
                           </InputField>
                         </div>
+
+                        {/* E-mail Profissional (público) */}
+                        <InputField label="E-mail Profissional (público)" icon={<MdOutlineEmail size={14} />}>
+                          <div className="relative">
+                            <MdOutlineEmail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                            <input
+                              type="email"
+                              value={professionalEmail}
+                              onChange={(e) => setProfessionalEmail(e.target.value)}
+                              placeholder="contato@meuconsultorio.com"
+                              className={`${inputWithIconClass} pr-11`}
+                            />
+                            <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={18} />
+                          </div>
+                        </InputField>
+
+                        {/* Telefone Profissional (público) */}
+                        <InputField label="Telefone Profissional (público)" icon={<MdLocalPhone size={14} />}>
+                          <div className="relative">
+                            <MdLocalPhone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-300" size={18} />
+                            <input
+                              type="tel"
+                              value={professionalPhone}
+                              onChange={(e) => setProfessionalPhone(e.target.value.replace(/\D/g, ''))}
+                              placeholder="(11) 91234-5678"
+                              className={`${inputWithIconClass} pr-11`}
+                            />
+                            <MdEdit className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300 pointer-events-none" size={18} />
+                          </div>
+                        </InputField>
 
                         {/* Endereço do Consultório */}
                         <InputField label="Endereço do Consultório">
