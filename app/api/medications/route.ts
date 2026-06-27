@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import supabase from "@/config/supabase";
 import { verifyToken, unauthorizedResponse } from "@/lib/auth";
+import { medicationSchema } from "@/schemas/medication";
 
 /**
  * GET /api/medications
- * 
- * Recupera a lista de medicamentos do usuário autenticado.
- * 
- * @param {NextRequest} req - Objeto de requisição.
+ * * Recupera a lista de medicamentos do usuário autenticado.
+ * * @param {NextRequest} req - Objeto de requisição.
  * @returns {Promise<Response>} Lista de medicamentos ou erro (401, 500).
  */
 export async function GET(req: NextRequest) {
@@ -38,19 +37,15 @@ export async function GET(req: NextRequest) {
 
 /**
  * POST /api/medications
- * 
- * Registra um novo medicamento no cronograma do usuário.
- * 
- * @param {NextRequest} req - Objeto de requisição.
+ * * Registra um novo medicamento no cronograma do usuário.
+ * * @param {NextRequest} req - Objeto de requisição.
  * @param {Object} req.body - Dados do medicamento.
  * @param {string} req.body.category - Categoria (ex: Insulina, Oral).
  * @param {string} req.body.medication_name - Nome do remédio.
- * @param {string} req.body.time - Horário da dose (HH:mm).
+ * @param {string[]} req.body.times - Array de horários da dose (ex: ["08:00", "20:00"]).
  * @param {boolean} req.body.notify - Se deseja receber notificação.
  * @returns {Promise<Response>} Registro criado ou erro (400, 401, 500).
  */
-import { medicationSchema } from "@/schemas/medication";
-
 export async function POST(req: NextRequest) {
   const user = await verifyToken(req);
   if (!user) return unauthorizedResponse();
@@ -66,7 +61,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { category, medication_name, time, notify } = result.data;
+    // Correção: Extraindo 'times' (plural) conforme o seu Schema do Zod
+    const { category, medication_name, times, notify } = result.data;
 
     const { data, error } = await supabase
       .from("medication_records")
@@ -75,7 +71,7 @@ export async function POST(req: NextRequest) {
           patient_id: user.id,
           category,
           medication_name,
-          time,
+          times, // Correção: Passando o array de horários
           notify,
         },
       ])
@@ -96,10 +92,12 @@ export async function POST(req: NextRequest) {
         user_id: user.id,
         type: "MEDICATION",
         title: "Lembrete de Medicamento configurado!",
-        body: `Você configurou o alarme para ${medication_name} às ${time}.`,
+        // Correção: Como 'times' é um array, usamos .join(', ') para formatar a string corretamente
+        body: `Você configurou o alarme para ${medication_name} às ${times.join(', ')}.`,
         read: false,
       },
     ]);
+
     if (notifError) console.error("Error creating medication notification:", notifError);
 
     return NextResponse.json(
