@@ -14,7 +14,7 @@ export default function GlucoseSummary({
   const displayValue = value !== undefined && value !== null ? value : "--";
   return (
     <div
-      className="flex flex-col justify-between p-8 gap-4 w-full min-h-[226px] bg-white rounded-[32px]"
+      className="flex flex-col justify-between p-6 md:p-8 gap-4 w-full min-h-[180px] md:min-h-[226px] bg-white rounded-[24px] md:rounded-[32px]"
       style={{ boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.15)" }}
     >
       <p className="m-0 text-[var(--dc-cinza-escuro-texto)]" style={{ fontFamily: "var(--font-manrope)", fontWeight: 600, fontSize: 14 }}>
@@ -23,7 +23,7 @@ export default function GlucoseSummary({
 
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-2">
-          <span style={{ fontFamily: "var(--font-manrope)", fontWeight: 800, fontSize: 48, color: "var(--dc-azul)", lineHeight: 1 }}>
+          <span className="text-[40px] md:text-[48px]" style={{ fontFamily: "var(--font-manrope)", fontWeight: 800, color: "var(--dc-azul)", lineHeight: 1 }}>
             {displayValue}
           </span>
           <span style={{ fontFamily: "var(--font-inter)", fontWeight: 400, fontSize: 14, color: "var(--dc-cinza-claro-texto)" }}>

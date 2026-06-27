@@ -14,9 +14,10 @@ interface ArticleCardProps {
    * Útil para páginas públicas (ex: /articles/id).
    */
   href?: string;
+  onDelete?: (id: string) => void;
 }
 
-export default function ArticleCard({ post, isProfessional, onEdit, href }: ArticleCardProps) {
+export default function ArticleCard({ post, isProfessional, onEdit, onDelete, href }: ArticleCardProps) {
   const pathname = usePathname();
   const router = useRouter();
   const basePath = pathname.startsWith("/professional") ? "/professional" : "/patient";
@@ -28,6 +29,12 @@ export default function ArticleCard({ post, isProfessional, onEdit, href }: Arti
     if (onEdit) onEdit(post.id);
   };
 
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onDelete) onDelete(post.id);
+  };
+
   return (
     <Link href={linkHref} className="no-underline w-full relative block group">
       <article
@@ -37,19 +44,28 @@ export default function ArticleCard({ post, isProfessional, onEdit, href }: Arti
                    group-hover:-translate-y-1 group-hover:shadow-[0_12px_32px_rgba(0,0,0,0.10)]
                    active:scale-[0.98] active:transition-transform active:duration-150"
       >
-        {/* Botão de Editar (Apenas para Profissional se onEdit for fornecido) */}
-        {isProfessional && onEdit && (
-          <button
-            onClick={handleEditClick}
-            className="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-azul shadow-lg
-                       hover:bg-azul hover:text-white hover:scale-110
-                       transition-all duration-300 ease-out
-                       active:scale-90
-                       opacity-0 group-hover:opacity-100"
-            aria-label="Editar publicação"
-          >
-            <MdEdit size={20} />
-          </button>
+        {/* Botões de Ação (Apenas para Profissional) */}
+        {isProfessional && (
+          <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+            {onEdit && (
+              <button
+                onClick={handleEditClick}
+                className="bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-azul shadow-lg hover:bg-azul hover:text-white hover:scale-110 transition-all duration-300 ease-out active:scale-90 opacity-0 group-hover:opacity-100"
+                aria-label="Editar publicação"
+              >
+                <MdEdit size={20} />
+              </button>
+            )}
+            {onDelete && (
+              <button
+                onClick={handleDeleteClick}
+                className="bg-white/90 backdrop-blur-sm p-3 rounded-2xl text-red-500 shadow-lg hover:bg-red-500 hover:text-white hover:scale-110 transition-all duration-300 ease-out active:scale-90 opacity-0 group-hover:opacity-100"
+                aria-label="Excluir publicação"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              </button>
+            )}
+          </div>
         )}
 
         {/* Imagem do artigo */}

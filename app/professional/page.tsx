@@ -183,6 +183,7 @@ export default function ProfissionalPage() {
                   }}
                   isProfessional={true}
                   onEdit={(id) => router.push(`/professional/edit-post/${id}`)}
+                  onDelete={handleDelete}
                 />
               ))}
             </div>

@@ -81,9 +81,9 @@ export async function POST(req: NextRequest) {
         `,
       });
 
-      // Timeout de 12s para o envio do e-mail (Vercel Hobby tem limite de 10s)
+      // Timeout de 8s para o envio do e-mail (Vercel Hobby tem limite de 10s)
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error("Timeout ao enviar e-mail")), 12000)
+        setTimeout(() => reject(new Error("Timeout ao enviar e-mail")), 8000)
       );
 
       await Promise.race([sendMailPromise, timeoutPromise]);

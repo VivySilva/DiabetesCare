@@ -16,6 +16,37 @@ import { glucoseSchema } from "@/schemas/glucose";
  * @param {Object} req.body - Dados atualizados da medição.
  * @returns {Promise<Response>} Registro atualizado ou erro (400, 401, 404, 500).
  */
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const user = await verifyToken(req);
+  if (!user) return unauthorizedResponse();
+
+  try {
+    const { id } = await params;
+
+    const { data: record, error } = await supabase
+      .from("glucose_records")
+      .select("*")
+      .eq("id", id)
+      .eq("patient_id", user.id)
+      .single();
+
+    if (error || !record) {
+      return NextResponse.json(
+        { erro: "Registro de glicose não encontrado." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ record }, { status: 200 });
+  } catch (error) {
+    console.error("General error fetching glucose record:", error);
+    return NextResponse.json({ erro: "Erro interno no servidor." }, { status: 500 });
+  }
+}
+
 export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }

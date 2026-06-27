@@ -5,7 +5,7 @@ import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import ArticleCard from "@/components/ui/ArticleCard";
 import { useRouter } from "next/navigation";
-import { getCommunityPosts } from "@/services/community/communityService";
+import { getCommunityPosts, deleteCommunityPost } from "@/services/community/communityService";
 import { getUserProfile } from "@/services/user/userService";
 
 export default function MyPostsPage() {
@@ -45,6 +45,22 @@ export default function MyPostsPage() {
 
   const handleEdit = (id: string) => {
     router.push(`/professional/edit-post/${id}`);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm("Tem certeza de que deseja excluir esta publicação? Esta ação não pode ser desfeita.")) {
+      return;
+    }
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      await deleteCommunityPost(id, token);
+      setPosts((prev) => prev.filter((p) => p.id !== id));
+      alert("Publicação excluída com sucesso.");
+    } catch (error) {
+      console.error("Erro ao excluir publicação:", error);
+      alert("Erro ao excluir publicação. Tente novamente.");
+    }
   };
 
   return (
@@ -88,6 +104,7 @@ export default function MyPostsPage() {
               }}
               isProfessional={true} 
               onEdit={handleEdit}
+              onDelete={handleDelete}
             />
           ))}
         </div>

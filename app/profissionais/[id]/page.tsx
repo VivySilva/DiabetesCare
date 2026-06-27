@@ -121,7 +121,7 @@ export default function PublicProfessionalProfile({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           {/* Coluna 1 — Card do Profissional */}
-          <div className="md:col-span-1 bg-white rounded-[32px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-6 flex flex-col items-center gap-4 sticky top-24">
+          <div className="md:col-span-1 bg-white rounded-[32px] border border-gray-100 shadow-[0_4px_24px_rgba(0,0,0,0.04)] p-6 flex flex-col items-center gap-4 relative md:sticky md:top-24">
             {/* Avatar */}
             <div className="w-28 h-28 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center overflow-hidden ring-4 ring-white shadow-lg">
               {profile.avatar_url ? (
@@ -455,7 +455,7 @@ function ShareButtons({
           Compartilhar
         </span>
       </div>
-      <div className="flex items-center gap-2 justify-center">
+      <div className="flex flex-wrap items-center gap-2 justify-center">
         {shareLinks.map((link) => (
           <a
             key={link.name}

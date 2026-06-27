@@ -8,6 +8,9 @@ import {
   recordsForLocalDate,
   startOfLocalDay,
 } from "@/lib/date-utils";
+import { useRouter } from "next/navigation";
+import { deleteGlucoseRecord } from "@/services/glucose/glucoseService";
+import { MdEdit, MdDelete } from "react-icons/md";
 
 // 1. Tipagem estruturada
 interface GlucoseRecord {
@@ -19,6 +22,7 @@ interface GlucoseRecord {
 
 interface GlucoseBoardProps {
   records: GlucoseRecord[];
+  onRecordDeleted?: (id: string | number) => void;
 }
 
 interface ChartDataPoint {
@@ -44,7 +48,8 @@ const getGlucoseStatusDetails = (value: number) => {
   return { status: "Hiperglicemia", color: "#FF4757", bg: "bg-red-100", text: "text-red-700" };
 };
 
-export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
+export default function GlucoseBoard({ records = [], onRecordDeleted }: GlucoseBoardProps) {
+  const router = useRouter();
   const [period, setPeriod] = useState<"Diário" | "Semanal" | "Mensal">("Diário");
 
   // Cálculos para os cartões de resumo (Últimos 7 dias)
@@ -190,7 +195,7 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
   }, [period, records]);
 
   return (
-    <div className="flex flex-col gap-6 md:gap-8 w-full p-4 md:p-8 bg-[#F8F9FA] md:rounded-[32px]">
+    <div className="flex flex-col gap-6 md:gap-8 w-full p-4 md:p-8 bg-[#F8F9FA] md:rounded-[32px] min-w-0">
 
       {/* CARTÕES DE RESUMO - Inalterados */}
       <div className="flex flex-col gap-4">
@@ -370,6 +375,7 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
                   <th className="text-left py-3 px-3 text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">Coleta</th>
                   <th className="text-left py-3 px-3 text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">Glicemia</th>
                   <th className="text-left py-3 px-3 text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">Status</th>
+                  <th className="text-right py-3 px-3 text-[10px] font-bold text-cinza-claro-texto uppercase tracking-wider">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -402,6 +408,38 @@ export default function GlucoseBoard({ records = [] }: GlucoseBoardProps) {
                         >
                           {statusDetails.status}
                         </span>
+                      </td>
+                      <td className="py-3.5 px-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => router.push(`/patient/records/glucose/${record.id}`)}
+                            className="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                            title="Editar"
+                          >
+                            <MdEdit size={16} />
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (window.confirm("Tem certeza que deseja apagar este registro?")) {
+                                try {
+                                  const token = localStorage.getItem("token");
+                                  if (token && record.id) {
+                                    await deleteGlucoseRecord(record.id.toString(), token);
+                                    if (onRecordDeleted) onRecordDeleted(record.id);
+                                    else window.location.reload();
+                                  }
+                                } catch (error) {
+                                  console.error("Erro ao apagar registro:", error);
+                                  alert("Falha ao apagar o registro.");
+                                }
+                              }
+                            }}
+                            className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Excluir"
+                          >
+                            <MdDelete size={16} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

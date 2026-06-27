@@ -10,19 +10,23 @@ import { FiMinus, FiPlus } from "react-icons/fi";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import SaveButton from "@/components/forms/SaveButton";
-import { registerGlucose } from "@/services/glucose/glucoseService";
+import { registerGlucose, updateGlucoseRecord } from "@/services/glucose/glucoseService";
 import SuccessModal from "@/components/ui/modals/success-modal";
 
-export default function CadastroGlicemia() {
+interface GlucoseRecordFormProps {
+  initialData?: any;
+}
+
+export default function CadastroGlicemia({ initialData }: GlucoseRecordFormProps = {}) {
   const router = useRouter();
-  const [glucoseValue, setGlucoseValue] = useState(95);
-  const [selectedPeriod, setSelectedPeriod] = useState("Jejum");
-  const [tookInsulin, setTookInsulin] = useState(true);
+  const [glucoseValue, setGlucoseValue] = useState(initialData?.glucose_value || 95);
+  const [selectedPeriod, setSelectedPeriod] = useState(initialData?.period || "Jejum");
+  const [tookInsulin, setTookInsulin] = useState(initialData ? !!initialData.took_insulin : false);
   
   // Estados da Insulina Expandida
-  const [insulinType, setInsulinType] = useState("Basal");
-  const [insulinAmount, setInsulinAmount] = useState(12);
-  const [injectionSite, setInjectionSite] = useState("Abdômen");
+  const [insulinType, setInsulinType] = useState(initialData?.insulin_type || "Basal");
+  const [insulinAmount, setInsulinAmount] = useState(initialData?.insulin_amount || 12);
+  const [injectionSite, setInjectionSite] = useState(initialData?.injection_site || "Abdômen");
   
   // Lógica de cores e alertas
   const getStatusColor = () => {
@@ -63,8 +67,10 @@ export default function CadastroGlicemia() {
   const statusColor = getStatusColor();
 
   // Estados de Sintomas
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(["Sem Sintomas"]);
-  const [symptomIntensity, setSymptomIntensity] = useState(0);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(
+    initialData?.symptoms?.length ? initialData.symptoms : ["Sem Sintomas"]
+  );
+  const [symptomIntensity, setSymptomIntensity] = useState(initialData?.symptom_intensity || 0);
 
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -126,7 +132,7 @@ export default function CadastroGlicemia() {
     }
 
     try {
-      await registerGlucose({
+      const payload = {
         glucose_value: glucoseValue,
         period: selectedPeriod,
         took_insulin: tookInsulin,
@@ -135,40 +141,46 @@ export default function CadastroGlicemia() {
         injection_site: tookInsulin ? injectionSite : undefined,
         symptoms: selectedSymptoms,
         symptom_intensity: symptomIntensity
-      }, token);
+      };
+
+      if (initialData?.id) {
+        await updateGlucoseRecord(initialData.id, payload, token);
+      } else {
+        await registerGlucose(payload, token);
+      }
 
       setShowSuccess(true);
     } catch (err: any) {
-      setError(err.message || "Erro ao salvar glicemia");
+      setError(err.message || (initialData?.id ? "Erro ao atualizar glicemia" : "Erro ao salvar glicemia"));
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12 min-w-0 w-full overflow-x-hidden">
       <Header
         title="Glicemia"
         variant="page"
         showNotification={true}
       />
 
-      <section className="flex flex-col items-start px-5 md:px-8 pt-5 md:pt-6 gap-5 md:gap-6 w-full max-w-5xl mx-auto">
+      <section className="flex flex-col items-start px-5 md:px-8 pt-5 md:pt-6 gap-5 md:gap-6 w-full max-w-5xl mx-auto min-w-0">
         <div className="flex flex-col gap-2 w-full">
-          <h1 className="text-lg md:text-xl">Glicemia</h1>
+          <h1 className="text-lg md:text-xl">{initialData ? "Editar Glicemia" : "Glicemia"}</h1>
           <p className="m-0 text-cinza-claro-texto text-sm md:text-base">
-            Registre a sua glicemia diária para um melhor controle.
+            {initialData ? "Atualize os dados do seu registro glicêmico." : "Registre a sua glicemia diária para um melhor controle."}
           </p>
         </div>
 
         {error && <div className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-xl w-full">{error}</div>}
 
         <form
-          className="flex flex-col gap-8 w-full"
+          className="flex flex-col gap-8 w-full min-w-0"
           onSubmit={handleSubmit}
         >
           {/* Título da seção */}
-          <div className="flex flex-col gap-5 md:gap-6 w-full">
+          <div className="flex flex-col gap-5 md:gap-6 w-full min-w-0">
             <div className="flex items-center gap-2">
               <TbHandMove size={22} className="md:w-6 md:h-6 shrink-0" color="var(--dc-azul)" />
               <h2 className="m-0" style={{ fontFamily: "var(--font-inter)", fontWeight: 700, fontSize: 15 }}>
@@ -247,7 +259,7 @@ export default function CadastroGlicemia() {
           </div>
 
           {/* Seleção de Período (Scroll Horizontal) */}
-          <div className="flex flex-col gap-4 w-full">
+          <div className="flex flex-col gap-4 w-full min-w-0">
             <span className="font-semibold text-texto" style={{ fontFamily: "var(--font-inter)", fontSize: 16 }}>
               Período
             </span>
@@ -314,7 +326,7 @@ export default function CadastroGlicemia() {
 
           {/* Seção Condicional de Detalhes da Insulina */}
           {tookInsulin && (
-            <div className="flex flex-col gap-5 md:gap-6 w-full animate-fade-in pb-2 pt-2">
+            <div className="flex flex-col gap-5 md:gap-6 w-full animate-fade-in pb-2 pt-2 min-w-0">
               {/* Cabeçalho da Seção */}
               <div className="flex flex-col gap-2 w-full">
                 <h1 className="text-lg md:text-xl">Insulina</h1>
@@ -469,7 +481,7 @@ export default function CadastroGlicemia() {
             </span>
 
             {/* Grid com auto-fill para evitar apertar em telas muito estreitas */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-3 lg:grid-cols-4 gap-y-5 md:gap-y-6 gap-x-1 md:gap-x-2 w-full mt-1 md:mt-2">
+            <div className="grid grid-cols-2 min-[380px]:grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-y-5 md:gap-y-6 gap-x-2 md:gap-x-4 w-full mt-1 md:mt-2">
               {[
                 { name: "Sem Sintomas", icon: MdCheckCircleOutline },
                 { name: "Tontura", icon: FaDizzy },
@@ -538,10 +550,10 @@ export default function CadastroGlicemia() {
 
         <SuccessModal 
           isOpen={showSuccess} 
-          message="Seu registro de glicemia foi salvo com sucesso e já está no seu histórico." 
+          message={initialData ? "Seu registro de glicemia foi atualizado com sucesso." : "Seu registro de glicemia foi salvo com sucesso e já está no seu histórico."} 
           onClose={() => {
             setShowSuccess(false);
-            router.push("/patient/records");
+            router.push("/patient");
           }} 
         />
       </section>

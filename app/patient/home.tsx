@@ -15,7 +15,6 @@ import { getUserProfile } from "@/services/user/userService"
 import { getGlucoseRecords } from "@/services/glucose/glucoseService"
 import { getCommunityPosts } from "@/services/community/communityService";
 import { httpClient } from "@/lib/httpClient";
-import DiabeticaChat from '@/components/features/diabetica/DiabeticaChat';
 import { useSmartHomeHref } from "@/lib/hooks/useSmartHomeHref";
 
 export default function Home() {
@@ -23,7 +22,6 @@ export default function Home() {
   const logoHref = useSmartHomeHref();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMedications, setShowMedications] = useState(false);
-  const [showChat, setShowChat] = useState(false);
   const [userName, setUserName] = useState("");
   const [latestGlucose, setLatestGlucose] = useState<any>(null);
   const [allGlucoseRecords, setAllGlucoseRecords] = useState<any[]>([]);
@@ -98,7 +96,7 @@ export default function Home() {
   }, [router]);
 
   return (
-    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12">
+    <main className="min-h-screen bg-[#F8F9FA] pb-[100px] md:pb-12 min-w-0 overflow-x-hidden">
       <Header
         title="DiabetesCare"
         titleColor="var(--dc-azul-escuro)"
@@ -133,7 +131,7 @@ export default function Home() {
       </div>
 
       {/* Centralized Container with Max Width */}
-      <section className="w-full max-w-5xl mx-auto px-6 md:px-8 pt-6 pb-12 flex flex-col gap-8">
+      <section className="w-full max-w-5xl mx-auto px-6 md:px-8 pt-6 pb-12 flex flex-col gap-8 min-w-0">
 
         {/* Title / Greetings Area */}
         <div className="flex flex-col md:flex-row w-full justify-between items-start md:items-center gap-4">
@@ -160,7 +158,7 @@ export default function Home() {
           />
 
           {/* Artigos Recentes */}
-          <div className="bg-white rounded-[32px] border border-gray-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col gap-5 h-full">
+          <div className="hidden lg:flex bg-white rounded-[32px] border border-gray-100 p-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex-col gap-5 h-full">
             <div className="flex items-center justify-between w-full">
               <h2 className="m-0 text-texto font-bold text-lg">Artigos Recentes</h2>
               <Link
@@ -192,33 +190,17 @@ export default function Home() {
         </div>
 
         {/* ── ROW 2: GlucoseBoard (gráfico + médias detalhadas) ── */}
-        <GlucoseBoard records={allGlucoseRecords} />
+        <GlucoseBoard 
+          records={allGlucoseRecords} 
+          onRecordDeleted={(id) => {
+            setAllGlucoseRecords((prev) => prev.filter(r => r.id !== id));
+            if (latestGlucose?.id === id) {
+              setLatestGlucose(allGlucoseRecords.find(r => r.id !== id) || null);
+            }
+          }}
+        />
 
       </section>
-
-      {/* Floating Chat Button */}
-      <button
-        onClick={() => setShowChat(!showChat)}
-        className="fixed bottom-24 md:bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors z-50"
-      >
-        <span className="text-white text-3xl">🤖</span>
-      </button>
-
-      {/* Chat Popover */}
-      {showChat && (
-        <div className="fixed bottom-40 md:bottom-24 right-6 z-50 w-[90vw] md:w-auto md:min-w-[400px]">
-          <div className="relative">
-            <button
-              onClick={() => setShowChat(false)}
-              className="absolute -top-3 -right-3 w-8 h-8 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-500 hover:text-gray-800 shadow-md z-10"
-              aria-label="Fechar chat"
-            >
-              ✕
-            </button>
-            <DiabeticaChat />
-          </div>
-        </div>
-      )}
 
       {/* Medications Modal */}
       {showMedications && (
