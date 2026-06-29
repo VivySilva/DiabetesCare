@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     const { data: user, error: errorBusca } = await supabase
       .from("users")
-      .select("id, name")
+      .select("id, role")
       .eq("email", email)
       .maybeSingle();
 
@@ -33,6 +33,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({
         mensagem: "Se o e-mail existir, um link de recuperação será enviado.",
       });
+    }
+
+    let userName = "Usuário";
+    if (user.role === "PATIENT") {
+      const { data: patient } = await supabase.from("patients").select("name").eq("id", user.id).maybeSingle();
+      if (patient?.name) userName = patient.name;
+    } else if (user.role === "PROFESSIONAL") {
+      const { data: professional } = await supabase.from("professionals").select("name").eq("id", user.id).maybeSingle();
+      if (professional?.name) userName = professional.name;
     }
 
     const token = crypto.randomBytes(32).toString("hex");
@@ -63,11 +72,11 @@ export async function POST(req: NextRequest) {
         from: EMAIL_FROM,
         to: email,
         subject: "Recuperação de Senha - DiabetesCare",
-        text: `Olá, ${user.name}\n\nVocê solicitou a recuperação da sua senha.\n\nUse o link abaixo para redefinir sua senha:\n${resetLink}\n\nEsse link expira em 1 hora.`,
+        text: `Olá, ${userName}\n\nVocê solicitou a recuperação da sua senha.\n\nUse o link abaixo para redefinir sua senha:\n${resetLink}\n\nEsse link expira em 1 hora.`,
         html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
             <h2 style="color: #2b6cb0; text-align: center;">DiabetesCare</h2>
-            <p style="font-size: 16px; color: #333;">Olá, <strong>${user.name}</strong>,</p>
+            <p style="font-size: 16px; color: #333;">Olá, <strong>${userName}</strong>,</p>
             <p style="font-size: 16px; color: #333;">Recebemos uma solicitação para redefinir a senha da sua conta.</p>
             <div style="text-align: center; margin: 30px 0;">
                 <a href="${resetLink}" style="background-color: #2b6cb0; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-size: 16px; font-weight: bold;">Redefinir Minha Senha</a>
