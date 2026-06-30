@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
         <h1 className="text-azul-escuro text-xl font-bold">Recuperar Senha</h1>
         <p className="text-cinza-claro-texto mt-1 text-center max-w-[280px] text-sm">
           {isSent 
-            ? "Instruções enviadas para o seu e-mail cadastrado." 
+            ? "Instruções enviadas. Verifique também a caixa de Spam." 
             : "Insira seu e-mail para receber as instruções de recuperação."}
         </p>
       </div>
@@ -99,8 +99,11 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
         <div className="w-full max-w-md flex flex-col items-center gap-6">
-           <div className="bg-green-50 text-green-700 p-4 rounded-2xl text-center text-sm font-medium">
-             Se o e-mail <strong>{email}</strong> estiver em nossa base, você receberá um link em instantes.
+           <div className="bg-green-50 text-green-700 p-4 rounded-2xl text-center text-sm font-medium space-y-3">
+             <p>Se o e-mail <strong>{email}</strong> estiver em nossa base, você receberá um link em instantes.</p>
+             <div className="text-xs text-amber-800 bg-amber-100/80 p-2.5 rounded-xl border border-amber-200">
+               ⚠️ <strong>Atenção:</strong> Se não encontrar o e-mail na Caixa de Entrada, verifique também a sua pasta de <strong>Spam</strong> ou <strong>Lixo Eletrônico</strong>.
+             </div>
            </div>
            
            <button
